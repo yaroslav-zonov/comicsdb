@@ -73,8 +73,7 @@ export async function GET(
     }
 
     // Получаем изображение из Metron (один запрос для всех размеров)
-    // Передаем comicId для кеширования в БД
-    const metronImageUrl = await getMetronImageUrl(comic.comicvine, comic.id)
+    const metronImageUrl = await getMetronImageUrl(comic.comicvine)
     
     // Используем Metron URL для всех размеров, если получен, иначе Comicvine
     // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров

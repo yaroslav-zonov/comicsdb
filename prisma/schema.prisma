@@ -81,7 +81,6 @@ model Comic {
   small               String               @db.VarChar(255)
   thumb               String               @db.VarChar(255)
   super               String               @db.VarChar(255)
-  metronImageUrl      String?              @map("metron_image_url") @db.VarChar(500)
   downloaded          Int                  @default(0)
   adddate             DateTime             @db.Date
   addedby             Int?

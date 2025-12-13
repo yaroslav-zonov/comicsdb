@@ -105,8 +105,7 @@ async function getSeries(id: number) {
       translationStatus,
       comics: await Promise.all(series.comics.map(async (comic) => {
         // Получаем изображение из Metron (один запрос на комикс)
-        // Передаем comicId для кеширования в БД
-        const metronImage = await getMetronImageUrl(comic.comicvine, comic.id)
+        const metronImage = await getMetronImageUrl(comic.comicvine)
         // Используем Metron URL для всех размеров, если получен, иначе Comicvine
         // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
         const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)

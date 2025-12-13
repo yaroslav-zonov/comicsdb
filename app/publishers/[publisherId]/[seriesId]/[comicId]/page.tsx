@@ -130,8 +130,7 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     const mainComic = allTranslations[0] || firstComic
 
     // Получаем изображение из Metron (один запрос для всех размеров)
-    // Передаем comicId для кеширования в БД
-    const metronImageUrl = await getMetronImageUrl(firstComic.comicvine, firstComic.id)
+    const metronImageUrl = await getMetronImageUrl(firstComic.comicvine)
     
     // Используем Metron URL для всех размеров, если получен, иначе Comicvine
     // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров

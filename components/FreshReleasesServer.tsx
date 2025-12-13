@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
-import { getMetronImageUrl } from '@/lib/metron'
+import { decodeHtmlEntities } from '@/lib/utils'
 
 type Comic = {
   id: number
@@ -102,22 +101,10 @@ async function getFreshReleases(): Promise<Comic[]> {
     
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
-    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    // Передаем comicId для кеширования в БД
-    const metronImagePromises = sortedComics.map(comic => getMetronImageUrl(comic.comicvine, comic.id))
-    const metronImageResults = await Promise.all(metronImagePromises)
-
     // Преобразуем в нужный формат
-    return sortedComics.map((comic, index) => {
+    return sortedComics.map(comic => {
       const site1 = siteMap.get(comic.site)
       const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-      const metronImage = metronImageResults[index]
-      
-      // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-      // Для карточек: thumb (большой размер)
-      // Для таблиц: tiny (маленький размер)
-      const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
-      const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
       
       return {
         id: comic.id,
@@ -133,8 +120,8 @@ async function getFreshReleases(): Promise<Comic[]> {
             name: decodeHtmlEntities(comic.series.publisher.name),
           },
         },
-        thumb,
-        tiny,
+        thumb: comic.thumb,
+        tiny: comic.tiny,
         translate: comic.translate,
         site: comic.site,
         siteName: site1 ? decodeHtmlEntities(site1) : comic.site,
