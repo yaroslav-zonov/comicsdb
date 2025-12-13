@@ -7,26 +7,28 @@ export async function getMetronImageUrl(comicvineId: number | null | undefined):
   if (!comicvineId) return null
 
   try {
-    const response = await fetch(
-      `https://metron.cloud/api/v1/issue/?cv_id=${comicvineId}`,
-      {
-        headers: { 'Accept': 'application/json' },
-        // Без кеширования
-        cache: 'no-store',
-      }
-    )
+    const url = `https://metron.cloud/api/v1/issue/?cv_id=${comicvineId}`
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      // Без кеширования
+      cache: 'no-store',
+    })
 
-    if (!response.ok) return null
+    if (!response.ok) {
+      // Если 404 - комикс не найден в Metron, это нормально
+      return null
+    }
 
     const data = await response.json()
     if (data.results && data.results.length > 0) {
+      const imageUrl = data.results[0].image || null
       // Возвращаем строку image из ответа Metron
-      return data.results[0].image || null
+      return imageUrl
     }
 
     return null
   } catch (error) {
-    console.error('Error fetching Metron image:', error)
+    console.error(`[Metron] Error fetching image for cv_id ${comicvineId}:`, error)
     return null
   }
 }
