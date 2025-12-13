@@ -138,11 +138,6 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     const tiny = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.tiny)
     const small = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.small)
     const superImage = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.super)
-    
-    // Временное логирование для отладки
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEBUG] Comic ${firstComic.comicvine}: Metron=${metronImageUrl ? 'YES' : 'NO'}, Thumb=${thumb?.substring(0, 60)}...`)
-    }
 
     return {
       id: mainComic.id,
