@@ -232,23 +232,22 @@ export default function SearchResultsView({
 
   // Компонент скелетона для карточки серии
   const SeriesCardSkeleton = () => (
-    <div className="overflow-hidden">
-      <div className="relative aspect-[2/3] bg-bg-tertiary dark:bg-bg-card animate-pulse" />
+    <div className="overflow-hidden group animate-pulse">
+      <div className="relative aspect-[2/3] bg-bg-tertiary rounded" />
       <div className="pt-3">
-        <div className="h-4 bg-bg-tertiary dark:bg-bg-card rounded animate-pulse mb-2" />
-        <div className="h-3 bg-bg-tertiary dark:bg-bg-card rounded animate-pulse w-2/3 mb-1" />
-        <div className="h-3 bg-bg-tertiary dark:bg-bg-card rounded animate-pulse w-1/2" />
+        <div className="h-4 bg-bg-tertiary rounded w-full mb-1" />
+        <div className="h-3 bg-bg-tertiary rounded w-2/3" />
       </div>
     </div>
   )
 
   // Компонент скелетона для карточки комикса
   const ComicCardSkeleton = () => (
-    <div className="overflow-hidden">
-      <div className="relative aspect-[2/3] bg-bg-tertiary dark:bg-bg-card animate-pulse" />
-      <div className="pt-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
+    <div className="overflow-hidden group animate-pulse">
+      <div className="relative aspect-[2/3] bg-bg-tertiary rounded" />
+      <div className="pt-3 space-y-2">
+        <div className="h-4 bg-bg-tertiary rounded w-3/4" />
+        <div className="h-3 bg-bg-tertiary rounded w-1/2" />
       </div>
     </div>
   )
@@ -301,10 +300,10 @@ export default function SearchResultsView({
                   <tr key={i} className="border-b border-border-primary">
                     <td className="py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-24 bg-gray-200 rounded animate-pulse" />
+                        <div className="w-16 h-24 bg-bg-tertiary rounded animate-pulse" />
                         <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-3/4" />
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+                          <div className="h-4 bg-bg-tertiary rounded animate-pulse mb-2 w-3/4" />
+                          <div className="h-3 bg-bg-tertiary rounded animate-pulse w-1/2" />
                         </div>
                       </div>
                     </td>
@@ -373,7 +372,7 @@ export default function SearchResultsView({
               href={getSeriesUrl(s.publisher.id, s.id)}
               className="overflow-hidden group"
             >
-              <div className="relative aspect-[2/3] bg-gray-200">
+              <div className="relative aspect-[2/3] bg-bg-tertiary">
                 {s.thumb ? (
                   <Image
                     src={s.thumb}
@@ -409,10 +408,10 @@ export default function SearchResultsView({
                   <tr key={i} className="border-b border-border-primary">
                     <td className="py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-24 bg-gray-200 rounded animate-pulse" />
+                        <div className="w-16 h-24 bg-bg-tertiary rounded animate-pulse" />
                         <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-3/4" />
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+                          <div className="h-4 bg-bg-tertiary rounded animate-pulse mb-2 w-3/4" />
+                          <div className="h-3 bg-bg-tertiary rounded animate-pulse w-1/2" />
                         </div>
                       </div>
                     </td>

@@ -55,7 +55,7 @@ export default function ComicCard({
         className="block"
       >
         {showCover && (
-          <div className={`relative bg-gray-200 ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''}`}>
+          <div className={`relative bg-bg-tertiary ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''}`}>
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -63,14 +63,14 @@ export default function ComicCard({
                 fill={coverAspectRatio === '2/3'}
                 width={coverAspectRatio !== '2/3' ? 200 : undefined}
                 height={coverAspectRatio !== '2/3' ? 300 : undefined}
-                className="object-cover"
+                className="object-cover transition-opacity duration-300"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                 loading="lazy"
                 unoptimized
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-text-tertiarytext-xs">Нет обложки</span>
+                <span className="text-text-tertiary text-xs">Нет обложки</span>
               </div>
             )}
           </div>

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import ComicCard, { ComicCardData } from './ComicCard'
 import TableRow from './TableRow'
 import ViewToggle, { ViewMode } from './ViewToggle'
+import ComicCardSkeleton from './skeletons/ComicCardSkeleton'
+import TableRowSkeleton from './skeletons/TableRowSkeleton'
 
 export type ComicsListViewProps = {
   comics: ComicCardData[]
@@ -18,6 +20,8 @@ export type ComicsListViewProps = {
   showTableOnMobile?: boolean
   groupByNumber?: boolean
   className?: string
+  isLoading?: boolean
+  skeletonCount?: number
   additionalTableData?: Array<{
     id: number
     siteName?: string | null
@@ -46,9 +50,51 @@ export default function ComicsListView({
   showTableOnMobile = false,
   groupByNumber = false,
   className = '',
+  isLoading = false,
+  skeletonCount = 12,
   additionalTableData,
 }: ComicsListViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
+
+  // Показываем скелетоны во время загрузки
+  if (isLoading) {
+    return (
+      <div className={className}>
+        {(title || true) && (
+          <div className="pb-4 border-b border-border-primary flex items-center justify-between">
+            {title && (
+              <h2 className="text-2xl font-bold text-text-primary">
+                {title}
+              </h2>
+            )}
+            <ViewToggle
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              showTableOnMobile={showTableOnMobile}
+            />
+          </div>
+        )}
+
+        {viewMode === 'cards' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-6">
+            {Array.from({ length: skeletonCount }).map((_, i) => (
+              <ComicCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className={`overflow-hidden ${showTableOnMobile ? '' : 'hidden md:block'} pt-6`}>
+            <table className="min-w-full">
+              <tbody>
+                {Array.from({ length: skeletonCount }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   if (comics.length === 0) {
     return (

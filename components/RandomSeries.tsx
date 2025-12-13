@@ -201,7 +201,7 @@ export default async function RandomSeries() {
                   unoptimized
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 dark:bg-bg-secondary flex items-center justify-center">
+                <div className="w-full h-full bg-bg-tertiary flex items-center justify-center">
                   <span className="text-text-tertiary text-sm">Нет обложки</span>
                 </div>
               )}

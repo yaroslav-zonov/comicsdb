@@ -1,3 +1,5 @@
+import ComicCardSkeleton from '@/components/skeletons/ComicCardSkeleton'
+
 export default function Loading() {
   return (
     <div className="min-h-screen flex flex-col bg-bg-primary">
@@ -7,14 +9,10 @@ export default function Loading() {
             {/* Скелетон заголовка */}
             <div className="h-10 w-64 bg-bg-tertiary rounded animate-pulse" />
             
-            {/* Скелетон контента */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-bg-card rounded-lg shadow p-6">
-                  <div className="aspect-[2/3] bg-bg-tertiary rounded mb-4 animate-pulse" />
-                  <div className="h-4 bg-bg-tertiary rounded mb-2 animate-pulse" />
-                  <div className="h-4 bg-bg-tertiary rounded w-3/4 animate-pulse" />
-                </div>
+            {/* Скелетон контента - используем правильные скелетоны */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {[...Array(12)].map((_, i) => (
+                <ComicCardSkeleton key={i} />
               ))}
             </div>
           </div>

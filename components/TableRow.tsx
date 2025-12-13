@@ -77,7 +77,7 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getSeriesUrl(data.publisher.id, data.id)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary dark:bg-bg-card">
+            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -244,7 +244,7 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary dark:bg-bg-card">
+            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -252,6 +252,7 @@ export default function TableRow(props: TableRowProps) {
                   fill
                   className="object-cover"
                   sizes="48px"
+                  loading="lazy"
                   unoptimized
                 />
               ) : (
@@ -333,7 +334,7 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary dark:bg-bg-card">
+            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -341,10 +342,11 @@ export default function TableRow(props: TableRowProps) {
                   fill
                   className="object-cover"
                   sizes="48px"
+                  loading="lazy"
                   unoptimized
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                   <span className="text-text-tertiary text-xs">Нет</span>
                 </div>
               )}
@@ -430,7 +432,7 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary dark:bg-bg-card">
+            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -438,6 +440,7 @@ export default function TableRow(props: TableRowProps) {
                   fill
                   className="object-cover"
                   sizes="48px"
+                  loading="lazy"
                   unoptimized
                 />
               ) : (
@@ -566,7 +569,7 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary dark:bg-bg-card">
+            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -574,6 +577,7 @@ export default function TableRow(props: TableRowProps) {
                   fill
                   className="object-cover"
                   sizes="48px"
+                  loading="lazy"
                   unoptimized
                 />
               ) : (
