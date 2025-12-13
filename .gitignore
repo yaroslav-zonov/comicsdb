@@ -35,3 +35,7 @@ next-env.d.ts
 
 # Prisma
 prisma/migrations/
+
+# Database dumps
+dump/*.sql
+dump/*.dump
