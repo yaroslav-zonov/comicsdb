@@ -48,6 +48,14 @@ export default function ComicCard({
   const releaseDate = data.date || data.pdate
   const comicvineUrl = data.thumb || data.tiny
 
+  // Временное логирование для отладки
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log(`[ComicCard] Comic ${data.comicvine}: URL=${comicvineUrl?.substring(0, 80)}...`, {
+      isMetron: comicvineUrl?.includes('metron'),
+      isComicvine: comicvineUrl?.includes('comicvine'),
+    })
+  }
+
   return (
     <div className={`overflow-hidden group ${className}`}>
       <Link

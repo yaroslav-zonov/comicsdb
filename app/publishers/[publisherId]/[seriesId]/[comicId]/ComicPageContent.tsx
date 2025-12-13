@@ -48,6 +48,16 @@ type Comic = {
 export default function ComicPageContent({ comic }: { comic: Comic }) {
   const coverImage = comic.super || comic.thumb || comic.small || comic.tiny
 
+  // Временное логирование для отладки
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[ComicPageContent] Comic ${comic.comicvine}: coverImage=${coverImage?.substring(0, 80)}...`, {
+      isMetron: coverImage?.includes('metron'),
+      isComicvine: coverImage?.includes('comicvine'),
+      thumb: comic.thumb?.substring(0, 60),
+      super: comic.super?.substring(0, 60),
+    })
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-bg-primary">
       <Header />

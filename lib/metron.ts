@@ -8,11 +8,19 @@ export async function getMetronImageUrl(comicvineId: number | null | undefined):
 
   try {
     const url = `https://metron.cloud/api/v1/issue/?cv_id=${comicvineId}`
+    
+    // Добавляем таймаут для избежания долгих ожиданий
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 секунд таймаут
+    
     const response = await fetch(url, {
       headers: { 'Accept': 'application/json' },
       // Без кеширования
       cache: 'no-store',
+      signal: controller.signal,
     })
+    
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       // Если 404 - комикс не найден в Metron, это нормально
@@ -27,8 +35,11 @@ export async function getMetronImageUrl(comicvineId: number | null | undefined):
     }
 
     return null
-  } catch (error) {
-    console.error(`[Metron] Error fetching image for cv_id ${comicvineId}:`, error)
+  } catch (error: any) {
+    // Игнорируем ошибки сети/таймаута - просто возвращаем null
+    if (error.name !== 'AbortError') {
+      console.error(`[Metron] Error fetching image for cv_id ${comicvineId}:`, error.message)
+    }
     return null
   }
 }
