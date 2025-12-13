@@ -1,8 +1,8 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TableRow from '@/components/TableRow'
-import MetronImage from '@/components/MetronImage'
 import { decodeHtmlEntities, getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
 
 type Comic = {
@@ -117,15 +117,21 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
             {/* Обложка */}
             <div className="flex-shrink-0">
               <div className="relative w-64 md:w-80 aspect-[2/3]">
-                <MetronImage
-                  comicvineId={comic.comicvine}
-                  comicvineUrl={coverImage}
-                  alt={`${comic.series.name} #${comic.number}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 256px, 320px"
-                  coverAspectRatio="2/3"
-                />
+                {coverImage ? (
+                  <Image
+                    src={coverImage}
+                    alt={`${comic.series.name} #${comic.number}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 256px, 320px"
+                    loading="lazy"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                    <span className="text-text-tertiary text-xs">Нет обложки</span>
+                  </div>
+                )}
               </div>
             </div>
 

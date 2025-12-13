@@ -1,6 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getComicUrl, formatDate } from '@/lib/utils'
-import MetronImage from './MetronImage'
 
 export type ComicCardData = {
   id: number
@@ -55,18 +55,24 @@ export default function ComicCard({
         className="block"
       >
         {showCover && (
-          <div className={`relative ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''}`}>
-            <MetronImage
-              comicvineId={data.comicvine}
-              comicvineUrl={comicvineUrl}
-              alt={`${data.series.name} #${data.number}`}
-              fill={coverAspectRatio === '2/3'}
-              width={coverAspectRatio !== '2/3' ? 200 : undefined}
-              height={coverAspectRatio !== '2/3' ? 300 : undefined}
-              className="object-cover transition-opacity duration-300"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-              coverAspectRatio={coverAspectRatio}
-            />
+          <div className={`relative ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''} bg-bg-tertiary`}>
+            {comicvineUrl ? (
+              <Image
+                src={comicvineUrl}
+                alt={`${data.series.name} #${data.number}`}
+                fill={coverAspectRatio === '2/3'}
+                width={coverAspectRatio !== '2/3' ? 200 : undefined}
+                height={coverAspectRatio !== '2/3' ? 300 : undefined}
+                className="object-cover transition-opacity duration-300"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                loading="lazy"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-text-tertiary text-xs">Нет обложки</span>
+              </div>
+            )}
           </div>
         )}
 

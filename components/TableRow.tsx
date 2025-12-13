@@ -5,7 +5,6 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { getComicUrl, getSeriesUrl, getImageUrl, formatDate } from '@/lib/utils'
-import MetronImage from './MetronImage'
 
 type ComicRowData = {
   id: number
@@ -246,14 +245,21 @@ export default function TableRow(props: TableRowProps) {
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
-              <MetronImage
-                comicvineId={data.comicvine}
-                comicvineUrl={comicvineUrl}
-                alt={`${data.series.name} #${data.number}`}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+              {comicvineUrl ? (
+                <Image
+                  src={comicvineUrl}
+                  alt={`${data.series.name} #${data.number}`}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                  loading="lazy"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                  <span className="text-text-tertiary text-xs">Нет</span>
+                </div>
+              )}
             </div>
           </Link>
         </td>
@@ -329,14 +335,21 @@ export default function TableRow(props: TableRowProps) {
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
-              <MetronImage
-                comicvineId={data.comicvine}
-                comicvineUrl={comicvineUrl}
-                alt={`${data.series.name} #${data.number}`}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+              {comicvineUrl ? (
+                <Image
+                  src={comicvineUrl}
+                  alt={`${data.series.name} #${data.number}`}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                  loading="lazy"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                  <span className="text-text-tertiary text-xs">Нет</span>
+                </div>
+              )}
             </div>
           </Link>
         </td>
@@ -420,14 +433,21 @@ export default function TableRow(props: TableRowProps) {
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
-              <MetronImage
-                comicvineId={data.comicvine}
-                comicvineUrl={comicvineUrl}
-                alt={`${data.series.name} #${data.number}`}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+              {comicvineUrl ? (
+                <Image
+                  src={comicvineUrl}
+                  alt={`${data.series.name} #${data.number}`}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                  loading="lazy"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                  <span className="text-text-tertiary text-xs">Нет</span>
+                </div>
+              )}
             </div>
           </Link>
         </td>
@@ -550,14 +570,21 @@ export default function TableRow(props: TableRowProps) {
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
-              <MetronImage
-                comicvineId={data.comicvine}
-                comicvineUrl={comicvineUrl}
-                alt={`${data.series.name} #${data.number}`}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+              {comicvineUrl ? (
+                <Image
+                  src={comicvineUrl}
+                  alt={`${data.series.name} #${data.number}`}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                  loading="lazy"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                  <span className="text-text-tertiary text-xs">Нет</span>
+                </div>
+              )}
             </div>
           </Link>
         </td>

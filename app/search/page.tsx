@@ -5,7 +5,8 @@ import Footer from '@/components/Footer'
 import SearchResultsView from '@/components/SearchResultsView'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { decodeHtmlEntities, getImageUrl, encodeHtmlEntities } from '@/lib/utils'
+import { decodeHtmlEntities, encodeHtmlEntities } from '@/lib/utils'
+import { getImageUrlWithMetron } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,10 +109,20 @@ async function processComicSearchResults(
     }) : []
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
+    // Получаем изображения из Metron для всех комиксов параллельно
+    const imagePromises = comics.map(comic => 
+      Promise.all([
+        getImageUrlWithMetron(comic.comicvine, comic.thumb),
+        getImageUrlWithMetron(comic.comicvine, comic.tiny),
+      ])
+    )
+    const imageResults = await Promise.all(imagePromises)
+
     return {
-      results: comics.map(comic => {
+      results: comics.map((comic, index) => {
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
+        const [thumb, tiny] = imageResults[index]
         
         return {
           id: comic.id,
@@ -132,8 +143,8 @@ async function processComicSearchResults(
             name: 'Неизвестное издательство',
             },
           },
-          thumb: getImageUrl(comic.thumb),
-          tiny: getImageUrl(comic.tiny),
+          thumb,
+          tiny,
           siteName: site1 ? decodeHtmlEntities(site1) : comic.site,
           siteId: comic.site,
           site2Name: site2 ? decodeHtmlEntities(site2) : null,
@@ -662,12 +673,22 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return (b.adddate?.getTime() || 0) - (a.adddate?.getTime() || 0)
     })
 
+    // Получаем изображения из Metron для всех комиксов параллельно
+    const imagePromises = comicsWithSeries.map(comic => 
+      Promise.all([
+        getImageUrlWithMetron(comic.comicvine, comic.thumb),
+        getImageUrlWithMetron(comic.comicvine, comic.tiny),
+      ])
+    )
+    const imageResults = await Promise.all(imagePromises)
+
     return {
-      results: comicsWithSeries.map(comic => {
+      results: comicsWithSeries.map((comic, index) => {
         const seriesData = comic.seriesData
         const realName = getRealScanlatorName(comic)
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
+        const [thumb, tiny] = imageResults[index]
         
         return {
           id: comic.id,
@@ -688,8 +709,8 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
               name: 'Неизвестное издательство',
             },
           },
-          thumb: getImageUrl(comic.thumb),
-          tiny: getImageUrl(comic.tiny),
+          thumb,
+          tiny,
           siteName: site1 ? decodeHtmlEntities(site1) : comic.site,
           siteId: comic.site,
           site2Name: site2 ? decodeHtmlEntities(site2) : null,

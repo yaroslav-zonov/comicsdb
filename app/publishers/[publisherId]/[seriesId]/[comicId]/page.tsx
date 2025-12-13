@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { getImageUrl } from '@/lib/utils'
+import { getImageUrlWithMetron } from '@/lib/metron'
 import ComicPageContent from './ComicPageContent'
 
 export const dynamic = 'force-dynamic'
@@ -128,6 +128,14 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     // Используем первый комикс для основной информации
     const mainComic = allTranslations[0] || firstComic
 
+    // Получаем изображения из Metron
+    const [thumb, tiny, small, superImage] = await Promise.all([
+      getImageUrlWithMetron(firstComic.comicvine, mainComic.thumb),
+      getImageUrlWithMetron(firstComic.comicvine, mainComic.tiny),
+      getImageUrlWithMetron(firstComic.comicvine, mainComic.small),
+      getImageUrlWithMetron(firstComic.comicvine, mainComic.super),
+    ])
+
     return {
       id: mainComic.id,
       comicvine: firstComic.comicvine,
@@ -142,10 +150,10 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
           name: decodeHtmlEntities(firstComic.series.publisher.name),
         },
       },
-      thumb: getImageUrl(mainComic.thumb),
-      tiny: getImageUrl(mainComic.tiny),
-      small: getImageUrl(mainComic.small),
-      super: getImageUrl(mainComic.super),
+      thumb,
+      tiny,
+      small,
+      super: superImage,
       translate: decodeHtmlEntities(mainComic.translate),
       edit: decodeHtmlEntities(mainComic.edit),
       creators: decodeHtmlEntities(mainComic.creators),
