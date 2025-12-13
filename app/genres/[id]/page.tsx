@@ -107,10 +107,12 @@ export default async function GenrePage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { page?: string }
+  searchParams: Promise<{ page?: string }> | { page?: string }
 }) {
+  // В Next.js 14 searchParams может быть Promise
+  const resolvedParams = await Promise.resolve(searchParams)
   const id = parseInt(params.id)
-  const page = parseInt(searchParams.page || '1')
+  const page = parseInt(resolvedParams.page || '1')
   
   if (isNaN(id)) {
     notFound()

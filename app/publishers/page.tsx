@@ -85,10 +85,12 @@ async function getPublishers(page: number = 1, pageSize: number = 100, sort: str
 export default async function PublishersPage({
   searchParams,
 }: {
-  searchParams: { page?: string; sort?: string }
+  searchParams: Promise<{ page?: string; sort?: string }> | { page?: string; sort?: string }
 }) {
-  const page = parseInt(searchParams.page || '1')
-  const sort = searchParams.sort || 'name_asc'
+  // В Next.js 14 searchParams может быть Promise
+  const resolvedParams = await Promise.resolve(searchParams)
+  const page = parseInt(resolvedParams.page || '1')
+  const sort = resolvedParams.sort || 'name_asc'
   const data = await getPublishers(page, 100, sort)
 
   const getPageLink = (pageNum: number) => {

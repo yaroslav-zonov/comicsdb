@@ -107,11 +107,14 @@ export default async function PublisherPage({
   params,
   searchParams,
 }: {
-  params: { publisherId: string }
-  searchParams: { page?: string }
+  params: Promise<{ publisherId: string }> | { publisherId: string }
+  searchParams: Promise<{ page?: string }> | { page?: string }
 }) {
-  const id = parseInt(params.publisherId)
-  const page = parseInt(searchParams.page || '1')
+  // В Next.js 14 params и searchParams могут быть Promise
+  const resolvedParams = await Promise.resolve(params)
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const id = parseInt(resolvedParams.publisherId)
+  const page = parseInt(resolvedSearchParams.page || '1')
   
   if (isNaN(id)) {
     notFound()

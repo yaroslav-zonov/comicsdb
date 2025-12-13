@@ -51,9 +51,11 @@ async function getSites(page: number = 1, pageSize: number = 100) {
 export default async function SitesPage({
   searchParams,
 }: {
-  searchParams: { page?: string }
+  searchParams: Promise<{ page?: string }> | { page?: string }
 }) {
-  const page = parseInt(searchParams.page || '1')
+  // В Next.js 14 searchParams может быть Promise
+  const resolvedParams = await Promise.resolve(searchParams)
+  const page = parseInt(resolvedParams.page || '1')
   const data = await getSites(page, 100)
 
   const getPageLink = (pageNum: number) => {
