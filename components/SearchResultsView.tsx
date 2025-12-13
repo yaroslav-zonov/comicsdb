@@ -186,7 +186,11 @@ export default function SearchResultsView({
   }
 
   const currentSort = searchParams.get('sort') || (currentTab === 'series' ? 'relevance' : 'adddate_desc')
-  const sortField = currentSort.split('_')[0]
+  // Для adddate используем translation_date, так как это дата перевода
+  let sortField = currentSort.split('_')[0]
+  if (sortField === 'adddate') {
+    sortField = 'translation_date'
+  }
   const sortDirection = currentSort.includes('_desc') ? 'desc' : 'asc'
   const isRelevanceSort = sortField === 'relevance'
 
@@ -384,7 +388,7 @@ export default function SearchResultsView({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-text-tertiarytext-xs">Нет обложки</span>
+                    <span className="text-text-tertiary text-xs">Нет обложки</span>
                   </div>
                 )}
               </div>
@@ -597,7 +601,7 @@ export default function SearchResultsView({
       </div>
 
       {/* Статистика сканлейтера */}
-      {currentTab === 'scanlators' && scanlatorStats && (() => {
+      {currentTab === 'scanlators' && scanlatorStats !== null && (() => {
         // Форматируем время в сканлейте (только годы)
         const formatTimeInScanlating = (days: number): string => {
           if (days < 365) {

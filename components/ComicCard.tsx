@@ -101,7 +101,7 @@ export default function ComicCard({
               </p>
             )}
             {showDate && releaseDate && (
-              <p className="text-xs text-text-tertiarytext-text-secondary mt-1">
+              <p className="text-xs text-text-secondary mt-1">
                 {formatDate(releaseDate)}
               </p>
             )}

@@ -55,9 +55,10 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
       <div className="flex-1">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Хлебные крошки и навигация по выпускам */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <nav className="text-sm">
-            <ol className="flex items-center space-x-2 text-text-secondary">
+            {/* Десктопная версия - полные крошки */}
+            <ol className="hidden md:flex items-center space-x-2 text-text-secondary">
               <li>
                 <Link href="/" className="hover:text-accent transition-colors">
                   Главная
@@ -84,10 +85,23 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
               <li>/</li>
               <li className="text-text-primary">#{comic.number}</li>
             </ol>
+            {/* Мобильная версия - только серия */}
+            <ol className="md:hidden flex items-center space-x-2 text-text-secondary">
+              <li>
+                <Link
+                  href={getSeriesUrl(comic.series.publisher.id, comic.series.id)}
+                  className="hover:text-accent transition-colors"
+                >
+                  {comic.series.name}
+                </Link>
+              </li>
+              <li>/</li>
+              <li className="text-text-primary">#{comic.number}</li>
+            </ol>
           </nav>
           
           {/* Навигация по выпускам */}
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center justify-start md:justify-end gap-2 text-sm">
             {comic.prevIssue ? (
               <Link
                 href={getComicUrl(comic.series.publisher.id, comic.series.id, comic.prevIssue.comicvine)}
@@ -107,7 +121,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 #{comic.nextIssue.number} →
               </Link>
             ) : (
-              <span className="text-text-muted">→</span>
+              <span className="text-text-tertiary">→</span>
             )}
           </div>
         </div>
@@ -141,7 +155,8 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 {comic.series.name} #{comic.number}
               </h1>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Издательство + дата публикации */}
                 <div className="text-sm text-text-primary">
                   <Link
                     href={`/publishers/${comic.series.publisher.id}`}
@@ -155,9 +170,44 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                   </span>
                 </div>
 
+                {/* Таблица переводов */}
+                {comic.translations && comic.translations.length > 0 && (
+                  <div className="pt-4 border-t border-border-primary">
+                    <h2 className="text-xl font-bold text-text-primary mb-4">Переводы</h2>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody>
+                          {comic.translations.map((translation) => (
+                            <TableRow
+                              key={translation.id}
+                              type="comic"
+                              variant="comic-page"
+                              data={{
+                                id: translation.id,
+                                comicvine: comic.comicvine,
+                                number: comic.number,
+                                series: comic.series,
+                                siteName: translation.siteName,
+                                siteId: translation.siteId,
+                                site2Name: translation.site2Name,
+                                site2Id: translation.site2Id,
+                                translate: translation.translate,
+                                edit: translation.edit,
+                                date: translation.date,
+                                link: translation.link,
+                                isJoint: translation.isJoint,
+                              }}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 {/* Создатели, персонажи, команды - кликабельные */}
                 {(comic.creators || comic.characters || comic.teams) && (
-                  <div className="pt-4 border-t border-border-primary space-y-3">
+                  <div className="pt-4 border-t border-border-primary space-y-4">
                     {comic.creators && (
                       <div>
                         <h3 className="text-sm font-semibold text-text-primary mb-2">
@@ -281,41 +331,6 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* Таблица переводов */}
-                {comic.translations && comic.translations.length > 0 && (
-                  <div className="pt-4 border-t border-border-primary">
-                    <h2 className="text-xl font-bold text-text-primary mb-4">Переводы</h2>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <tbody>
-                          {comic.translations.map((translation) => (
-                            <TableRow
-                              key={translation.id}
-                              type="comic"
-                              variant="comic-page"
-                              data={{
-                                id: translation.id,
-                                comicvine: comic.comicvine,
-                                number: comic.number,
-                                series: comic.series,
-                                siteName: translation.siteName,
-                                siteId: translation.siteId,
-                                site2Name: translation.site2Name,
-                                site2Id: translation.site2Id,
-                                translate: translation.translate,
-                                edit: translation.edit,
-                                date: translation.date,
-                                link: translation.link,
-                                isJoint: translation.isJoint,
-                              }}
-                            />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
                   </div>
                 )}
               </div>

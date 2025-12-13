@@ -74,7 +74,7 @@ export default function TableRow(props: TableRowProps) {
       : 'Продолжается'
 
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
+      <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getSeriesUrl(data.publisher.id, data.id)}>
             <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
@@ -136,7 +136,7 @@ export default function TableRow(props: TableRowProps) {
     const comicData = data as ComicRowData & { isJoint?: boolean; site2Name?: string | null; site2Id?: string | null }
     
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
+      <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           {comicData.siteName && comicData.siteId ? (
             <div className="flex flex-wrap gap-1">
@@ -169,9 +169,9 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3 whitespace-nowrap">
+        <td className="py-3">
           {data.translate ? (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-col flex-wrap gap-1 max-h-16">
               {data.translate.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -179,7 +179,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline"
+                    className="text-sm text-text-secondary hover:text-accent hover:underline whitespace-nowrap"
                   >
                     {trimmed}
                   </Link>
@@ -190,9 +190,9 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3 whitespace-nowrap">
+        <td className="py-3">
           {data.edit ? (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-col flex-wrap gap-1 max-h-16">
               {data.edit.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -200,7 +200,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline"
+                    className="text-sm text-text-secondary hover:text-accent hover:underline whitespace-nowrap"
                   >
                     {trimmed}
                   </Link>
@@ -242,97 +242,149 @@ export default function TableRow(props: TableRowProps) {
     const comicData = data as ComicRowData & { isJoint?: boolean; site2Name?: string | null; site2Id?: string | null }
     
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
-        <td className="py-3 whitespace-nowrap">
-          <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3]">
-              {comicvineUrl ? (
-                <Image
-                  src={comicvineUrl}
-                  alt={`${data.series.name} #${data.number}`}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                  loading="lazy"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-                  <span className="text-text-tertiary text-xs">Нет</span>
-                </div>
-              )}
-            </div>
-          </Link>
-        </td>
-        <td className="py-3">
-          <div>
-            <Link
-              href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}
-              className="text-sm font-medium text-text-primary hover:text-accent transition-colors block"
-            >
-              {data.series.name} #{data.number}
+      <>
+        {/* Десктопная версия */}
+        <tr className="border-t border-border-primary dark:border-border-primary first:border-t-0 hidden md:table-row">
+          <td className="py-3 whitespace-nowrap">
+            <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
+              <div className="relative w-12 aspect-[2/3]">
+                {comicvineUrl ? (
+                  <Image
+                    src={comicvineUrl}
+                    alt={`${data.series.name} #${data.number}`}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                    loading="lazy"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                    <span className="text-text-tertiary text-xs">Нет</span>
+                  </div>
+                )}
+              </div>
             </Link>
-            <Link
-              href={`/publishers/${data.series.publisher.id}`}
-              className="text-xs text-text-secondary hover:text-accent transition-colors"
-            >
-              {data.series.publisher.name}
-            </Link>
-          </div>
-        </td>
-        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
-          {data.siteName && data.siteId ? (
-            <div className="flex flex-wrap gap-1">
+          </td>
+          <td className="py-3">
+            <div>
               <Link
-                href={`/sites/${data.siteId}`}
-                className="text-accent hover:text-accent-hover hover:underline"
+                href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}
+                className="text-sm font-medium text-text-primary hover:text-accent transition-colors block"
               >
-                {data.siteName}
+                {data.series.name} #{data.number}
               </Link>
-              {data.site2Name && data.site2Id && (
-                <>
-                  <span className="text-text-tertiary">,</span>
-                  <Link
-                    href={`/sites/${data.site2Id}`}
-                    className="text-accent hover:text-accent-hover hover:underline"
-                  >
-                    {data.site2Name}
-                  </Link>
-                </>
+              <Link
+                href={`/publishers/${data.series.publisher.id}`}
+                className="text-xs text-text-secondary hover:text-accent transition-colors"
+              >
+                {data.series.publisher.name}
+              </Link>
+            </div>
+          </td>
+          <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+            {data.siteName && data.siteId ? (
+              <div className="flex flex-wrap gap-1">
+                <Link
+                  href={`/sites/${data.siteId}`}
+                  className="text-accent hover:text-accent-hover hover:underline"
+                >
+                  {data.siteName}
+                </Link>
+                {data.site2Name && data.site2Id && (
+                  <>
+                    <span className="text-text-tertiary">,</span>
+                    <Link
+                      href={`/sites/${data.site2Id}`}
+                      className="text-accent hover:text-accent-hover hover:underline"
+                    >
+                      {data.site2Name}
+                    </Link>
+                  </>
+                )}
+              </div>
+            ) : data.siteName || '-'}
+          </td>
+          <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+            {data.date
+              ? formatDate(data.date)
+              : '-'}
+          </td>
+          <td className="py-3 whitespace-nowrap text-right pr-0">
+            {data.link ? (
+              <a
+                href={data.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-text-tertiary hover:text-accent transition-colors"
+                title="Скачать"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+              </a>
+            ) : (
+              <span className="text-text-muted" title="Ссылка недоступна">
+                <XMarkIcon className="w-5 h-5" />
+              </span>
+            )}
+          </td>
+        </tr>
+        {/* Мобильная компактная версия */}
+        <tr className="border-t border-border-primary dark:border-border-primary first:border-t-0 md:hidden">
+          <td className="py-2 px-2" colSpan={5}>
+            <div className="flex items-start gap-3">
+              <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)} className="flex-shrink-0">
+                <div className="relative w-10 aspect-[2/3]">
+                  {comicvineUrl ? (
+                    <Image
+                      src={comicvineUrl}
+                      alt={`${data.series.name} #${data.number}`}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                      loading="lazy"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                      <span className="text-text-tertiary text-xs">Нет</span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+              <div className="flex-1 min-w-0">
+                <Link
+                  href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}
+                  className="text-sm font-medium text-text-primary hover:text-accent transition-colors block truncate"
+                >
+                  {data.series.name} #{data.number}
+                </Link>
+                <div className="text-xs text-text-secondary truncate mt-0.5">
+                  {data.siteName || '-'}
+                  {data.date && ` • ${formatDate(data.date)}`}
+                </div>
+              </div>
+              {data.link && (
+                <a
+                  href={data.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 text-text-tertiary hover:text-accent transition-colors"
+                  title="Скачать"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" />
+                </a>
               )}
             </div>
-          ) : data.siteName || '-'}
-        </td>
-        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
-          {data.date
-            ? formatDate(data.date)
-            : '-'}
-        </td>
-        <td className="py-3 whitespace-nowrap text-right pr-0">
-          {data.link ? (
-            <a
-              href={data.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-text-tertiary hover:text-accent transition-colors"
-              title="Скачать"
-            >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-            </a>
-          ) : (
-            <span className="text-text-muted" title="Ссылка недоступна">
-              <XMarkIcon className="w-5 h-5" />
-            </span>
-          )}
-        </td>
-      </tr>
+          </td>
+        </tr>
+      </>
     )
   }
 
   if (variant === 'character-creator-team') {
     // Поиск по персонажу/автору/команде: обложка, название выпуска, издательство, дата перевода, дата публикации, сайт, скачать
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
+      <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
@@ -430,7 +482,7 @@ export default function TableRow(props: TableRowProps) {
   if (variant === 'series') {
     // На странице серии: обложка / сайт-переводчик / переводчик / оформитель / дата публикации / кнопка скачать
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
+      <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">
@@ -567,7 +619,7 @@ export default function TableRow(props: TableRowProps) {
     }
 
     return (
-      <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
+      <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
             <div className="relative w-12 aspect-[2/3]">

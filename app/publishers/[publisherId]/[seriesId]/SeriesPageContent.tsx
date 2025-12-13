@@ -176,7 +176,8 @@ export default async function SeriesPageContent({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Хлебные крошки */}
         <nav className="mb-6 text-sm">
-            <ol className="flex items-center space-x-2 text-text-secondary">
+          {/* Десктопная версия - полные крошки */}
+          <ol className="hidden md:flex items-center space-x-2 text-text-secondary">
             <li>
               <Link href="/" className="hover:text-accent transition-colors">
                 Главная
@@ -192,7 +193,20 @@ export default async function SeriesPageContent({
               </Link>
             </li>
             <li>/</li>
-              <li className="text-text-primary">{series.name}</li>
+            <li className="text-text-primary">{series.name}</li>
+          </ol>
+          {/* Мобильная версия - только издательство */}
+          <ol className="md:hidden flex items-center space-x-2 text-text-secondary">
+            <li>
+              <Link
+                href={`/publishers/${series.publisher.id}`}
+                className="hover:text-accent transition-colors"
+              >
+                {series.publisher.name}
+              </Link>
+            </li>
+            <li>/</li>
+            <li className="text-text-primary">{series.name}</li>
           </ol>
         </nav>
 
@@ -208,36 +222,38 @@ export default async function SeriesPageContent({
           </h1>
 
           <div className="space-y-4 mt-6">
-            <div className="text-sm text-text-primary">
-              <Link
-                href={`/publishers/${series.publisher.id}`}
-                className="text-accent hover:text-accent-hover hover:underline"
-              >
-                {series.publisher.name}
-              </Link>
-              <span className="text-text-tertiarymx-2">•</span>
-              <span className="text-sm text-text-secondary">Статус серии: </span>
-              <span className="text-sm font-medium text-text-primary">
-                {series.status === 'comicvine' ? 'Статус неизвестен' :
-                 series.status === 'continue' ? 'Продолжается' :
-                 series.status === 'finish' ? 'Завершена' :
-                 series.status === 'freez' ? 'Заморожена' : series.status}
-              </span>
-              <span className="text-text-tertiarymx-2">•</span>
-              <span className="text-sm text-text-secondary">Статус перевода: </span>
-              <span className="text-sm font-medium text-text-primary">
-                {series.translationStatus}
-              </span>
-              <span className="text-text-tertiarymx-2">•</span>
-              <span className="text-sm text-text-secondary">Переведено: </span>
-              <span className="text-sm font-medium text-text-primary">
-                {series.comics.length}
-                {series.comicvine > 0 && ` из ${series.comicvine}`}
-              </span>
+            {/* Основная метадата */}
+            <div className="text-sm text-text-primary space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/publishers/${series.publisher.id}`}
+                  className="text-accent hover:text-accent-hover hover:underline"
+                >
+                  {series.publisher.name}
+                </Link>
+                <span className="text-text-tertiary">•</span>
+                <span className="text-sm font-medium text-text-primary">
+                  {series.status === 'comicvine' ? 'Статус неизвестен' :
+                   series.status === 'continue' ? 'Продолжается' :
+                   series.status === 'finish' ? 'Завершена' :
+                   series.status === 'freez' ? 'Заморожена' : series.status}
+                </span>
+                <span className="text-text-tertiary">•</span>
+                <span className="text-sm font-medium text-text-primary">
+                  {series.translationStatus}
+                </span>
+                <span className="text-text-tertiary">•</span>
+                <span className="text-sm text-text-primary">
+                  Переведено: {series.comics.length}
+                  {series.comicvine > 0 && ` из ${series.comicvine}`}
+                </span>
+              </div>
+              
+              {/* Жанры отдельной строкой */}
               {series.genres.length > 0 && (
-                <>
-                  <span className="text-text-tertiarymx-2">•</span>
-                  <span>
+                <div className="pt-2">
+                  <span className="text-sm text-text-secondary">Жанры: </span>
+                  <span className="text-sm">
                     {series.genres.map((genre, idx) => (
                       <span key={idx}>
                         <Link
@@ -250,7 +266,7 @@ export default async function SeriesPageContent({
                       </span>
                     ))}
                   </span>
-                </>
+                </div>
               )}
             </div>
           </div>

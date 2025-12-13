@@ -728,13 +728,16 @@ async function getScanlatorStats(name: string) {
       return null
     }
     
+    // Используем более гибкий поиск для статистики, чтобы учесть возможные различия в регистре и пробелах
+    // Это важно для случаев вроде "KazikZ" где может быть разный регистр в базе
+    // Используем LIKE с LOWER для поиска без учета регистра
     const comics = await prisma.$queryRaw<Array<{
       adddate: Date
       date: Date | null
       translate: string
       edit: string
     }>>`
-      SELECT c.adddate, c.date, c.translate, c.edit
+      SELECT DISTINCT c.adddate, c.date, c.translate, c.edit
       FROM cdb_comics c
       WHERE c.date_delete IS NULL
         AND (
@@ -742,6 +745,10 @@ async function getScanlatorStats(name: string) {
           OR FIND_IN_SET(${trimmedName}, REPLACE(c.edit, ', ', ',')) > 0
           OR c.translate = ${trimmedName}
           OR c.edit = ${trimmedName}
+          OR FIND_IN_SET(LOWER(${trimmedName}), REPLACE(LOWER(c.translate), ', ', ',')) > 0
+          OR FIND_IN_SET(LOWER(${trimmedName}), REPLACE(LOWER(c.edit), ', ', ',')) > 0
+          OR LOWER(c.translate) LIKE CONCAT('%', LOWER(${trimmedName}), '%')
+          OR LOWER(c.edit) LIKE CONCAT('%', LOWER(${trimmedName}), '%')
         )
       ORDER BY c.adddate ASC
     `
@@ -783,14 +790,30 @@ async function getScanlatorStats(name: string) {
       }
     }
     
+    // Более гибкая проверка для подсчета, учитывающая возможные различия в регистре и пробелах
+    const normalizeName = (name: string) => name.toLowerCase().replace(/\s+/g, '')
+    const normalizedQuery = normalizeName(trimmedName)
+    
     const translatedCount = comics.filter(c => {
+      if (!c.translate) return false
       const translateList = c.translate.split(',').map(s => s.trim())
-      return translateList.some(s => s.toLowerCase() === trimmedName.toLowerCase())
+      return translateList.some(s => {
+        const normalized = normalizeName(s)
+        return normalized === normalizedQuery || 
+               normalized.includes(normalizedQuery) ||
+               normalizedQuery.includes(normalized)
+      })
     }).length
     
     const editedCount = comics.filter(c => {
+      if (!c.edit) return false
       const editList = c.edit.split(',').map(s => s.trim())
-      return editList.some(s => s.toLowerCase() === trimmedName.toLowerCase())
+      return editList.some(s => {
+        const normalized = normalizeName(s)
+        return normalized === normalizedQuery || 
+               normalized.includes(normalizedQuery) ||
+               normalizedQuery.includes(normalized)
+      })
     }).length
     
     const daysInScanlating = Math.floor((new Date(lastRelease).getTime() - new Date(firstRelease).getTime()) / (1000 * 60 * 60 * 24))
@@ -844,21 +867,25 @@ async function SearchResults({
   const sort = resolvedParams.sort || (defaultTab === 'series' ? 'relevance' : 'adddate_desc')
 
   // Загружаем все табы параллельно для быстрого переключения без задержек
+  // Статистику сканлейтера загружаем всегда, если есть результаты по сканлейтерам
   const [
     seriesResult,
     charactersResult,
     creatorsResult,
     scanlatorsResult,
     teamsResult,
-    scanlatorStats,
   ] = await Promise.all([
     searchSeries(query, page, sort),
     searchByCharacters(query, page, sort),
     searchByCreators(query, page, sort),
     searchByScanlators(query, page, sort),
     searchByTeams(query, page, sort),
-    defaultTab === 'scanlators' ? getScanlatorStats(query) : Promise.resolve(null),
   ])
+  
+  // Загружаем статистику сканлейтера всегда, если мы на табе сканлейтеров или есть результаты
+  // Это нужно для того, чтобы статистика показывалась даже если результаты еще не загружены
+  const shouldLoadStats = defaultTab === 'scanlators' || scanlatorsResult.total > 0
+  const scanlatorStats = shouldLoadStats ? await getScanlatorStats(query) : null
 
   // Используем уже загруженные total из результатов
   // Если total = 0, возможно результаты еще не загружены, но это нормально для отображения
@@ -929,7 +956,12 @@ export default async function SearchPage({
         </nav>
 
         {/* Результаты */}
-        <Suspense fallback={<div className="text-center py-12">Загрузка...</div>}>
+        <Suspense fallback={
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-bg-tertiary border-t-accent mb-4"></div>
+            <p className="text-text-secondary">Загрузка результатов поиска...</p>
+          </div>
+        }>
           <SearchResults searchParams={resolvedParams} />
         </Suspense>
       </div>

@@ -160,9 +160,10 @@ export default async function RandomSeries() {
 
   if (!series) {
     return (
-      <section className="bg-gradient-to-r from-red-50 to-orange-50 py-8">
+      <section className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-orange-950/20 dark:to-red-950/20 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-bg-card rounded-lg shadow-lg p-6 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-bg-tertiary border-t-accent mb-3"></div>
             <p className="text-text-secondary">Загрузка случайной серии...</p>
           </div>
         </div>
@@ -176,7 +177,7 @@ export default async function RandomSeries() {
     : 'Описание отсутствует'
 
   return (
-    <section className="bg-gradient-to-r from-red-50 to-orange-50 py-8">
+    <section className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-orange-950/20 dark:to-red-950/20 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="flex flex-col md:flex-row">

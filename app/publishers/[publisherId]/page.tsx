@@ -195,13 +195,18 @@ export default async function PublisherPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Хлебные крошки */}
           <nav className="mb-6 text-sm">
-            <ol className="flex items-center space-x-2 text-text-secondary">
+            {/* Десктопная версия - полные крошки */}
+            <ol className="hidden md:flex items-center space-x-2 text-text-secondary">
               <li>
                 <Link href="/" className="hover:text-accent transition-colors">
                   Главная
                 </Link>
               </li>
               <li>/</li>
+              <li className="text-text-primary">{publisher.name}</li>
+            </ol>
+            {/* Мобильная версия - только название */}
+            <ol className="md:hidden flex items-center space-x-2 text-text-secondary">
               <li className="text-text-primary">{publisher.name}</li>
             </ol>
           </nav>
