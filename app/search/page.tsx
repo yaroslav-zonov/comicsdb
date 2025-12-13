@@ -671,14 +671,9 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return (b.adddate?.getTime() || 0) - (a.adddate?.getTime() || 0)
     })
 
-    // Получаем изображения из Metron для всех комиксов параллельно
-    const imagePromises = comicsWithSeries.map(comic => 
-      Promise.all([
-        getImageUrlWithMetron(comic.comicvine, comic.thumb),
-        getImageUrlWithMetron(comic.comicvine, comic.tiny),
-      ])
-    )
-    const imageResults = await Promise.all(imagePromises)
+    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
+    const metronImagePromises = comicsWithSeries.map(comic => getMetronImageUrl(comic.comicvine))
+    const metronImageResults = await Promise.all(metronImagePromises)
 
     return {
       results: comicsWithSeries.map((comic, index) => {
@@ -686,7 +681,10 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
         const realName = getRealScanlatorName(comic)
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-        const [thumb, tiny] = imageResults[index]
+        const metronImage = metronImageResults[index]
+        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
+        const thumb = metronImage || getImageUrl(comic.thumb)
+        const tiny = metronImage || getImageUrl(comic.tiny)
         
         return {
           id: comic.id,
