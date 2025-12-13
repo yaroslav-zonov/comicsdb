@@ -6,7 +6,6 @@ import SearchResultsView from '@/components/SearchResultsView'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, encodeHtmlEntities, getImageUrl } from '@/lib/utils'
-import { getMetronImageUrl } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,19 +108,12 @@ async function processComicSearchResults(
     }) : []
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
-    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine))
-    const metronImageResults = await Promise.all(metronImagePromises)
-
     return {
-      results: comics.map((comic, index) => {
+      results: comics.map((comic) => {
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-        const metronImage = metronImageResults[index]
-        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
-        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
-        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
         
         return {
           id: comic.id,
@@ -672,21 +664,14 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return (b.adddate?.getTime() || 0) - (a.adddate?.getTime() || 0)
     })
 
-    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    const metronImagePromises = comicsWithSeries.map(comic => getMetronImageUrl(comic.comicvine))
-    const metronImageResults = await Promise.all(metronImagePromises)
-
     return {
-      results: comicsWithSeries.map((comic, index) => {
+      results: comicsWithSeries.map((comic) => {
         const seriesData = comic.seriesData
         const realName = getRealScanlatorName(comic)
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-        const metronImage = metronImageResults[index]
-        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
-        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
-        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
         
         return {
           id: comic.id,

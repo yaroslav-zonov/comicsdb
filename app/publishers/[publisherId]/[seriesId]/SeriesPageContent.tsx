@@ -6,7 +6,6 @@ import Footer from '@/components/Footer'
 import SeriesComicsView from '@/components/SeriesComicsView'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, getSeriesUrl, getTranslationStatus, getImageUrl } from '@/lib/utils'
-import { getMetronImageUrl } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,12 +103,8 @@ async function getSeries(id: number) {
       genres,
       translationStatus,
       comics: await Promise.all(series.comics.map(async (comic) => {
-        // Получаем изображение из Metron (один запрос на комикс)
-        const metronImage = await getMetronImageUrl(comic.comicvine)
-        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
-        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
-        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
         
         return {
           id: comic.id,

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { getMetronImageUrl } from '@/lib/metron'
 import { getImageUrl } from '@/lib/utils'
 import ComicPageContent from './ComicPageContent'
 
@@ -129,15 +128,10 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     // Используем первый комикс для основной информации
     const mainComic = allTranslations[0] || firstComic
 
-    // Получаем изображение из Metron (один запрос для всех размеров)
-    const metronImageUrl = await getMetronImageUrl(firstComic.comicvine)
-    
-    // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-    // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
-    const thumb = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.thumb)
-    const tiny = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.tiny)
-    const small = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.small)
-    const superImage = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.super)
+    const thumb = getImageUrl(mainComic.thumb)
+    const tiny = getImageUrl(mainComic.tiny)
+    const small = getImageUrl(mainComic.small)
+    const superImage = getImageUrl(mainComic.super)
 
     return {
       id: mainComic.id,
