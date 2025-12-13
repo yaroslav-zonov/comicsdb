@@ -133,10 +133,11 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     const metronImageUrl = await getMetronImageUrl(firstComic.comicvine)
     
     // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-    const thumb = metronImageUrl || getImageUrl(mainComic.thumb)
-    const tiny = metronImageUrl || getImageUrl(mainComic.tiny)
-    const small = metronImageUrl || getImageUrl(mainComic.small)
-    const superImage = metronImageUrl || getImageUrl(mainComic.super)
+    // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
+    const thumb = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.thumb)
+    const tiny = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.tiny)
+    const small = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.small)
+    const superImage = metronImageUrl ? metronImageUrl : getImageUrl(mainComic.super)
 
     return {
       id: mainComic.id,

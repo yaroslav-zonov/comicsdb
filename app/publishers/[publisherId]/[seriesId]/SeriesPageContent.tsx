@@ -107,8 +107,9 @@ async function getSeries(id: number) {
         // Получаем изображение из Metron (один запрос на комикс)
         const metronImage = await getMetronImageUrl(comic.comicvine)
         // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        const thumb = metronImage || getImageUrl(comic.thumb)
-        const tiny = metronImage || getImageUrl(comic.tiny)
+        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
+        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
+        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
         
         return {
           id: comic.id,

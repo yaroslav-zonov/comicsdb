@@ -206,7 +206,8 @@ export async function getMostTranslatedComicByYear() {
     // Получаем изображение из Metron для комикса
     const metronImage = comic?.comicvine ? await getMetronImageUrl(comic.comicvine) : null
     // Используем Metron URL, если получен, иначе Comicvine
-    const thumb = metronImage || getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb)
+    // ВАЖНО: Если Metron вернул URL, используем его
+    const thumb = metronImage ? metronImage : (getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb))
 
     return {
       comicvine: Number(result.comicvine),

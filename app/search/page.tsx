@@ -119,8 +119,9 @@ async function processComicSearchResults(
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
         const metronImage = metronImageResults[index]
         // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        const thumb = metronImage || getImageUrl(comic.thumb)
-        const tiny = metronImage || getImageUrl(comic.tiny)
+        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
+        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
+        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
         
         return {
           id: comic.id,
@@ -683,8 +684,9 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
         const metronImage = metronImageResults[index]
         // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-        const thumb = metronImage || getImageUrl(comic.thumb)
-        const tiny = metronImage || getImageUrl(comic.tiny)
+        // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
+        const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
+        const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
         
         return {
           id: comic.id,

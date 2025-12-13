@@ -191,8 +191,9 @@ async function getComicsForWeek(start: Date, end: Date) {
       const site2Name = comic.site2 && comic.site2 !== '0' ? siteNameMap.get(comic.site2) : null
       const metronImage = metronImageResults[index]
       // Используем Metron URL для всех размеров, если получен, иначе Comicvine
-      const thumb = metronImage || getImageUrl(comic.thumb)
-      const tiny = metronImage || getImageUrl(comic.tiny)
+      // ВАЖНО: Если Metron вернул URL, используем его для ВСЕХ размеров
+      const thumb = metronImage ? metronImage : getImageUrl(comic.thumb)
+      const tiny = metronImage ? metronImage : getImageUrl(comic.tiny)
       
       return {
         id: comic.id,
