@@ -104,10 +104,11 @@ async function getSeries(id: number) {
       genres,
       translationStatus,
       comics: await Promise.all(series.comics.map(async (comic) => {
-        const [thumb, tiny] = await Promise.all([
-          getImageUrlWithMetron(comic.comicvine, comic.thumb),
-          getImageUrlWithMetron(comic.comicvine, comic.tiny),
-        ])
+        // Получаем изображение из Metron (один запрос на комикс)
+        const metronImage = await getMetronImageUrl(comic.comicvine)
+        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
+        const thumb = metronImage || getImageUrl(comic.thumb)
+        const tiny = metronImage || getImageUrl(comic.tiny)
         
         return {
           id: comic.id,
