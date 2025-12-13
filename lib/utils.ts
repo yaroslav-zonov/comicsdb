@@ -70,24 +70,12 @@ export function getTranslationStatus(
 
 /**
  * Преобразует URL изображения, заменяя scale_avatar на scale_large для лучшего качества
- * Проксирует изображения Comicvine через API route для обхода проблем с Cloudflare
  * @param url - URL изображения
  * @returns Преобразованный URL или null, если URL пустой
  */
 export function getImageUrl(url: string | null | undefined): string | null {
   if (!url || url === '') return null
-  
-  // Улучшаем качество изображения
-  let improvedUrl = url.replace(/scale_avatar/g, 'scale_large')
-  
-  // Если это изображение с Comicvine, проксируем через наш API
-  if (improvedUrl.includes('comicvine.gamespot.com')) {
-    // Кодируем URL для передачи в query параметре
-    const encodedUrl = encodeURIComponent(improvedUrl)
-    return `/api/image-proxy?url=${encodedUrl}`
-  }
-  
-  return improvedUrl
+  return url.replace(/scale_avatar/g, 'scale_large')
 }
 
 /**

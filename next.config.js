@@ -10,8 +10,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // Разрешаем загрузку изображений через наш прокси
-    unoptimized: false,
   },
 }
 
