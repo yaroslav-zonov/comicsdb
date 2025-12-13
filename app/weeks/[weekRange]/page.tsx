@@ -182,7 +182,8 @@ async function getComicsForWeek(start: Date, end: Date) {
     const siteNameMap = new Map(sites.map(s => [s.id, s.name]))
 
     // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine))
+    // Передаем comicId для кеширования в БД
+    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine, comic.id))
     const metronImageResults = await Promise.all(metronImagePromises)
 
     // Преобразуем в формат для ComicsListView

@@ -110,7 +110,8 @@ async function processComicSearchResults(
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
     // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine))
+    // Передаем comicId для кеширования в БД
+    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine, comic.id))
     const metronImageResults = await Promise.all(metronImagePromises)
 
     return {
@@ -673,7 +674,8 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
     })
 
     // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
-    const metronImagePromises = comicsWithSeries.map(comic => getMetronImageUrl(comic.comicvine))
+    // Передаем comicId для кеширования в БД
+    const metronImagePromises = comicsWithSeries.map(comic => getMetronImageUrl(comic.comicvine, comic.id))
     const metronImageResults = await Promise.all(metronImagePromises)
 
     return {
