@@ -103,30 +103,37 @@ async function getSeries(id: number) {
       lastIssue: series.lastIssue,
       genres,
       translationStatus,
-      comics: await Promise.all(series.comics.map(async (comic) => ({
-        id: comic.id,
-        comicvine: comic.comicvine,
-        number: Number(comic.number),
-        pdate: comic.pdate,
-        date: comic.date,
-        thumb: await getImageUrlWithMetron(comic.comicvine, comic.thumb),
-        tiny: await getImageUrlWithMetron(comic.comicvine, comic.tiny),
-        site: comic.site,
-        siteName: decodeHtmlEntities(siteMap.get(comic.site) || comic.site),
-        siteId: comic.site,
-        site2: comic.site2,
-        site2Name: comic.site2 && comic.site2 !== '0' ? decodeHtmlEntities(siteMap.get(comic.site2) || comic.site2) : null,
-        translate: comic.translate,
-        edit: comic.edit,
-        link: comic.link,
-        series: {
-          id: series.id,
-          name: decodeHtmlEntities(series.name),
-          publisher: {
-            id: series.publisher.id,
-            name: decodeHtmlEntities(series.publisher.name),
+      comics: await Promise.all(series.comics.map(async (comic) => {
+        const [thumb, tiny] = await Promise.all([
+          getImageUrlWithMetron(comic.comicvine, comic.thumb),
+          getImageUrlWithMetron(comic.comicvine, comic.tiny),
+        ])
+        
+        return {
+          id: comic.id,
+          comicvine: comic.comicvine,
+          number: Number(comic.number),
+          pdate: comic.pdate,
+          date: comic.date,
+          thumb,
+          tiny,
+          site: comic.site,
+          siteName: decodeHtmlEntities(siteMap.get(comic.site) || comic.site),
+          siteId: comic.site,
+          site2: comic.site2,
+          site2Name: comic.site2 && comic.site2 !== '0' ? decodeHtmlEntities(siteMap.get(comic.site2) || comic.site2) : null,
+          translate: comic.translate,
+          edit: comic.edit,
+          link: comic.link,
+          series: {
+            id: series.id,
+            name: decodeHtmlEntities(series.name),
+            publisher: {
+              id: series.publisher.id,
+              name: decodeHtmlEntities(series.publisher.name),
+            },
           },
-        },
+        }
       })),
     }
   } catch (error) {
