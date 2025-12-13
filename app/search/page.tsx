@@ -5,7 +5,7 @@ import Footer from '@/components/Footer'
 import SearchResultsView from '@/components/SearchResultsView'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { decodeHtmlEntities, encodeHtmlEntities } from '@/lib/utils'
+import { decodeHtmlEntities, encodeHtmlEntities, getImageUrl } from '@/lib/utils'
 import { getImageUrlWithMetron } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
