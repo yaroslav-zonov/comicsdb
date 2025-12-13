@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -19,7 +18,7 @@ export default function Header() {
   return (
     <header className="bg-bg-card border-b border-border-secondary sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Первая строка: Лого, навигация, кнопка входа */}
+        {/* Первая строка: Лого и навигация */}
         <div className="flex items-center justify-between h-14 border-b border-border-secondary">
           {/* Логотип */}
           <div className="flex items-center">
@@ -28,7 +27,7 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Навигация и кнопка входа */}
+          {/* Навигация */}
           <div className="hidden md:flex items-center space-x-6">
             <nav className="flex items-center space-x-6">
               <Link href="/comics" className="text-text-primary hover:text-accent transition-colors">
@@ -45,16 +44,6 @@ export default function Header() {
               </Link>
             </nav>
 
-            {/* Переключатель темы */}
-            <ThemeToggle />
-
-            {/* Кнопка входа */}
-            <button
-              onClick={() => window.location.href = '/login'}
-              className="px-4 py-2 text-sm text-text-primary hover:text-accent transition-colors"
-            >
-              Войти
-            </button>
           </div>
 
           {/* Кнопка мобильного меню */}
@@ -154,16 +143,6 @@ export default function Header() {
               </Link>
             </nav>
 
-            {/* Переключатель темы и кнопка входа */}
-            <div className="flex items-center justify-between mb-4">
-              <ThemeToggle />
-              <button
-                onClick={() => window.location.href = '/login'}
-                className="px-4 py-2 text-sm text-text-primary hover:text-accent transition-colors"
-              >
-                Войти
-              </button>
-            </div>
 
             {/* Социальные ссылки */}
             <div className="flex flex-wrap items-center gap-3 text-sm pt-4 border-t border-border-secondary">
