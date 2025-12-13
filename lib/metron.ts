@@ -20,7 +20,8 @@ export async function getMetronImageUrl(
       select: { metronImageUrl: true },
     })
     
-    if (comic?.metronImageUrl) {
+    // Проверяем, что это не пустая строка (означает "не найдено в Metron")
+    if (comic?.metronImageUrl && comic.metronImageUrl !== '') {
       return comic.metronImageUrl
     }
   } else {
@@ -29,13 +30,14 @@ export async function getMetronImageUrl(
       where: { 
         comicvine: comicvineId,
         dateDelete: null,
-        metronImageUrl: { not: null },
+        metronImageUrl: { not: null, not: '' },
       },
       select: { metronImageUrl: true },
       orderBy: { id: 'desc' }, // Берем последний (на случай дублей)
     })
     
-    if (comic?.metronImageUrl) {
+    // Проверяем, что это не пустая строка (означает "не найдено в Metron")
+    if (comic?.metronImageUrl && comic.metronImageUrl !== '') {
       return comic.metronImageUrl
     }
   }
