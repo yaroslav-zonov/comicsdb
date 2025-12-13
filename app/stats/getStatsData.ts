@@ -201,6 +201,16 @@ export async function getMostTranslatedComicByYear() {
 
     const comic = series.comics[0]
 
+    // Получаем изображение из Metron для комикса, если есть comicvine ID
+    let thumb: string | null = null
+    if (comic?.comicvine) {
+      thumb = await getImageUrlWithMetron(comic.comicvine, comic.thumb || comic.tiny)
+    }
+    // Если нет comicvine ID или Metron не вернул, используем обычный getImageUrl
+    if (!thumb) {
+      thumb = getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb)
+    }
+
     return {
       comicvine: Number(result.comicvine),
       seriesName: decodeHtmlEntities(series.name),
@@ -208,7 +218,7 @@ export async function getMostTranslatedComicByYear() {
       publisherId: series.publisher.id,
       seriesId: series.id,
       number: Number(comic?.number || 0),
-      thumb: getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb),
+      thumb,
       count: Number(result.count),
       year: currentYear,
     }

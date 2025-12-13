@@ -78,55 +78,6 @@ export function getImageUrl(url: string | null | undefined): string | null {
   return url.replace(/scale_avatar/g, 'scale_large')
 }
 
-/**
- * Получает URL изображения из Metron API по comicvine ID
- * Используется как приоритетный источник вместо Comicvine
- * @param comicvineId - Comicvine ID комикса
- * @returns URL изображения из Metron или null
- */
-export async function getMetronImageUrl(comicvineId: number | null | undefined): Promise<string | null> {
-  if (!comicvineId) return null
-  
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/metron-image/${comicvineId}`,
-      {
-        // Кешируем на клиенте на 7 дней
-        next: { revalidate: 604800 },
-      }
-    )
-    
-    if (!response.ok) {
-      return null
-    }
-    
-    const data = await response.json()
-    return data.image || null
-  } catch (error) {
-    console.error('Error fetching Metron image:', error)
-    return null
-  }
-}
-
-/**
- * Получает URL изображения с приоритетом Metron, fallback на Comicvine
- * @param comicvineId - Comicvine ID комикса
- * @param comicvineUrl - URL изображения из Comicvine (fallback)
- * @returns URL изображения из Metron или Comicvine
- */
-export async function getImageUrlWithMetron(
-  comicvineId: number | null | undefined,
-  comicvineUrl: string | null | undefined
-): Promise<string | null> {
-  // Сначала пытаемся получить из Metron
-  const metronUrl = await getMetronImageUrl(comicvineId)
-  if (metronUrl) {
-    return metronUrl
-  }
-  
-  // Если Metron не вернул, используем Comicvine
-  return getImageUrl(comicvineUrl)
-}
 
 /**
  * Кодирует специальные символы в HTML-сущности для поиска в базе данных

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getImageUrl } from '@/lib/utils'
+import { getImageUrlWithMetron } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,6 +71,14 @@ export async function GET(
       }
     }
 
+    // Получаем изображения из Metron
+    const [thumb, tiny, small, superImage] = await Promise.all([
+      getImageUrlWithMetron(comic.comicvine, comic.thumb),
+      getImageUrlWithMetron(comic.comicvine, comic.tiny),
+      getImageUrlWithMetron(comic.comicvine, comic.small),
+      getImageUrlWithMetron(comic.comicvine, comic.super),
+    ])
+
     return NextResponse.json({
       id: comic.id,
       number: Number(comic.number),
@@ -84,10 +92,10 @@ export async function GET(
           name: comic.series.publisher.name,
         },
       },
-      thumb: getImageUrl(comic.thumb),
-      tiny: getImageUrl(comic.tiny),
-      small: getImageUrl(comic.small),
-      super: getImageUrl(comic.super),
+      thumb,
+      tiny,
+      small,
+      super: superImage,
       translate: comic.translate,
       edit: comic.edit,
       site: comic.site,

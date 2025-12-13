@@ -102,14 +102,14 @@ async function getSeries(id: number) {
       lastIssue: series.lastIssue,
       genres,
       translationStatus,
-      comics: series.comics.map(comic => ({
+      comics: await Promise.all(series.comics.map(async (comic) => ({
         id: comic.id,
         comicvine: comic.comicvine,
         number: Number(comic.number),
         pdate: comic.pdate,
         date: comic.date,
-        thumb: getImageUrl(comic.thumb),
-        tiny: getImageUrl(comic.tiny),
+        thumb: await getImageUrlWithMetron(comic.comicvine, comic.thumb),
+        tiny: await getImageUrlWithMetron(comic.comicvine, comic.tiny),
         site: comic.site,
         siteName: decodeHtmlEntities(siteMap.get(comic.site) || comic.site),
         siteId: comic.site,
