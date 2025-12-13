@@ -8,23 +8,40 @@ export async function getMetronImageUrl(comicvineId: number | null | undefined):
 
   try {
     const url = `https://metron.cloud/api/v1/issue/?cv_id=${comicvineId}`
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
-      cache: 'no-store',
-    })
+    
+    // Создаём AbortController для таймаута (совместимо с Node.js)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    
+    try {
+      const response = await fetch(url, {
+        headers: { 
+          'Accept': 'application/json',
+          'User-Agent': 'ComicsDB/1.0',
+        },
+        cache: 'no-store',
+        signal: controller.signal,
+      })
 
-    if (!response.ok) {
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        return null
+      }
+
+      const data = await response.json()
+      
+      if (data.results && data.results.length > 0) {
+        return data.results[0].image || null
+      }
+
       return null
+    } finally {
+      clearTimeout(timeoutId)
     }
-
-    const data = await response.json()
-    if (data.results && data.results.length > 0) {
-      return data.results[0].image || null
-    }
-
-    return null
-  } catch (error) {
-    // Игнорируем все ошибки - просто возвращаем null
+  } catch (error: any) {
+    // Игнорируем ошибки сети/таймаута - просто возвращаем null
+    // Fallback на Comicvine будет использован автоматически
     return null
   }
 }
