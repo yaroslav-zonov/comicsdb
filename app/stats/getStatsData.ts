@@ -188,6 +188,7 @@ export async function getMostTranslatedComicByYear() {
             number: true,
             thumb: true,
             tiny: true,
+            comicvine: true,
           },
           orderBy: {
             number: 'asc',
