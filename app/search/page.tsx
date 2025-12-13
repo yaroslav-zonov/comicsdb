@@ -6,7 +6,7 @@ import SearchResultsView from '@/components/SearchResultsView'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, encodeHtmlEntities, getImageUrl } from '@/lib/utils'
-import { getImageUrlWithMetron } from '@/lib/metron'
+import { getMetronImageUrl } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,20 +109,18 @@ async function processComicSearchResults(
     }) : []
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
-    // Получаем изображения из Metron для всех комиксов параллельно
-    const imagePromises = comics.map(comic => 
-      Promise.all([
-        getImageUrlWithMetron(comic.comicvine, comic.thumb),
-        getImageUrlWithMetron(comic.comicvine, comic.tiny),
-      ])
-    )
-    const imageResults = await Promise.all(imagePromises)
+    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
+    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine))
+    const metronImageResults = await Promise.all(metronImagePromises)
 
     return {
       results: comics.map((comic, index) => {
         const site1 = siteMap.get(comic.site)
         const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-        const [thumb, tiny] = imageResults[index]
+        const metronImage = metronImageResults[index]
+        // Используем Metron URL для всех размеров, если получен, иначе Comicvine
+        const thumb = metronImage || getImageUrl(comic.thumb)
+        const tiny = metronImage || getImageUrl(comic.tiny)
         
         return {
           id: comic.id,

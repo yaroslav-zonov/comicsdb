@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import SeriesComicsView from '@/components/SeriesComicsView'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, getSeriesUrl, getTranslationStatus, getImageUrl } from '@/lib/utils'
-import { getImageUrlWithMetron } from '@/lib/metron'
+import { getMetronImageUrl } from '@/lib/metron'
 
 export const dynamic = 'force-dynamic'
 

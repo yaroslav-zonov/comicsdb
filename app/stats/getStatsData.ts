@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
-import { getImageUrlWithMetron } from '@/lib/metron'
+import { getMetronImageUrl } from '@/lib/metron'
 
 // Динамика переводов - группировка по месяцам
 export async function getTranslationDynamics() {
@@ -203,15 +203,10 @@ export async function getMostTranslatedComicByYear() {
 
     const comic = series.comics[0]
 
-    // Получаем изображение из Metron для комикса, если есть comicvine ID
-    let thumb: string | null = null
-    if (comic?.comicvine) {
-      thumb = await getImageUrlWithMetron(comic.comicvine, comic.thumb || comic.tiny)
-    }
-    // Если нет comicvine ID или Metron не вернул, используем обычный getImageUrl
-    if (!thumb) {
-      thumb = getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb)
-    }
+    // Получаем изображение из Metron для комикса
+    const metronImage = comic?.comicvine ? await getMetronImageUrl(comic.comicvine) : null
+    // Используем Metron URL, если получен, иначе Comicvine
+    const thumb = metronImage || getImageUrl(comic?.thumb) || getImageUrl(comic?.tiny) || getImageUrl(series.thumb)
 
     return {
       comicvine: Number(result.comicvine),

@@ -4,8 +4,8 @@ import Footer from '@/components/Footer'
 import ComicsListView from '@/components/ComicsListView'
 import WeekNavigation from '@/components/WeekNavigation'
 import { prisma } from '@/lib/prisma'
-import { decodeHtmlEntities, formatDate } from '@/lib/utils'
-import { getImageUrlWithMetron } from '@/lib/metron'
+import { decodeHtmlEntities, formatDate, getImageUrl } from '@/lib/utils'
+import { getMetronImageUrl } from '@/lib/metron'
 import { notFound } from 'next/navigation'
 import { Prisma } from '@prisma/client'
 
@@ -181,20 +181,18 @@ async function getComicsForWeek(start: Date, end: Date) {
 
     const siteNameMap = new Map(sites.map(s => [s.id, s.name]))
 
-    // Получаем изображения из Metron для всех комиксов параллельно
-    const imagePromises = comics.map(comic => 
-      Promise.all([
-        getImageUrlWithMetron(comic.comicvine, comic.thumb),
-        getImageUrlWithMetron(comic.comicvine, comic.tiny),
-      ])
-    )
-    const imageResults = await Promise.all(imagePromises)
+    // Получаем изображения из Metron для всех комиксов параллельно (один запрос на комикс)
+    const metronImagePromises = comics.map(comic => getMetronImageUrl(comic.comicvine))
+    const metronImageResults = await Promise.all(metronImagePromises)
 
     // Преобразуем в формат для ComicsListView
     const comicsData = comics.map((comic, index) => {
       const site1Name = siteNameMap.get(comic.site)
       const site2Name = comic.site2 && comic.site2 !== '0' ? siteNameMap.get(comic.site2) : null
-      const [thumb, tiny] = imageResults[index]
+      const metronImage = metronImageResults[index]
+      // Используем Metron URL для всех размеров, если получен, иначе Comicvine
+      const thumb = metronImage || getImageUrl(comic.thumb)
+      const tiny = metronImage || getImageUrl(comic.tiny)
       
       return {
         id: comic.id,
