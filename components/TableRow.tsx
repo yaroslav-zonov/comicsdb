@@ -127,8 +127,8 @@ export default function TableRow(props: TableRowProps) {
 
   // Comic row
   const { data, variant } = props
-  // Для таблиц используем маленький размер: tiny (или icon если есть)
-  const comicvineUrl = data.tiny || data.thumb
+  // Используем большой размер везде: thumb (приоритет) > tiny (fallback)
+  const comicvineUrl = data.thumb || data.tiny
   const releaseDate = data.date || data.pdate
 
   if (variant === 'comic-page') {
