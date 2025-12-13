@@ -1,0 +1,34 @@
+# ComicsDB Project Rules
+
+## Tech Stack
+- Next.js 14 with App Router
+- TypeScript
+- Prisma ORM with MySQL
+- Tailwind CSS
+
+## Code Style
+- Use TypeScript strict mode
+- Follow Next.js 14 App Router conventions
+- Use Prisma for all database operations
+- Prefer server components over client components
+- Use async/await for database queries
+
+## File Structure
+- `/app` - Next.js App Router pages and API routes
+- `/components` - React components
+- `/lib` - Utilities and Prisma client
+- `/prisma` - Database schema
+- `/scripts` - Setup and migration scripts
+
+## Database
+- MySQL database: `comicsdb`
+- Use Prisma for all queries
+- Always use transactions for multiple operations
+- Handle connection errors gracefully
+
+## API Routes
+- All API routes should export `dynamic = 'force-dynamic'`
+- Use NextResponse for responses
+- Handle errors with try/catch
+- Return proper HTTP status codes
+

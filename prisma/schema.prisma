@@ -1,0 +1,643 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Publisher {
+  id           Int            @id
+  name         String         @db.VarChar(255)
+  tiny         String         @db.VarChar(255)
+  icon         String         @db.VarChar(255)
+  small        String         @db.VarChar(255)
+  thumb        String         @db.VarChar(255)
+  numofcoms    Int            @default(0)
+  dateDelete   DateTime?      @map("date_delete") @db.DateTime(0)
+  userDelete   Int?           @map("user_delete")
+  cdb_globals  cdb_globals[]
+  cdb_globgenl cdb_globgenl[]
+  series       Series[]
+
+  @@index([dateDelete], map: "date_delete")
+  @@map("cdb_publishers")
+}
+
+model Series {
+  id                Int               @id
+  name              String            @db.VarChar(255)
+  volume            String            @db.VarChar(4)
+  publisherId       Int               @map("publisher")
+  type              Int?              @db.SmallInt
+  zhanr             String            @db.Text
+  status            cdb_series_status @default(comicvine)
+  first             String            @default("1") @db.VarChar(3)
+  total             Int               @default(0)
+  reverse           Boolean           @default(false)
+  tiny              String            @db.VarChar(255)
+  icon              String            @db.VarChar(255)
+  small             String            @db.VarChar(255)
+  thumb             String            @db.VarChar(255)
+  super             String            @db.VarChar(255)
+  comicvine         Int               @default(1)
+  updated           DateTime?         @db.Date
+  lastIssue         DateTime?         @map("last_issue") @db.Date
+  dateDelete        DateTime?         @map("date_delete") @db.DateTime(0)
+  userDelete        Int?              @map("user_delete")
+  comics            Comic[]
+  publisher         Publisher         @relation(fields: [publisherId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "series_to_publisher")
+  cdb_comic_types   cdb_comic_types?  @relation(fields: [type], references: [id], map: "series_to_series_type")
+  cdb_series_genres SeriesGenre[]
+
+  @@index([dateDelete], map: "date_delete")
+  @@index([publisherId], map: "series_to_publisher")
+  @@index([type], map: "type")
+  @@map("cdb_series")
+}
+
+model Comic {
+  id                  Int                  @id @default(autoincrement()) @db.UnsignedInt
+  serieId             Int                  @map("serie")
+  number              Decimal              @db.Decimal(8, 1)
+  comicvine           Int
+  idk                 String               @default("") @db.VarChar(400)
+  pdate               DateTime             @db.Date
+  date                DateTime?            @db.Date
+  site                String               @db.VarChar(20)
+  site2               String               @default("0") @db.VarChar(20)
+  link                String               @db.VarChar(255)
+  link2               String?              @db.VarChar(255)
+  translate           String               @db.VarChar(100)
+  edit                String               @db.VarChar(100)
+  top                 cdb_comics_top       @default(no)
+  creators            String               @db.Text
+  characters          String               @db.Text
+  teams               String               @db.Text
+  moder               cdb_comics_moder     @default(no)
+  tiny                String               @db.VarChar(255)
+  icon                String               @db.VarChar(255)
+  small               String               @db.VarChar(255)
+  thumb               String               @db.VarChar(255)
+  super               String               @db.VarChar(255)
+  downloaded          Int                  @default(0)
+  adddate             DateTime             @db.Date
+  addedby             Int?
+  dateDelete          DateTime?            @map("date_delete") @db.DateTime(0)
+  userDelete          Int?                 @map("user_delete")
+  cdb_users           User?                @relation(fields: [addedby], references: [id], map: "issue_added_by_to_user")
+  series              Series               @relation(fields: [serieId], references: [id], onDelete: NoAction, map: "issue_to_series")
+  translation_missing translation_missing?
+
+  @@index([comicvine], map: "comicvine")
+  @@index([dateDelete], map: "date_delete")
+  @@index([addedby], map: "issue_added_by_to_user")
+  @@index([serieId], map: "issue_to_series")
+  @@index([site], map: "site")
+  @@index([site2], map: "site2")
+  @@map("cdb_comics")
+}
+
+model Site {
+  id              String             @id @db.VarChar(20)
+  name            String             @db.VarChar(255)
+  url             String?            @db.VarChar(255)
+  birthday        DateTime?          @db.Date
+  lastTranslation DateTime?          @map("last_translation") @db.Date
+  deathday        DateTime?          @db.Date
+  paper           SitePaper          @default(NO)
+  numofcoms       Decimal            @default(0.0) @db.Decimal(7, 1)
+  numofcomsreal   Int                @default(0)
+  showlink        cdb_sites_showlink @default(yes) @map("showlink")
+  text            String?            @db.VarChar(255)
+  hidesite        Boolean            @default(false)
+  dateDelete      DateTime?          @map("date_delete") @db.DateTime(0)
+  userDelete      Int?               @map("user_delete")
+  vkId            String?            @map("vk_id") @db.VarChar(255)
+  cdb_banners     cdb_banners[]
+
+  @@map("cdb_sites")
+}
+
+model User {
+  id                   Int                    @id @default(autoincrement())
+  ban                  Boolean                @default(false)
+  vk                   String?                @default("") @db.VarChar(20)
+  fb                   String?                @default("") @db.VarChar(20)
+  login                String?                @default("") @db.VarChar(50)
+  name                 String                 @db.VarChar(100)
+  avatar               String?                @default("") @db.VarChar(255)
+  changenick           Int                    @default(0) @db.SmallInt
+  showfavs             Boolean                @default(true)
+  password             String?                @default("") @db.VarChar(32)
+  group                Int?                   @default(2)
+  type                 cdb_users_type         @default(visitor)
+  site                 String?                @default("") @db.VarChar(20)
+  amplua               cdb_users_amplua?      @default(EMPTY_ENUM_VALUE)
+  puttime              DateTime               @db.DateTime(0)
+  last_visit           DateTime?              @db.DateTime(0)
+  wide                 Boolean                @default(false)
+  cookie               String?                @db.VarChar(255)
+  token                String?                @db.VarChar(255)
+  date_delete          DateTime?              @db.DateTime(0)
+  user_delete          Int?
+  updated_at           DateTime?              @db.DateTime(0)
+  cdb_articles         cdb_articles[]
+  cdb_comics           Comic[]
+  comments             Comment[]
+  cdb_log              cdb_log[]
+  cdb_news             News[]
+  cdb_questions        cdb_questions[]
+  cdb_user_read_issue  cdb_user_read_issue[]
+  cdb_user_read_series cdb_user_read_series[]
+  cdb_usergroups       cdb_usergroups?        @relation(fields: [group], references: [id], map: "user_to_user_group")
+  translation_missing  translation_missing[]
+
+  @@index([fb], map: "fb")
+  @@index([group], map: "group")
+  @@index([vk], map: "vk")
+  @@map("cdb_users")
+}
+
+model Comment {
+  id         Int       @id @default(autoincrement())
+  serie      String    @db.VarChar(50)
+  type       String    @db.VarChar(10)
+  article    String?   @db.VarChar(50)
+  text       String    @db.Text
+  userId     Int?      @map("user")
+  author     String?   @db.VarChar(30)
+  date       DateTime  @db.Date
+  time       DateTime  @db.Time(0)
+  edited     String?   @db.VarChar(100)
+  dateDelete DateTime? @map("date_delete") @db.DateTime(0)
+  userDelete Int?      @map("user_delete")
+  user       User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comment_user")
+
+  @@index([serie], map: "serie")
+  @@index([type], map: "type")
+  @@index([userId], map: "user")
+  @@map("cdb_comments")
+}
+
+model SeriesGenre {
+  series_id  Int
+  genre_id   Int    @db.SmallInt
+  cdb_series Series @relation(fields: [series_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "series_genre_series")
+  cdb_zhanr  Genre  @relation(fields: [genre_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "series_genres_genre")
+
+  @@unique([series_id, genre_id], map: "series_id")
+  @@index([genre_id], map: "genre")
+  @@index([series_id], map: "series_genre_series")
+  @@map("cdb_series_genres")
+}
+
+model Genre {
+  id                Int           @id @default(autoincrement()) @db.SmallInt
+  name              String        @db.VarChar(50)
+  total             Int?
+  date_delete       DateTime?     @db.DateTime(0)
+  cdb_series_genres SeriesGenre[]
+
+  @@map("cdb_zhanr")
+}
+
+model News {
+  id         Int       @id @default(autoincrement())
+  title      String    @db.VarChar(255)
+  text       String    @db.Text
+  author     Int
+  date       DateTime  @db.Date
+  point      DateTime  @db.Date
+  dateDelete DateTime? @map("date_delete") @db.DateTime(0)
+  userDelete Int?      @map("user_delete")
+  cdb_users  User      @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_news")
+
+  @@index([author], map: "author")
+  @@map("cdb_news")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_articles {
+  id          String            @id @db.VarChar(50)
+  author      Int
+  title       String            @db.VarChar(255)
+  text        String            @db.Text
+  writen      DateTime          @db.Date
+  updated     DateTime?         @db.Date
+  rel         String?           @db.VarChar(255)
+  show        cdb_articles_show @default(yes)
+  date_delete DateTime?         @db.DateTime(0)
+  user_delete Int?
+  cdb_users   User              @relation(fields: [author], references: [id], onDelete: Cascade, map: "article_to_user")
+
+  @@index([author], map: "article_to_user")
+  @@index([user_delete], map: "article_user_delete_to_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_banners {
+  id          Int       @id @default(autoincrement())
+  site        String    @db.VarChar(20)
+  link        String    @db.VarChar(255)
+  banner      String    @db.VarChar(255)
+  point       DateTime  @db.Date
+  date_delete DateTime? @db.DateTime(0)
+  user_delete Int?
+  cdb_sites   Site      @relation(fields: [site], references: [id], onDelete: Cascade, map: "banner_to_site")
+
+  @@index([site], map: "site")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_comic_types {
+  id         Int      @id @default(autoincrement()) @db.SmallInt
+  name       String   @db.VarChar(255)
+  cdb_series Series[]
+}
+
+model cdb_cron_log {
+  id   Int      @id @default(autoincrement())
+  date DateTime @db.DateTime(0)
+  text String   @db.VarChar(255)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_downloaded {
+  id     Int      @id @default(autoincrement())
+  ip     String   @db.VarChar(15)
+  comics Int
+  date   DateTime @db.Date
+
+  @@index([comics], map: "comics")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_globals {
+  id             String        @id @default("") @db.VarChar(255)
+  genl           Int
+  name           String        @db.VarChar(255)
+  years          String?       @db.VarChar(9)
+  text           String?       @db.VarChar(255)
+  chronology     String?       @db.VarChar(255)
+  publisher      Int
+  order          Int?
+  date_delete    DateTime?     @db.DateTime(0)
+  user_delete    Int?
+  cdb_publishers Publisher     @relation(fields: [publisher], references: [id], onDelete: NoAction, map: "event_to_publisher")
+  cdb_globgenl   cdb_globgenl  @relation(fields: [genl], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "eventgroup_event")
+  cdb_globcom    cdb_globcom[]
+
+  @@index([genl], map: "eventgroup_event")
+  @@index([publisher], map: "publisher")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_globcom {
+  id          Int         @id @default(autoincrement())
+  global      String      @default("") @db.VarChar(255)
+  comics      String      @db.VarChar(15)
+  tiny        String      @db.VarChar(255)
+  thumb       String      @db.VarChar(255)
+  super       String      @db.VarChar(255)
+  pdate       DateTime    @db.Date
+  name        String      @db.VarChar(255)
+  number      Decimal     @db.Decimal(8, 1)
+  order       Int
+  date_delete DateTime?   @db.DateTime(0)
+  user_delete Int?
+  cdb_globals cdb_globals @relation(fields: [global], references: [id], onDelete: NoAction, map: "event_issue")
+
+  @@index([global], map: "event_issue")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_globgenl {
+  id             Int           @id @default(autoincrement())
+  name           String        @db.VarChar(255)
+  publisher      Int
+  date_delete    DateTime?     @db.DateTime(0)
+  user_delete    Int?
+  cdb_globals    cdb_globals[]
+  cdb_publishers Publisher     @relation(fields: [publisher], references: [id], onDelete: NoAction, map: "eventgroup_publisher")
+
+  @@index([publisher], map: "eventgroup_publisher")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_lists {
+  id          Int            @id @default(autoincrement())
+  user        Int
+  comics      Int
+  type        cdb_lists_type @default(com)
+  date        DateTime       @db.Date
+  date_delete DateTime?      @db.DateTime(0)
+  user_delete Int?
+
+  @@index([comics], map: "comics")
+  @@index([user], map: "user")
+}
+
+model cdb_log {
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  user      Int?
+  username  String?   @db.VarChar(255)
+  comics    String?   @db.Text
+  comicsid  Int?
+  date      DateTime? @db.DateTime(0)
+  action    String?   @default("") @db.VarChar(11)
+  prevdata  String?   @db.Text
+  cdb_users User?     @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "log_user")
+
+  @@index([comicsid], map: "comicsid")
+  @@index([user], map: "user")
+}
+
+model cdb_phallometer {
+  id    Int    @id @default(autoincrement()) @db.UnsignedInt
+  nick  String @default("") @db.VarChar(50)
+  type  String @default("") @db.VarChar(9)
+  count Int    @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_pm {
+  id   Int      @id @default(autoincrement())
+  user Int
+  from Int
+  text String   @db.Text
+  date DateTime @db.DateTime(0)
+  read Boolean  @default(false)
+
+  @@index([from], map: "from")
+  @@index([user], map: "user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_questions {
+  id          Int       @id @default(autoincrement())
+  question    String    @db.Text
+  qdate       DateTime  @db.DateTime(0)
+  answer      String    @db.Text
+  adate       DateTime  @db.DateTime(0)
+  answerer    Int       @db.SmallInt
+  user        Int?
+  edited      String    @default("") @db.VarChar(255)
+  date_delete DateTime? @db.DateTime(0)
+  user_delete Int?
+  cdb_users   User?     @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_add_question")
+
+  @@index([user], map: "user_add_question")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_readmore {
+  id          Int                @id @default(autoincrement())
+  serie       String             @db.VarChar(8)
+  read        String             @db.VarChar(8)
+  moder       cdb_readmore_moder @default(no)
+  add_date    DateTime?          @db.DateTime(0)
+  user_add    Int?
+  date_delete DateTime?          @db.DateTime(0)
+  user_delete Int?
+
+  @@unique([serie, read], map: "readmore_series_read")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_review {
+  id          Int              @id @default(autoincrement())
+  serie       String           @db.VarChar(8)
+  text        String           @db.Text
+  author      String           @db.VarChar(30)
+  user_add    Int?
+  date        DateTime         @db.Date
+  moder       cdb_review_moder @default(no)
+  date_delete DateTime?        @db.DateTime(0)
+  user_delete Int?
+
+  @@index([serie], map: "serie")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_review_week {
+  id          Int                   @id @default(autoincrement())
+  comics      Int
+  author      Int
+  date        DateTime              @db.Date
+  week        String                @db.VarChar(21)
+  text        String                @db.Text
+  moder       cdb_review_week_moder @default(wait)
+  moderedby   String?               @db.VarChar(100)
+  rating      Int
+  date_delete DateTime?             @db.DateTime(0)
+  user_delete Int?
+
+  @@index([author], map: "author")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_service {
+  date DateTime @id @db.Date
+}
+
+model cdb_stat_dynamics {
+  id    Int      @id @default(autoincrement())
+  date  DateTime @db.DateTime(0)
+  month DateTime @db.Date
+  site  String?  @db.VarChar(20)
+  value Decimal  @db.Decimal(7, 1)
+
+  @@unique([month, site], map: "month")
+}
+
+model cdb_user_read_issue {
+  user      Int
+  issue     Int
+  date      DateTime @db.DateTime(0)
+  cdb_users User     @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cdb_user_read_cdb_users_id_fk")
+
+  @@id([user, issue])
+}
+
+model cdb_user_read_series {
+  user      Int
+  series    Int
+  status    Boolean
+  date      DateTime @db.DateTime(0)
+  cdb_users User     @relation(fields: [user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cdb_user_read_series_cdb_users_id_fk")
+
+  @@id([user, series])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_usergroups {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  comment     Boolean   @default(false)
+  delcomment  Boolean   @default(false)
+  review      Boolean   @default(false)
+  reviewmod   Boolean   @default(false)
+  readmore    Boolean   @default(false)
+  captcha     Boolean   @default(false)
+  admin       Boolean   @default(false)
+  ban         Boolean   @default(false)
+  userinfo    Boolean   @default(false)
+  serie       Boolean   @default(false)
+  comics      Boolean   @default(false)
+  delcomics   Boolean   @default(false)
+  newcomics   Boolean   @default(false)
+  global      Boolean   @default(false)
+  globgenl    Boolean   @default(false)
+  globcom     Boolean   @default(false)
+  sites       Boolean   @default(false)
+  banners     Boolean   @default(false)
+  answer      Boolean   @default(false)
+  compan      Boolean   @default(false)
+  listitems   Int       @default(100) @db.SmallInt
+  writer      Boolean   @default(false)
+  master      Boolean
+  date_delete DateTime? @db.DateTime(0)
+  cdb_users   User[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_vote {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  week        String    @default("") @db.VarChar(21)
+  viewer_id   Int
+  comics_id   Int
+  date        DateTime  @db.DateTime(0)
+  date_delete DateTime? @db.DateTime(0)
+  user_delete Int?
+  type        Boolean?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cdb_weeks {
+  month  String        @id @db.VarChar(7)
+  dbegin DateTime      @db.Date
+  dend   DateTime      @db.Date
+  res    cdb_weeks_res @default(yes)
+}
+
+model cdb_weeks_translations {
+  week         String  @id @default("") @db.VarChar(21)
+  year         Int
+  translations Boolean @default(false)
+}
+
+model php_error {
+  type     String   @default("") @db.Char(50)
+  message  String   @db.Text
+  filename String   @default("") @db.VarChar(255)
+  line     Int
+  date     DateTime @db.DateTime(0)
+  done     Boolean?
+
+  @@id([type, filename, line])
+}
+
+model site_checked_links {
+  link   String @id @db.VarChar(255)
+  status Int?   @db.SmallInt
+}
+
+model site_checked_translations {
+  translation Int
+  site        String    @default("") @db.VarChar(20)
+  status      Int?
+  comment     String?   @db.VarChar(255)
+  date        DateTime? @db.DateTime(0)
+
+  @@id([translation, site])
+}
+
+model translation_missing {
+  translation_id Int      @id @db.UnsignedInt
+  add_date       DateTime @db.DateTime(0)
+  add_user_id    Int?
+  done           Boolean?
+  link           String?  @db.Text
+  cdb_users      User?    @relation(fields: [add_user_id], references: [id], onDelete: Cascade, map: "translation_missing_ibfk_1")
+  cdb_comics     Comic    @relation(fields: [translation_id], references: [id], onDelete: Cascade, map: "translation_missing_ibfk_2")
+
+  @@index([add_user_id], map: "add_user_id")
+}
+
+enum SitePaper {
+  NO  @map("no")
+  YES @map("yes")
+}
+
+enum cdb_lists_type {
+  com
+  ser
+}
+
+enum cdb_readmore_moder {
+  no
+  yes
+}
+
+enum cdb_weeks_res {
+  no
+  yes
+  pr
+}
+
+enum cdb_review_moder {
+  no
+  yes
+}
+
+enum cdb_review_week_moder {
+  yes
+  no
+  wait
+}
+
+enum cdb_series_status {
+  comicvine
+  continue
+  finish
+  freez
+}
+
+enum cdb_articles_show {
+  yes
+  no
+}
+
+enum cdb_sites_showlink {
+  yes
+  no
+}
+
+enum cdb_users_type {
+  admin
+  moder
+  member
+  visitor
+}
+
+enum cdb_comics_top {
+  no
+  week
+  month
+  year
+  newyear
+}
+
+enum cdb_users_amplua {
+  EMPTY_ENUM_VALUE @map("")
+  // Переводчик @map("Переводчик")
+  // Оформитель @map("Оформитель")
+  // Универсал @map("Универсал")
+}
+
+enum cdb_comics_moder {
+  yes
+  no
+}

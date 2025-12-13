@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Цветовая система через CSS-переменные
+   ============================================ */
+
+:root {
+  /* Фоны */
+  --color-bg-primary: #f9fafb;        /* bg-gray-50 */
+  --color-bg-secondary: #ffffff;     /* bg-white */
+  --color-bg-tertiary: #f3f4f6;      /* bg-gray-100 */
+  --color-bg-card: #ffffff;          /* Карточки */
+  --color-bg-input: #ffffff;         /* Поля ввода */
+  
+  /* Текст */
+  --color-text-primary: #111827;     /* text-gray-900 */
+  --color-text-secondary: #6b7280;   /* text-gray-500 */
+  --color-text-tertiary: #9ca3af;   /* text-gray-400 */
+  --color-text-muted: #d1d5db;      /* text-gray-300 */
+  
+  /* Границы */
+  --color-border-primary: #e5e7eb;  /* border-gray-200 */
+  --color-border-secondary: #d1d5db; /* border-gray-300 */
+  --color-border-tertiary: #9ca3af;  /* border-gray-400 */
+  
+  /* Акцентные цвета */
+  --color-accent: #ea580c;           /* orange-600 */
+  --color-accent-hover: #c2410c;     /* orange-700 */
+  --color-accent-light: #fff7ed;    /* orange-50 */
+  
+  /* Утилиты */
+  --color-background: var(--color-bg-primary);
+  --color-foreground: var(--color-text-primary);
+}
+
+.dark {
+  /* Фоны */
+  --color-bg-primary: #0a0a0a;       /* Почти чёрный */
+  --color-bg-secondary: #111111;     /* Тёмно-серый */
+  --color-bg-tertiary: #1a1a1a;     /* Карточки и блоки */
+  --color-bg-card: #1a1a1a;         /* Карточки */
+  --color-bg-input: #1a1a1a;        /* Поля ввода */
+  
+  /* Текст */
+  --color-text-primary: #e5e5e5;     /* Основной текст */
+  --color-text-secondary: #a0a0a0;   /* Вторичный текст */
+  --color-text-tertiary: #666666;    /* Placeholder, disabled */
+  --color-text-muted: #4a4a4a;      /* Очень приглушённый */
+  
+  /* Границы */
+  --color-border-primary: #2a2a2a;   /* Основные границы */
+  --color-border-secondary: #1a1a1a; /* Вторичные границы */
+  --color-border-tertiary: #111111;  /* Третичные границы */
+  
+  /* Акцентные цвета */
+  --color-accent: #f97316;            /* orange-500 */
+  --color-accent-hover: #fb923c;      /* orange-400 */
+  --color-accent-light: rgba(249, 115, 22, 0.1); /* orange-900/20 */
+  
+  /* Утилиты */
+  --color-background: var(--color-bg-primary);
+  --color-foreground: var(--color-text-primary);
+}
+
+body {
+  color: var(--color-foreground);
+  background: var(--color-background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Стили для полей ввода и селектов через переменные */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  background-color: var(--color-bg-input);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  background-color: var(--color-bg-input);
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+select option {
+  background-color: var(--color-bg-input);
+  color: var(--color-text-primary);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Скрытие скролл-бара */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
