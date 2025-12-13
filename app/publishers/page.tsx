@@ -6,7 +6,8 @@ import SortSelect from '@/components/SortSelect'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+// Кешируем на 60 секунд для ускорения
+export const revalidate = 60
 
 async function getPublishers(page: number = 1, pageSize: number = 100, sort: string = 'name_asc') {
   try {

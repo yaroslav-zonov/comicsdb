@@ -6,29 +6,31 @@ import SeriesListView from '@/components/SeriesListView'
 import Pagination from '@/components/Pagination'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 
-export const dynamic = 'force-dynamic'
+// Кешируем на 60 секунд для ускорения
+export const revalidate = 60
 
 async function getPublisher(id: number, page: number = 1, pageSize: number = 100) {
   try {
-    const publisher = await prisma.publisher.findUnique({
-      where: {
-        id: id,
-        dateDelete: null,
-      },
-    })
+    const [publisher, totalSeries] = await Promise.all([
+      prisma.publisher.findUnique({
+        where: {
+          id: id,
+          dateDelete: null,
+        },
+      }),
+      prisma.series.count({
+        where: {
+          publisherId: id,
+          dateDelete: null,
+        },
+      }),
+    ])
 
     if (!publisher) {
       return null
     }
-
-    // Получаем общее количество серий
-    const totalSeries = await prisma.series.count({
-      where: {
-        publisherId: id,
-        dateDelete: null,
-      },
-    })
 
     // Получаем серии с пагинацией
     const skip = (page - 1) * pageSize
@@ -44,15 +46,55 @@ async function getPublisher(id: number, page: number = 1, pageSize: number = 100
       take: pageSize,
     })
 
-    // Получаем обложки и количество комиксов для серий
-    const seriesWithData = await Promise.all(
-      series.map(async (series) => {
-        const firstComic = await prisma.comic.findFirst({
+    if (series.length === 0) {
+      return {
+        id: publisher.id,
+        name: decodeHtmlEntities(publisher.name),
+        series: [],
+        total: totalSeries,
+        page,
+        pageSize,
+      }
+    }
+
+    // Оптимизация: получаем все обложки и количество комиксов batch запросами
+    const seriesIds = series.map(s => s.id)
+    
+    if (seriesIds.length === 0) {
+      return {
+        id: publisher.id,
+        name: decodeHtmlEntities(publisher.name),
+        series: [],
+        total: totalSeries,
+        page,
+        pageSize,
+      }
+    }
+    
+    // Получаем количество комиксов и обложки одним batch запросом
+    const [comicsCountsRaw, firstComicsRaw] = await Promise.all([
+      // Количество комиксов
+      prisma.comic.groupBy({
+        by: ['serieId'],
+        where: {
+          serieId: { in: seriesIds },
+          dateDelete: null,
+        },
+        _count: {
+          id: true,
+        },
+      }),
+      // Первые комиксы для обложек - получаем все комиксы и фильтруем на клиенте
+      (async () => {
+        // Получаем все комиксы для этих серий одним запросом
+        const allComics = await prisma.comic.findMany({
           where: {
-            serieId: series.id,
+            serieId: { in: seriesIds },
             dateDelete: null,
           },
           select: {
+            serieId: true,
+            number: true,
             thumb: true,
             tiny: true,
           },
@@ -60,21 +102,33 @@ async function getPublisher(id: number, page: number = 1, pageSize: number = 100
             number: 'asc',
           },
         })
-
-        const comicsCount = await prisma.comic.count({
-          where: {
-            serieId: series.id,
-            dateDelete: null,
-          },
-        })
-
-        return {
-          ...series,
-          cover: firstComic?.thumb || firstComic?.tiny || series.thumb,
-          comicsCount,
+        
+        // Группируем по сериям и берем первый (с минимальным номером)
+        const firstComicsMap = new Map<number, { thumb: string | null; tiny: string | null }>()
+        for (const comic of allComics) {
+          if (!firstComicsMap.has(comic.serieId)) {
+            firstComicsMap.set(comic.serieId, {
+              thumb: comic.thumb,
+              tiny: comic.tiny,
+            })
+          }
         }
-      })
-    )
+        
+        return Array.from(firstComicsMap.entries()).map(([serie, images]) => ({
+          serie,
+          ...images,
+        }))
+      })(),
+    ])
+
+    const countMap = new Map(comicsCountsRaw.map(c => [c.serieId, c._count.id]))
+    const coverMap = new Map(firstComicsRaw.map(c => [c.serie, c.thumb || c.tiny]))
+
+    const seriesWithData = series.map(series => ({
+      ...series,
+      cover: coverMap.get(series.id) || series.thumb,
+      comicsCount: countMap.get(series.id) || 0,
+    }))
 
     return {
       id: publisher.id,

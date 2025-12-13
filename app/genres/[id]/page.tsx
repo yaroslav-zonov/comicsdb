@@ -7,7 +7,8 @@ import Pagination from '@/components/Pagination'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, getImageUrl, getSeriesUrl } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+// Кешируем на 60 секунд для ускорения
+export const revalidate = 60
 
 async function getGenre(id: number, page: number = 1, pageSize: number = 100) {
   try {
