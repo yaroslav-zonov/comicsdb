@@ -1,33 +1,23 @@
 /**
  * Получает URL изображения из Metron API по comicvine ID
- * Используется на сервере для получения изображений
+ * @param comicvineId - Comicvine ID комикса
+ * @returns URL изображения из Metron или null
  */
-export async function getMetronImageUrl(comicvineId: number | null | undefined): Promise<string | null> {
-  if (!comicvineId) return null
-
+async function getMetronImageUrl(comicvineId: number): Promise<string | null> {
   try {
-    // Запрашиваем issue из Metron API по cv_id
     const response = await fetch(
       `https://metron.cloud/api/v1/issue/?cv_id=${comicvineId}`,
       {
-        headers: {
-          'Accept': 'application/json',
-        },
-        // Кешируем на стороне сервера на 7 дней
-        next: { revalidate: 604800 },
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 604800 }, // Кеш 7 дней
       }
     )
 
-    if (!response.ok) {
-      return null
-    }
+    if (!response.ok) return null
 
     const data = await response.json()
-    
-    // Metron возвращает массив результатов, берем первый
     if (data.results && data.results.length > 0) {
-      const issue = data.results[0]
-      return issue.image || null
+      return data.results[0].image || null
     }
 
     return null
@@ -38,23 +28,27 @@ export async function getMetronImageUrl(comicvineId: number | null | undefined):
 }
 
 /**
- * Получает URL изображения с приоритетом Metron, fallback на Comicvine
- * @param comicvineId - Comicvine ID комикса
- * @param comicvineUrl - URL изображения из Comicvine (fallback)
- * @returns URL изображения из Metron или Comicvine
+ * Подменяет Comicvine URL на Metron URL, если доступен comicvine ID
+ * @param comicvineId - Comicvine ID комикса (из базы)
+ * @param comicvineUrl - URL изображения из Comicvine
+ * @returns URL из Metron (если найден) или обработанный Comicvine URL
  */
 export async function getImageUrlWithMetron(
   comicvineId: number | null | undefined,
   comicvineUrl: string | null | undefined
 ): Promise<string | null> {
-  // Сначала пытаемся получить из Metron
-  const metronUrl = await getMetronImageUrl(comicvineId)
-  if (metronUrl) {
-    return metronUrl
-  }
-  
-  // Если Metron не вернул, используем Comicvine
+  // Если нет URL - возвращаем null
   if (!comicvineUrl || comicvineUrl === '') return null
+
+  // Если есть comicvine ID - пытаемся получить из Metron
+  if (comicvineId) {
+    const metronUrl = await getMetronImageUrl(comicvineId)
+    if (metronUrl) {
+      return metronUrl
+    }
+  }
+
+  // Если Metron не вернул или нет comicvine ID - используем Comicvine
   return comicvineUrl.replace(/scale_avatar/g, 'scale_large')
 }
 

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
+import { getImageUrlWithMetron } from '@/lib/metron'
 
 // Динамика переводов - группировка по месяцам
 export async function getTranslationDynamics() {
