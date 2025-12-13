@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { decodeHtmlEntities } from '@/lib/utils'
+import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
 import ComicCard from './ComicCard'
 
 type Comic = {
@@ -112,8 +112,8 @@ async function getNewSeries(limit: number = 4): Promise<Comic[]> {
           name: decodeHtmlEntities(item.publisher_name),
         },
       },
-      thumb: item.thumb,
-      tiny: item.tiny,
+      thumb: getImageUrl(item.thumb) || '',
+      tiny: getImageUrl(item.tiny) || '',
       translate: item.translate,
       site: item.site,
       siteName: decodeHtmlEntities(siteMap.get(item.site) || item.site),
