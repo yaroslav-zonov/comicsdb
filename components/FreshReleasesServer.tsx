@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { decodeHtmlEntities } from '@/lib/utils'
+import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
 
 type Comic = {
   id: number
@@ -120,8 +120,8 @@ async function getFreshReleases(): Promise<Comic[]> {
             name: decodeHtmlEntities(comic.series.publisher.name),
           },
         },
-        thumb: comic.thumb,
-        tiny: comic.tiny,
+        thumb: getImageUrl(comic.thumb),
+        tiny: getImageUrl(comic.tiny),
         translate: comic.translate,
         site: comic.site,
         siteName: site1 ? decodeHtmlEntities(site1) : comic.site,
