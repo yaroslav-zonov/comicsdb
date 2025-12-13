@@ -328,22 +328,15 @@ export default function TableRow(props: TableRowProps) {
       <tr className="border-t border-border-primarydark:border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
           <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
-            <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={`${data.series.name} #${data.number}`}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                  loading="lazy"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-                  <span className="text-text-tertiary text-xs">Нет</span>
-                </div>
-              )}
+            <div className="relative w-12 aspect-[2/3]">
+              <MetronImage
+                comicvineId={data.comicvine}
+                comicvineUrl={comicvineUrl}
+                alt={`${data.series.name} #${data.number}`}
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
             </div>
           </Link>
         </td>
