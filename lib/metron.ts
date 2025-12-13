@@ -30,7 +30,10 @@ export async function getMetronImageUrl(
       where: { 
         comicvine: comicvineId,
         dateDelete: null,
-        metronImageUrl: { not: null, not: '' },
+        AND: [
+          { metronImageUrl: { not: null } },
+          { metronImageUrl: { not: '' } },
+        ],
       },
       select: { metronImageUrl: true },
       orderBy: { id: 'desc' }, // Берем последний (на случай дублей)
