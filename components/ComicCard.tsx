@@ -46,6 +46,7 @@ export default function ComicCard({
   className = '',
 }: ComicCardProps) {
   const releaseDate = data.date || data.pdate
+  // Для карточек используем большой размер: thumb (приоритет) > tiny (fallback)
   const comicvineUrl = data.thumb || data.tiny
 
   return (
