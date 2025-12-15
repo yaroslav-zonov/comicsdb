@@ -354,7 +354,7 @@ export default function SearchResultsView({
             <Link
               key={s.id}
               href={getSeriesUrl(s.publisher.id, s.id)}
-              className="overflow-hidden group"
+              className="overflow-hidden group card-lift"
             >
               <div className="relative aspect-[2/3] bg-bg-tertiary">
                 {s.thumb ? (

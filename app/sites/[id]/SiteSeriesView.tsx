@@ -40,7 +40,7 @@ export default function SiteSeriesView({ series }: { series: SeriesData[] }) {
       {viewMode === 'cards' ? (
         <div className="grid-cards">
           {series.map((s) => (
-            <div key={s.id} className="overflow-hidden group">
+            <div key={s.id} className="overflow-hidden group card-lift">
               <Link
                 href={getSeriesUrl(s.publisher.id, s.id)}
                 className="block"

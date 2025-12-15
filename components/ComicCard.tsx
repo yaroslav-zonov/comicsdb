@@ -50,7 +50,7 @@ export default function ComicCard({
   const comicvineUrl = data.thumb || data.tiny
 
   return (
-    <div className={`overflow-hidden group ${className}`}>
+    <div className={`overflow-hidden group card-lift ${className}`}>
       <Link
         href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}
         className="block"
