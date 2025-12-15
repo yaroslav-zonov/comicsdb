@@ -13,14 +13,17 @@ export const revalidate = APP_CONFIG.revalidate.publishers
 
 async function getPublishers(page: number = 1, pageSize: number = 100, sort: string = 'name_asc') {
   try {
-    // Определяем ORDER BY на основе параметра сортировки
-    let orderByClause = 'p.name ASC'
-    if (sort === 'name_desc') orderByClause = 'p.name DESC'
-    else if (sort === 'series_asc') orderByClause = 'seriesCount ASC'
-    else if (sort === 'series_desc') orderByClause = 'seriesCount DESC'
-    else if (sort === 'comics_asc') orderByClause = 'comicsCount ASC'
-    else if (sort === 'comics_desc') orderByClause = 'comicsCount DESC'
+    // Whitelist для безопасной сортировки (защита от SQL injection)
+    const validSorts: Record<string, string> = {
+      'name_asc': 'p.name ASC',
+      'name_desc': 'p.name DESC',
+      'series_asc': 'seriesCount ASC',
+      'series_desc': 'seriesCount DESC',
+      'comics_asc': 'comicsCount ASC',
+      'comics_desc': 'comicsCount DESC',
+    }
 
+    const orderByClause = validSorts[sort] || 'p.name ASC'
     const skip = (page - 1) * pageSize
 
     // Используем raw SQL с сортировкой и пагинацией в БД
@@ -87,13 +90,6 @@ export default async function PublishersPage({
     if (sort !== 'name_asc') params.set('sort', sort)
     const query = params.toString()
     return `/publishers${query ? `?${query}` : ''}`
-  }
-
-  const getSortLink = (newSort: string) => {
-    const params = new URLSearchParams()
-    if (page > 1) params.set('page', page.toString())
-    params.set('sort', newSort)
-    return `/publishers?${params.toString()}`
   }
 
   return (

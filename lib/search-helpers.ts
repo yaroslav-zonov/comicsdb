@@ -6,24 +6,20 @@ import { Prisma } from '@prisma/client'
 
 /**
  * Генерирует ORDER BY clause для SQL запросов на основе параметра сортировки
+ * Использует whitelist для защиты от SQL injection
  */
 export function getOrderByClause(sort: string): string {
-  switch (sort) {
-    case 'name_asc':
-      return 's.name ASC'
-    case 'name_desc':
-      return 's.name DESC'
-    case 'date_asc':
-      return 'c.pdate ASC'
-    case 'date_desc':
-      return 'c.pdate DESC'
-    case 'translation_date_asc':
-      return 'COALESCE(c.date, c.pdate) ASC'
-    case 'translation_date_desc':
-      return 'COALESCE(c.date, c.pdate) DESC'
-    default:
-      return 'c.adddate DESC'
+  const validSorts: Record<string, string> = {
+    'name_asc': 's.name ASC',
+    'name_desc': 's.name DESC',
+    'date_asc': 'c.pdate ASC',
+    'date_desc': 'c.pdate DESC',
+    'translation_date_asc': 'COALESCE(c.date, c.pdate) ASC',
+    'translation_date_desc': 'COALESCE(c.date, c.pdate) DESC',
+    'adddate_desc': 'c.adddate DESC',
   }
+
+  return validSorts[sort] || 'c.adddate DESC'
 }
 
 /**
