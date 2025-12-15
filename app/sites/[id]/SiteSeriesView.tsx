@@ -83,9 +83,9 @@ export default function SiteSeriesView({ series }: { series: SeriesData[] }) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Дата последнего перевода</th>
               </tr>
             </thead>
-            <tbody className="bg-bg-card divide-y divide-gray-200 dark:divide-[#2a2a2a]">
+            <tbody className="table-body">
               {series.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-[#111111]">
+                <tr key={s.id} className="table-row">
                   <td className="px-6 py-4">
                     <Link
                       href={getSeriesUrl(s.publisher.id, s.id)}

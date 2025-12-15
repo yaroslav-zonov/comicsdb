@@ -167,4 +167,13 @@ select option {
   .input {
     @apply w-full px-4 py-2 bg-bg-input border border-border-primary rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
+
+  /* Таблицы */
+  .table-body {
+    @apply bg-bg-card divide-y divide-gray-200 dark:divide-border-primary;
+  }
+
+  .table-row {
+    @apply hover:bg-gray-50 dark:hover:bg-bg-secondary transition-colors;
+  }
 }
