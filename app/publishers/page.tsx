@@ -135,13 +135,13 @@ export default async function PublishersPage({
             <p className="text-text-secondary">Нет доступных издательств</p>
           ) : (
             <>
-              <div className="bg-bg-card rounded-lg shadow overflow-hidden">
-                <ul className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
+              <div className="card overflow-hidden">
+                <ul className="list-divider">
                   {data.publishers.map((publisher) => (
                     <li key={publisher.id}>
                       <Link
                         href={`/publishers/${publisher.id}`}
-                        className="block px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#111111] transition-colors"
+                        className="block list-item"
                       >
                         <div className="flex items-center justify-between">
                           <div>

@@ -551,7 +551,7 @@ export default function SearchResultsView({
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
               currentTab === 'series'
                 ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark::hover:border-[#2a2a2a]'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark:hover:border-border-secondary'
             }`}
           >
             По сериям ({seriesTotal})
@@ -561,7 +561,7 @@ export default function SearchResultsView({
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
               currentTab === 'characters'
                 ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark::hover:border-[#2a2a2a]'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark:hover:border-border-secondary'
             }`}
           >
             Персонажам ({charactersTotal})
@@ -571,7 +571,7 @@ export default function SearchResultsView({
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
               currentTab === 'teams'
                 ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark::hover:border-[#2a2a2a]'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark:hover:border-border-secondary'
             }`}
           >
             Командам ({teamsTotal})
@@ -581,7 +581,7 @@ export default function SearchResultsView({
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
               currentTab === 'creators'
                 ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark::hover:border-[#2a2a2a]'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark:hover:border-border-secondary'
             }`}
           >
             Авторам ({creatorsTotal})
@@ -591,7 +591,7 @@ export default function SearchResultsView({
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
               currentTab === 'scanlators'
                 ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark::hover:border-[#2a2a2a]'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary dark:hover:border-border-secondary'
             }`}
           >
             Сканлейтерам ({scanlatorsTotal})

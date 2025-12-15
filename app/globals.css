@@ -102,14 +102,69 @@ select option {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   /* Скрытие скролл-бара */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Консистентные стили для списков с разделителями */
+  .list-item {
+    @apply px-6 py-4 hover:bg-gray-50 dark:hover:bg-bg-secondary transition-colors;
+  }
+
+  .list-divider {
+    @apply divide-y divide-gray-200 dark:divide-border-primary;
+  }
+
+  /* Стандартные spacing для секций */
+  .section-spacing {
+    @apply py-12;
+  }
+
+  .section-spacing-sm {
+    @apply py-8;
+  }
+
+  /* Стандартный gap для grid */
+  .grid-standard {
+    @apply gap-4;
+  }
+
+  /* Responsive grid для карточек */
+  .grid-cards {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4;
+  }
+
+  /* Стандартные кнопки */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-hover active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply btn bg-bg-tertiary text-text-primary hover:bg-bg-secondary dark:hover:bg-bg-card active:scale-95;
+  }
+
+  /* Стандартные карточки */
+  .card {
+    @apply bg-bg-card rounded-lg shadow-sm border border-border-primary transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md hover:border-border-secondary;
+  }
+
+  /* Стандартные input поля */
+  .input {
+    @apply w-full px-4 py-2 bg-bg-input border border-border-primary rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
 }
