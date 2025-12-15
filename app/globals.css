@@ -168,6 +168,10 @@ select option {
     @apply w-full px-4 py-2 bg-bg-input border border-border-primary rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
 
+  .input-search {
+    @apply w-full px-4 py-2 bg-bg-input border border-border-secondary rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm;
+  }
+
   /* Таблицы */
   .table-body {
     @apply bg-bg-card divide-y divide-gray-200 dark:divide-border-primary;

@@ -110,7 +110,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Поиск комиксов, серий..."
-                className="w-full px-4 py-2 border border-border-secondary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm text-text-primary bg-bg-input placeholder:text-text-tertiary"
+                className="input-search"
               />
               <button
                 type="submit"
@@ -155,10 +155,10 @@ export default function Header() {
               <Link href="/rss" className="text-text-secondary hover:text-accent">
                 RSS
               </Link>
-              <Link href="/faq" className="text-text-secondary hover:text-text-primary hover:text-text-primary">
+              <Link href="/faq" className="text-text-secondary hover:text-text-primary">
                 F.A.Q.
               </Link>
-              <Link href="/stats" className="text-text-secondary hover:text-text-primary hover:text-text-primary">
+              <Link href="/stats" className="text-text-secondary hover:text-text-primary">
                 Статистика
               </Link>
             </div>
