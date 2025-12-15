@@ -259,7 +259,7 @@ export default function SearchResultsView({
   const renderComics = (comics: Comic[], variant: 'main' | 'character-creator-team' | 'scanlator' = 'main') => {
     if (isPending) {
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid-cards">
           {Array.from({ length: 12 }).map((_, i) => (
             <ComicCardSkeleton key={i} />
           ))}
@@ -269,7 +269,7 @@ export default function SearchResultsView({
     
     if (viewMode === 'cards') {
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid-cards">
           {comics.map((comic) => (
             <ComicCard
               key={comic.id}
@@ -359,7 +359,7 @@ export default function SearchResultsView({
   const renderSeries = () => {
     if (isPending) {
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid-cards">
           {Array.from({ length: 12 }).map((_, i) => (
             <SeriesCardSkeleton key={i} />
           ))}
@@ -369,7 +369,7 @@ export default function SearchResultsView({
     
     if (viewMode === 'cards') {
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid-cards">
           {series.map((s) => (
             <Link
               key={s.id}
@@ -692,7 +692,7 @@ export default function SearchResultsView({
           {series.length === 0 && seriesTotal === 0 ? (
             <p className="text-text-secondary">Ничего не найдено</p>
           ) : series.length === 0 && seriesTotal > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid-cards">
               {Array.from({ length: 12 }).map((_, i) => (
                 <SeriesCardSkeleton key={i} />
               ))}
@@ -736,7 +736,7 @@ export default function SearchResultsView({
               )}
             </>
           ) : characters.length === 0 && charactersTotal > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid-cards">
               {Array.from({ length: 12 }).map((_, i) => (
                 <ComicCardSkeleton key={i} />
               ))}
@@ -780,7 +780,7 @@ export default function SearchResultsView({
               )}
             </>
           ) : creators.length === 0 && creatorsTotal > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid-cards">
               {Array.from({ length: 12 }).map((_, i) => (
                 <ComicCardSkeleton key={i} />
               ))}
@@ -819,7 +819,7 @@ export default function SearchResultsView({
           {scanlators.length === 0 && scanlatorsTotal === 0 ? (
             <p className="text-text-secondary">Ничего не найдено</p>
           ) : scanlators.length === 0 && scanlatorsTotal > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid-cards">
               {Array.from({ length: 12 }).map((_, i) => (
                 <ComicCardSkeleton key={i} />
               ))}
@@ -864,7 +864,7 @@ export default function SearchResultsView({
               )}
             </>
           ) : teams.length === 0 && teamsTotal > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid-cards">
               {Array.from({ length: 12 }).map((_, i) => (
                 <ComicCardSkeleton key={i} />
               ))}

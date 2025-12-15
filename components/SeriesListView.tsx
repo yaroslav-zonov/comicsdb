@@ -61,7 +61,7 @@ export default function SeriesListView({
       )}
 
       {viewMode === 'cards' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-6">
+        <div className="grid-cards pt-6">
           {series.map((s) => (
             <div key={s.id} className="overflow-hidden group">
               <Link
