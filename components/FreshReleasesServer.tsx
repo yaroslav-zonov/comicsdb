@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
+import { APP_CONFIG } from '@/lib/config'
 
 type Comic = {
   id: number
@@ -25,68 +26,67 @@ type Comic = {
 
 async function getFreshReleases(): Promise<Comic[]> {
   try {
-    // Вычисляем дату 7 дней назад
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    sevenDaysAgo.setHours(0, 0, 0, 0)
+    // Вычисляем дату N дней назад (из конфига)
+    const daysAgo = new Date()
+    daysAgo.setDate(daysAgo.getDate() - APP_CONFIG.freshReleases.daysAgo)
+    daysAgo.setHours(0, 0, 0, 0)
 
-    // Получаем комиксы, опубликованные за последние 7 дней
-    // Используем только date и pdate (даты публикации), не adddate (дата добавления)
-    const comics = await prisma.comic.findMany({
-      take: 200, // Берем больше для фильтрации
-      where: {
-        dateDelete: null,
-        OR: [
-          {
-            date: {
-              gte: sevenDaysAgo,
-            },
-          },
-          {
-            AND: [
-              {
-                date: null,
-              },
-              {
-                pdate: {
-                  gte: sevenDaysAgo,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      include: {
-        series: {
-          include: {
-            publisher: true,
-          },
-        },
-      },
-      orderBy: {
-        adddate: 'desc',
-      },
-    })
-
-    // Сортируем вручную: сначала по date (если есть), потом по pdate
-    const sortedComics = comics.sort((a, b) => {
-      const getDate = (comic: typeof a) => {
-        if (comic.date) return new Date(comic.date).getTime()
-        if (comic.pdate) return new Date(comic.pdate).getTime()
-        return new Date(comic.adddate).getTime()
-      }
-      
-      const dateA = getDate(a)
-      const dateB = getDate(b)
-      return dateB - dateA
-    })
+    // Используем raw SQL для эффективной сортировки по COALESCE(date, pdate, adddate)
+    // Это избавляет от необходимости загружать 200 записей и сортировать их в памяти
+    const comics = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      pdate: Date
+      date: Date | null
+      adddate: Date
+      thumb: string
+      tiny: string
+      translate: string
+      site: string
+      site2: string | null
+      link: string
+      series_id: number
+      series_name: string
+      publisher_id: number
+      publisher_name: string
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        c.pdate,
+        c.date,
+        c.adddate,
+        c.thumb,
+        c.tiny,
+        c.translate,
+        c.site,
+        c.site2,
+        c.link,
+        s.id as series_id,
+        s.name as series_name,
+        p.id as publisher_id,
+        p.name as publisher_name
+      FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id
+      INNER JOIN cdb_publishers p ON s.publisher = p.id
+      WHERE c.date_delete IS NULL
+        AND s.date_delete IS NULL
+        AND (
+          c.date >= ${daysAgo}
+          OR (c.date IS NULL AND c.pdate >= ${daysAgo})
+        )
+      ORDER BY COALESCE(c.date, c.pdate, c.adddate) DESC
+      LIMIT ${APP_CONFIG.freshReleases.limit}
+    `
 
     // Получаем уникальные ID сайтов (включая site2)
     const allSiteIds = [...new Set([
-      ...sortedComics.map(c => c.site).filter(Boolean),
-      ...sortedComics.map(c => c.site2).filter(s => s && s !== '0')
+      ...comics.map(c => c.site).filter((s): s is string => Boolean(s)),
+      ...comics.map(c => c.site2).filter((s): s is string => Boolean(s) && s !== '0')
     ])]
-    
+
     // Получаем названия сайтов
     const sites = allSiteIds.length > 0 ? await prisma.site.findMany({
       where: {
@@ -98,14 +98,14 @@ async function getFreshReleases(): Promise<Comic[]> {
         name: true,
       },
     }) : []
-    
+
     const siteMap = new Map(sites.map(s => [s.id, s.name]))
 
     // Преобразуем в нужный формат
-    return sortedComics.map(comic => {
+    return comics.map(comic => {
       const site1 = siteMap.get(comic.site)
       const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-      
+
       return {
         id: comic.id,
         comicvine: comic.comicvine,
@@ -113,11 +113,11 @@ async function getFreshReleases(): Promise<Comic[]> {
         pdate: comic.pdate,
         date: comic.date,
         series: {
-          ...comic.series,
-          name: decodeHtmlEntities(comic.series.name),
+          id: comic.series_id,
+          name: decodeHtmlEntities(comic.series_name),
           publisher: {
-            ...comic.series.publisher,
-            name: decodeHtmlEntities(comic.series.publisher.name),
+            id: comic.publisher_id,
+            name: decodeHtmlEntities(comic.publisher_name),
           },
         },
         thumb: getImageUrl(comic.thumb) || '',

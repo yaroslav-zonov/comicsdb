@@ -4,75 +4,62 @@ import Footer from '@/components/Footer'
 import Pagination from '@/components/Pagination'
 import SortSelect from '@/components/SortSelect'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities } from '@/lib/utils'
+import { APP_CONFIG } from '@/lib/config'
 
 // Кешируем на 60 секунд для ускорения
-export const revalidate = 60
+export const revalidate = APP_CONFIG.revalidate.publishers
 
 async function getPublishers(page: number = 1, pageSize: number = 100, sort: string = 'name_asc') {
   try {
-    // Сначала получаем ВСЕ издательства
-    const allPublishers = await prisma.publisher.findMany({
-      where: {
-        dateDelete: null,
-      },
-    })
+    // Определяем ORDER BY на основе параметра сортировки
+    let orderByClause = 'p.name ASC'
+    if (sort === 'name_desc') orderByClause = 'p.name DESC'
+    else if (sort === 'series_asc') orderByClause = 'seriesCount ASC'
+    else if (sort === 'series_desc') orderByClause = 'seriesCount DESC'
+    else if (sort === 'comics_asc') orderByClause = 'comicsCount ASC'
+    else if (sort === 'comics_desc') orderByClause = 'comicsCount DESC'
 
-    const total = allPublishers.length
-
-    // Получаем количество серий и комиксов для каждого издательства
-    const publishersWithCounts = await Promise.all(
-      allPublishers.map(async (publisher) => {
-        const [seriesCount, comicsCount] = await Promise.all([
-          prisma.series.count({
-            where: {
-              publisherId: publisher.id,
-              dateDelete: null,
-            },
-          }),
-          prisma.comic.count({
-            where: {
-              dateDelete: null,
-              series: {
-                publisherId: publisher.id,
-                dateDelete: null,
-              },
-            },
-          }),
-        ])
-
-        return {
-          id: publisher.id,
-          name: decodeHtmlEntities(publisher.name),
-          seriesCount,
-          comicsCount,
-        }
-      })
-    )
-
-    // Сортируем ВСЕ данные в зависимости от параметра
-    let sorted = [...publishersWithCounts]
-    if (sort === 'name_desc') {
-      sorted.sort((a, b) => b.name.localeCompare(a.name))
-    } else if (sort === 'series_asc') {
-      sorted.sort((a, b) => a.seriesCount - b.seriesCount)
-    } else if (sort === 'series_desc') {
-      sorted.sort((a, b) => b.seriesCount - a.seriesCount)
-    } else if (sort === 'comics_asc') {
-      sorted.sort((a, b) => a.comicsCount - b.comicsCount)
-    } else if (sort === 'comics_desc') {
-      sorted.sort((a, b) => b.comicsCount - a.comicsCount)
-    } else {
-      // name_asc
-      sorted.sort((a, b) => a.name.localeCompare(b.name))
-    }
-
-    // Применяем пагинацию ПОСЛЕ сортировки
     const skip = (page - 1) * pageSize
-    const paginated = sorted.slice(skip, skip + pageSize)
+
+    // Используем raw SQL с сортировкой и пагинацией в БД
+    // COUNT(*) OVER() даёт нам total без отдельного запроса
+    const publishersWithCounts = await prisma.$queryRaw<Array<{
+      id: number
+      name: string
+      seriesCount: bigint
+      comicsCount: bigint
+      total_count: bigint
+    }>>`
+      SELECT
+        p.id,
+        p.name,
+        COALESCE(COUNT(DISTINCT s.id), 0) as seriesCount,
+        COALESCE(COUNT(DISTINCT c.id), 0) as comicsCount,
+        COUNT(*) OVER() as total_count
+      FROM cdb_publishers p
+      LEFT JOIN cdb_series s ON s.publisher = p.id AND s.date_delete IS NULL
+      LEFT JOIN cdb_comics c ON c.serie = s.id AND c.date_delete IS NULL
+      WHERE p.date_delete IS NULL
+      GROUP BY p.id, p.name
+      ORDER BY ${Prisma.raw(orderByClause)}
+      LIMIT ${pageSize}
+      OFFSET ${skip}
+    `
+
+    const total = publishersWithCounts.length > 0 ? Number(publishersWithCounts[0].total_count) : 0
+
+    // Конвертируем BigInt в Number и декодируем HTML-сущности
+    const publishers = publishersWithCounts.map(p => ({
+      id: p.id,
+      name: decodeHtmlEntities(p.name),
+      seriesCount: Number(p.seriesCount),
+      comicsCount: Number(p.comicsCount),
+    }))
 
     return {
-      publishers: paginated,
+      publishers,
       total,
       page,
       pageSize,
@@ -92,7 +79,7 @@ export default async function PublishersPage({
   const resolvedParams = await Promise.resolve(searchParams)
   const page = parseInt(resolvedParams.page || '1')
   const sort = resolvedParams.sort || 'name_asc'
-  const data = await getPublishers(page, 100, sort)
+  const data = await getPublishers(page, APP_CONFIG.pagination.publishersPageSize, sort)
 
   const getPageLink = (pageNum: number) => {
     const params = new URLSearchParams()
