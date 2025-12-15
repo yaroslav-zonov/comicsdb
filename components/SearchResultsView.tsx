@@ -13,6 +13,8 @@ import {
 import TableRow from './TableRow'
 import ComicCard from './ComicCard'
 import Pagination from './Pagination'
+import SeriesCardSkeleton from './skeletons/SeriesCardSkeleton'
+import ComicCardSkeleton from './skeletons/ComicCardSkeleton'
 import { getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
 
 type Comic = {
@@ -233,28 +235,6 @@ export default function SearchResultsView({
       </div>
     )
   }
-
-  // Компонент скелетона для карточки серии
-  const SeriesCardSkeleton = () => (
-    <div className="overflow-hidden group animate-pulse">
-      <div className="relative aspect-[2/3] bg-bg-tertiary rounded" />
-      <div className="pt-3">
-        <div className="h-4 bg-bg-tertiary rounded w-full mb-1" />
-        <div className="h-3 bg-bg-tertiary rounded w-2/3" />
-      </div>
-    </div>
-  )
-
-  // Компонент скелетона для карточки комикса
-  const ComicCardSkeleton = () => (
-    <div className="overflow-hidden group animate-pulse">
-      <div className="relative aspect-[2/3] bg-bg-tertiary rounded" />
-      <div className="pt-3 space-y-2">
-        <div className="h-4 bg-bg-tertiary rounded w-3/4" />
-        <div className="h-3 bg-bg-tertiary rounded w-1/2" />
-      </div>
-    </div>
-  )
 
   const renderComics = (comics: Comic[], variant: 'main' | 'character-creator-team' | 'scanlator' = 'main') => {
     if (isPending) {
