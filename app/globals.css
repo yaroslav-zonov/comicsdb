@@ -213,4 +213,30 @@ select option {
   .smooth-transition {
     @apply transition-all duration-200 ease-in-out;
   }
+
+  /* FAB (Floating Action Button) для мобильной навигации */
+  .fab-container {
+    @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-40 md:hidden;
+  }
+
+  .fab-nav {
+    @apply flex items-center gap-0 bg-bg-card border border-border-primary rounded-full shadow-lg px-2 py-2;
+  }
+
+  .fab-btn {
+    @apply flex items-center justify-center gap-1 px-3 py-2 text-text-primary transition-all duration-200;
+  }
+
+  .fab-btn-prev,
+  .fab-btn-next {
+    @apply hover:text-accent active:scale-95;
+  }
+
+  .fab-btn-disabled {
+    @apply text-text-tertiary cursor-not-allowed opacity-50;
+  }
+
+  .fab-divider {
+    @apply w-px h-8 bg-border-primary;
+  }
 }

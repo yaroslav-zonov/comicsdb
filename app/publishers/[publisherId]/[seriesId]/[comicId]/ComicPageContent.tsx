@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TableRow from '@/components/TableRow'
+import ComicNavigationFAB from '@/components/ComicNavigationFAB'
 import { decodeHtmlEntities, getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
 
 type Comic = {
@@ -339,7 +340,15 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
         </div>
       </div>
       </div>
-      
+
+      {/* FAB для мобильной навигации */}
+      <ComicNavigationFAB
+        publisherId={comic.series.publisher.id}
+        seriesId={comic.series.id}
+        prevIssue={comic.prevIssue}
+        nextIssue={comic.nextIssue}
+      />
+
       <Footer />
     </div>
   )
