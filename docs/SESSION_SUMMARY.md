@@ -1,5 +1,26 @@
 # Сводка выполненной работы (2025-12-15)
 
+## Обновление 2: UI рефакторинг завершён
+
+### ✅ Убраны все hardcoded цвета (100%)
+
+**Файлы:**
+1. [app/globals.css](../app/globals.css:172-178) - добавлены `.table-body`, `.table-row`
+2. [app/sites/[id]/SiteSeriesView.tsx](../app/sites/[id]/SiteSeriesView.tsx) - применены классы
+3. [app/error.tsx](../app/error.tsx) - заменён на `.btn-primary`
+4. [app/not-found.tsx](../app/not-found.tsx) - заменён на `.btn-primary`
+
+**Результат:**
+- ✅ Все `dark:divide-[#2a2a2a]` → `.table-body`
+- ✅ Все `dark:hover:bg-[#111111]` → `.table-row`
+- ✅ Все `bg-orange-600 dark:bg-orange-500` → `.btn-primary`
+
+**Коммит:** `3b355b5`
+
+---
+
+## Обновление 1: Оптимизация запросов и начальный UI
+
 ## ✅ Выполнено
 
 ### 1. Оптимизация поиска (БД)
