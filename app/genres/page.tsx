@@ -11,7 +11,7 @@ export const revalidate = 60
 async function getGenres(page: number = 1, pageSize: number = 100) {
   try {
     const skip = (page - 1) * pageSize
-    
+
     const [genres, total] = await Promise.all([
       prisma.genre.findMany({
         where: {
@@ -30,32 +30,34 @@ async function getGenres(page: number = 1, pageSize: number = 100) {
       }),
     ])
 
-    // Получаем количество серий для каждого жанра
-    const genresWithCounts = await Promise.all(
-      genres.map(async (genre) => {
-        // Сначала получаем все серии этого жанра, затем фильтруем по dateDelete
-        const seriesGenres = await prisma.seriesGenre.findMany({
-          where: {
-            genre_id: genre.id,
-          },
-          include: {
-            cdb_series: {
-              select: {
-                dateDelete: true,
-              },
-            },
-          },
-        })
+    // Получаем ID жанров для текущей страницы
+    const genreIds = genres.map(g => g.id)
 
-        const seriesCount = seriesGenres.filter(sg => !sg.cdb_series.dateDelete).length
+    // Один запрос для подсчёта серий для всех жанров
+    const seriesCounts = await prisma.seriesGenre.groupBy({
+      by: ['genre_id'],
+      where: {
+        genre_id: { in: genreIds },
+        cdb_series: {
+          dateDelete: null,
+        },
+      },
+      _count: {
+        genre_id: true,
+      },
+    })
 
-        return {
-          id: genre.id,
-          name: decodeHtmlEntities(genre.name),
-          seriesCount,
-        }
-      })
+    // Создаём Map для быстрого доступа
+    const countsMap = new Map(
+      seriesCounts.map(item => [item.genre_id, item._count.genre_id])
     )
+
+    // Формируем результат
+    const genresWithCounts = genres.map(genre => ({
+      id: genre.id,
+      name: decodeHtmlEntities(genre.name),
+      seriesCount: countsMap.get(genre.id) || 0,
+    }))
 
     return {
       genres: genresWithCounts,
@@ -111,13 +113,13 @@ export default async function GenresPage({
             <p className="text-text-secondary">Нет доступных жанров</p>
           ) : (
             <>
-              <div className="bg-bg-card rounded-lg shadow overflow-hidden">
-                <ul className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
+              <div className="card overflow-hidden">
+                <ul className="list-divider">
                   {data.genres.map((genre) => (
                     <li key={genre.id}>
                       <Link
                         href={`/genres/${genre.id}`}
-                        className="block px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#111111] transition-colors"
+                        className="block list-item"
                       >
                         <div className="flex items-center justify-between">
                           <div>
