@@ -44,7 +44,7 @@ export default function FreshReleases({ comics }: { comics: Comic[] }) {
   }))
 
   return (
-    <section className="py-12 bg-bg-primary">
+    <section className="section-spacing bg-bg-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ComicsListView
           comics={comicsData}

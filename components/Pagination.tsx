@@ -41,7 +41,7 @@ export default function Pagination({ total, page, pageSize, getPageLink }: Pagin
       {page > 1 && (
         <Link
           href={getPageLink(page - 1)}
-          className="px-3 py-2 bg-bg-tertiary bg-bg-input text-text-primary rounded-lg hover:bg-bg-secondary transition-colors text-sm"
+          className="pagination-btn"
         >
           ←
         </Link>
@@ -58,7 +58,7 @@ export default function Pagination({ total, page, pageSize, getPageLink }: Pagin
         return pageNum === page ? (
           <span
             key={pageNum}
-            className="px-3 py-2 bg-orange-600 bg-accent text-text-primary rounded-lg text-sm font-medium"
+            className="pagination-active"
           >
             {pageNum}
           </span>
@@ -66,7 +66,7 @@ export default function Pagination({ total, page, pageSize, getPageLink }: Pagin
           <Link
             key={pageNum}
             href={getPageLink(pageNum)}
-            className="px-3 py-2 bg-bg-tertiary bg-bg-input text-text-primary rounded-lg hover:bg-bg-secondary transition-colors text-sm"
+            className="pagination-btn"
           >
             {pageNum}
           </Link>
@@ -75,7 +75,7 @@ export default function Pagination({ total, page, pageSize, getPageLink }: Pagin
       {page < totalPages && (
         <Link
           href={getPageLink(page + 1)}
-          className="px-3 py-2 bg-bg-tertiary bg-bg-input text-text-primary rounded-lg hover:bg-bg-secondary transition-colors text-sm"
+          className="pagination-btn"
         >
           →
         </Link>

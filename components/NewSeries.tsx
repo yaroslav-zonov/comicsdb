@@ -138,7 +138,7 @@ export default async function NewSeries() {
   }
 
   return (
-    <section className="py-12 bg-bg-primary">
+    <section className="section-spacing bg-bg-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text-primary">Новые серии</h2>

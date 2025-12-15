@@ -176,4 +176,13 @@ select option {
   .table-row {
     @apply hover:bg-gray-50 dark:hover:bg-bg-secondary transition-colors;
   }
+
+  /* Пагинация */
+  .pagination-btn {
+    @apply px-3 py-2 bg-bg-input text-text-primary rounded-lg hover:bg-bg-secondary transition-colors text-sm;
+  }
+
+  .pagination-active {
+    @apply px-3 py-2 bg-accent text-white rounded-lg text-sm font-medium;
+  }
 }

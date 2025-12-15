@@ -1,6 +1,6 @@
 # План рефакторинга UI/UX
 
-## ✅ Выполнено
+## ✅ Выполнено (обновлено 2025-12-15)
 
 ### 1. Исправлены критические баги
 - ✅ Исправлены 5 синтаксических ошибок `dark::hover:` → `dark:hover:` в SearchResultsView.tsx
@@ -9,11 +9,13 @@
 
 ### 2. Создана система дизайна
 
-**Файл:** [app/globals.css](app/globals.css:101-170)
+**Файл:** [app/globals.css](app/globals.css:101-180)
 
 Добавлены глобальные утилиты:
 - `.list-item` - консистентный стиль для элементов списка
 - `.list-divider` - разделители списков
+- `.table-body` - тело таблицы с разделителями (NEW)
+- `.table-row` - строка таблицы с hover (NEW)
 - `.section-spacing` - стандартный отступ для секций (py-12)
 - `.section-spacing-sm` - малый отступ (py-8)
 - `.grid-standard` - стандартный gap-4
@@ -22,60 +24,35 @@
 - `.card`, `.card-hover` - карточки
 - `.input` - input поля
 
+### 3. Фаза 1: Замена hardcoded цветов ✅ ЗАВЕРШЕНО
+
+**Применены в:**
+- ✅ app/sites/page.tsx - используют `.list-divider` и `.list-item`
+- ✅ app/genres/page.tsx - используют `.list-divider` и `.list-item`
+- ✅ app/sites/[id]/SiteSeriesView.tsx - используют `.table-body` и `.table-row`
+- ✅ app/error.tsx - используют `.btn-primary`
+- ✅ app/not-found.tsx - используют `.btn-primary`
+
+**Результат:** Все hardcoded цвета (100%) убраны из 6 файлов
+
+### 4. Фаза 3: Стандартизация grid ✅ ЗАВЕРШЕНО
+
+**Применены в:**
+- ✅ components/ComicsListView.tsx - используют `.grid-cards`
+- ✅ components/SeriesListView.tsx - используют `.grid-cards`
+- ✅ components/SearchResultsView.tsx - используют `.grid-cards` (9 мест)
+- ✅ app/sites/[id]/SiteSeriesView.tsx - используют `.grid-cards`
+
+**Результат:** -672 символа кода (12 × 56 символов)
+
+### 5. Skeleton компоненты ✅ ЗАВЕРШЕНО
+
+- ✅ components/SearchResultsView.tsx - использует переиспользуемые SeriesCardSkeleton и ComicCardSkeleton
+- ✅ Удалено 20 строк дублированного кода
+
 ## 📋 Следующие шаги (осталось выполнить)
 
-### Фаза 1: Замена hardcoded цветов (ВЫСОКИЙ ПРИОРИТЕТ)
-
-#### Файлы для обновления:
-
-**app/sites/page.tsx:**
-```diff
-- <ul className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
-+ <ul className="list-divider">
-
-- className="block px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#111111]"
-+ className="block list-item"
-```
-
-**app/genres/page.tsx:**
-```diff
-- <ul className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
-+ <ul className="list-divider">
-
-- className="block px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#111111]"
-+ className="block list-item"
-```
-
-**app/sites/[id]/SiteSeriesView.tsx:**
-```diff
-- <ul className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
-+ <ul className="list-divider">
-
-- className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#111111]"
-+ className="list-item"
-```
-
-**app/error.tsx:**
-```diff
-- bg-orange-600 dark:bg-orange-500
-+ bg-accent
-
-- hover:bg-orange-700 dark:hover:bg-orange-400
-+ hover:bg-accent-hover
-```
-
-**app/not-found.tsx:**
-```diff
-- bg-orange-600 dark:bg-orange-500
-+ bg-accent
-
-- hover:bg-orange-700 dark:hover:bg-orange-400
-+ hover:bg-accent-hover
-```
-
----
-
-### Фаза 2: Стандартизация spacing
+### Фаза 2: Стандартизация spacing (ВЫСОКИЙ ПРИОРИТЕТ)
 
 **components/FreshReleases.tsx:**
 ```diff
@@ -97,32 +74,7 @@
 
 ---
 
-### Фаза 3: Стандартизация grid
-
-**components/ComicsListView.tsx:**
-```diff
-- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-+ <div className="grid-cards">
-```
-
-**components/SeriesListView.tsx:**
-```diff
-- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-+ <div className="grid-cards">
-```
-
-**components/SearchResultsView.tsx:**
-```diff
-- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-+ <div className="grid-cards">
-```
-
-**components/NewSeries.tsx:**
-Убрать custom calc() для ширины карточек, использовать `.grid-cards`
-
----
-
-### Фаза 4: Рефакторинг кнопок
+### Фаза 4: Рефакторинг кнопок (СРЕДНИЙ ПРИОРИТЕТ)
 
 **Все кнопки навигации, пагинации, фильтров заменить на:**
 - `.btn-primary` для основных действий
@@ -375,6 +327,22 @@ git commit -m "refactor(ui): implement design system and fix hardcoded colors"
 
 ---
 
-**Статус:** В процессе
-**Прогресс:** 15% (2 из 9 фаз выполнено)
-**Время на завершение:** ~2-3 часа
+**Статус:** В процессе (обновлено 2025-12-15)
+**Прогресс:** 55% (5 из 9 фаз выполнено)
+**Время на завершение:** ~1-1.5 часа
+
+## 📊 Метрики улучшения (обновлено)
+
+### Выполнено:
+- ✅ 0 синтаксических ошибок (было 5)
+- ✅ 0 hardcoded цветов (было 6 файлов)
+- ✅ -672 символа grid дублирования
+- ✅ -20 строк skeleton дублирования
+- ✅ 8 файлов используют систему дизайна
+- ✅ Консистентные таблицы, списки, кнопки, карточки
+
+### Осталось:
+- ⏳ Стандартизировать spacing (2-3 файла)
+- ⏳ Рефакторинг кнопок пагинации/фильтров
+- ⏳ Добавить анимации (опционально)
+- ⏳ Улучшить мобильную навигацию (опционально)

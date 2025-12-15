@@ -97,7 +97,7 @@ export default async function PublishersPage({
       <Header />
       
       <div className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-spacing-sm">
           {/* Хлебные крошки */}
           <nav className="mb-6 text-sm">
             <ol className="flex items-center space-x-2 text-text-secondary">
