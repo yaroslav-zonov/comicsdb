@@ -1,5 +1,30 @@
 # Changelog - Краткий лог изменений
 
+## 2025-12-15 (3) - Завершение UI системы дизайна
+
+### ✅ Применён .grid-cards везде
+
+**Компоненты:**
+- [ComicsListView.tsx](../components/ComicsListView.tsx)
+- [SeriesListView.tsx](../components/SeriesListView.tsx)
+- [SearchResultsView.tsx](../components/SearchResultsView.tsx) - 9 мест
+- [SiteSeriesView.tsx](../app/sites/[id]/SiteSeriesView.tsx)
+
+**Замена:**
+```diff
+- grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4
++ grid-cards
+```
+
+**Результат:**
+- ✅ Консистентный grid во всём приложении
+- ✅ -60 символов в каждом использовании
+- ✅ Единое место для изменения breakpoints
+
+**Коммит:** `53dc842`
+
+---
+
 ## 2025-12-15 (2) - UI рефакторинг завершён
 
 ### ✅ Убраны все hardcoded цвета
