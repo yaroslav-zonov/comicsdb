@@ -32,7 +32,8 @@ export async function GET(request: Request) {
       const getDate = (comic: typeof a) => {
         if (comic.date) return new Date(comic.date).getTime()
         if (comic.pdate) return new Date(comic.pdate).getTime()
-        return new Date(comic.adddate).getTime()
+        if (comic.adddate) return new Date(comic.adddate).getTime()
+        return 0
       }
       
       const dateA = getDate(a)

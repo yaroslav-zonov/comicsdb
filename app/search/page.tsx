@@ -548,8 +548,7 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
 
-    // Используем стандартный Prisma ORM с широким поиском и последующей фильтрацией
-    // Не загружаем даты сразу - в БД есть невалидные даты (P2020 ошибка)
+    // Простой поиск: загружаем сразу все поля включая даты
     const allComics = await prisma.comic.findMany({
       where: {
         dateDelete: null,
@@ -581,10 +580,13 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
         translate: true,
         edit: true,
         link: true,
+        date: true,
+        pdate: true,
+        adddate: true,
       },
     })
 
-    // Затем фильтруем точно по имени в списке (в памяти, case-insensitive)
+    // Фильтруем точно по имени (case-insensitive)
     const lowerQuery = trimmedQuery.toLowerCase()
     const matchScanlator = (field: string | null): boolean => {
       if (!field) return false
@@ -592,11 +594,11 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return names.some(name => name.toLowerCase() === lowerQuery)
     }
 
-    const exactMatchComics = allComics.filter(c =>
+    const comicsWithDates = allComics.filter(c =>
       matchScanlator(c.translate) || matchScanlator(c.edit)
     )
 
-    const total = exactMatchComics.length
+    const total = comicsWithDates.length
 
     if (total === 0) {
       return {
@@ -608,41 +610,14 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       }
     }
 
-    // Определяем реальный ник сканлейтера для каждого комикса
-    const getRealScanlatorName = (comic: typeof exactMatchComics[0]): string | null => {
+    // Определяем реальный ник сканлейтера
+    const getRealScanlatorName = (comic: typeof comicsWithDates[0]): string | null => {
       const translateList = (comic.translate || '').split(',').map(s => s.trim())
       const editList = (comic.edit || '').split(',').map(s => s.trim())
-
-      // Сначала ищем точное совпадение
-      const inTranslate = translateList.find(s => s === trimmedQuery)
-      const inEdit = editList.find(s => s === trimmedQuery)
-
-      if (inTranslate || inEdit) {
-        return inTranslate || inEdit || null
-      }
-
-      // Если точного нет, ищем без учета регистра
-      const inTranslateLower = translateList.find(s => s.toLowerCase() === trimmedQuery.toLowerCase())
-      const inEditLower = editList.find(s => s.toLowerCase() === trimmedQuery.toLowerCase())
-
-      return inTranslateLower || inEditLower || null
+      const inTranslate = translateList.find(s => s.toLowerCase() === lowerQuery)
+      const inEdit = editList.find(s => s.toLowerCase() === lowerQuery)
+      return inTranslate || inEdit || null
     }
-
-    // Загружаем даты через Prisma - теперь поля nullable в схеме, безопасно для '0000-00-00'
-    const comicIds = exactMatchComics.map(c => c.id)
-    const datesData = await prisma.comic.findMany({
-      where: { id: { in: comicIds } },
-      select: { id: true, date: true, pdate: true, adddate: true }
-    })
-
-    const datesMap = new Map(datesData.map(d => [d.id, d]))
-
-    const comicsWithDates = exactMatchComics.map(comic => ({
-      ...comic,
-      date: datesMap.get(comic.id)?.date || null,
-      pdate: datesMap.get(comic.id)?.pdate || null,
-      adddate: datesMap.get(comic.id)?.adddate || null,
-    }))
 
     // Сортируем комиксы
     comicsWithDates.sort((a, b) => {
@@ -746,8 +721,7 @@ async function getScanlatorStats(name: string) {
 
     const lowerQuery = trimmedName.toLowerCase()
 
-    // Используем стандартный Prisma ORM - такой же подход как в searchByScanlators
-    // Не загружаем даты сразу из-за невалидных значений в БД (P2020)
+    // Простой поиск: загружаем сразу все поля включая pdate
     const allComics = await prisma.comic.findMany({
       where: {
         dateDelete: null,
@@ -760,39 +734,24 @@ async function getScanlatorStats(name: string) {
         id: true,
         translate: true,
         edit: true,
+        pdate: true,
       },
     })
 
-    // Фильтруем точно по имени в списке (case-insensitive)
+    // Фильтруем точно по имени (case-insensitive)
     const matchScanlator = (field: string | null): boolean => {
       if (!field) return false
       const names = field.split(',').map(s => s.trim())
       return names.some(name => name.toLowerCase() === lowerQuery)
     }
 
-    const filteredComics = allComics.filter(c =>
-      matchScanlator(c.translate) || matchScanlator(c.edit)
-    )
+    const comics = allComics
+      .filter(c => matchScanlator(c.translate) || matchScanlator(c.edit))
+      .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
 
-    if (filteredComics.length === 0) {
+    if (comics.length === 0) {
       return null
     }
-
-    // Загружаем pdate через Prisma - теперь поле nullable, безопасно для '0000-00-00'
-    const comicIds = filteredComics.map(c => c.id)
-    const datesData = await prisma.comic.findMany({
-      where: { id: { in: comicIds } },
-      select: { id: true, pdate: true }
-    })
-
-    const datesMap = new Map(datesData.map(d => [d.id, d.pdate]))
-
-    const comics = filteredComics
-      .map(c => ({
-        ...c,
-        pdate: datesMap.get(c.id) || null
-      }))
-      .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
 
     // Находим реальное имя сканлейтера из базы (первое вхождение)
     let realName = trimmedName
