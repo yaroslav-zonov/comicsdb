@@ -103,15 +103,19 @@ async function getSite(id: string): Promise<{
 
     // Получаем статистику
     const totalComics = comics.length
-    const firstRelease = comics.length > 0 
+    const firstRelease = comics.length > 0
       ? comics.reduce((earliest, comic) => {
           const date = comic.date || comic.pdate || comic.adddate
+          if (!date) return earliest
+          if (!earliest) return date
           return date < earliest ? date : earliest
         }, comics[0].date || comics[0].pdate || comics[0].adddate)
       : null
     const lastRelease = comics.length > 0
       ? comics.reduce((latest, comic) => {
           const date = comic.date || comic.pdate || comic.adddate
+          if (!date) return latest
+          if (!latest) return date
           return date > latest ? date : latest
         }, comics[0].date || comics[0].pdate || comics[0].adddate)
       : null

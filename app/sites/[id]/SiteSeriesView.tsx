@@ -11,7 +11,7 @@ type SeriesData = {
   name: string
   publisher: { id: number; name: string }
   comics: Array<{ id: number; comicvine: number; number: number; date: Date | null; pdate: Date | null }>
-  lastDate: Date
+  lastDate: Date | null
   thumb: string | null
 }
 
@@ -113,7 +113,7 @@ export default function SiteSeriesView({ series }: { series: SeriesData[] }) {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                    {formatDate(s.lastDate)}
+                    {s.lastDate ? formatDate(s.lastDate) : 'Дата неизвестна'}
                   </td>
                 </tr>
               ))}
