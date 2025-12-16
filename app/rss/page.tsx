@@ -62,7 +62,7 @@ export default async function RSSPage() {
     ${comics.map(comic => {
       const title = `${comic.series.name} #${comic.number}`
       const link = comic.link || `${siteUrl}/publishers/${comic.series.publisher.id}/${comic.series.id}/${comic.comicvine}`
-      const pubDate = new Date(comic.adddate).toUTCString()
+      const pubDate = comic.adddate ? new Date(comic.adddate).toUTCString() : new Date().toUTCString()
       const description = `Новый перевод: ${title} (${comic.series.publisher.name})${comic.site ? ` от ${decodeHtmlEntities(comic.site)}` : ''}`
       
       return `    <item>
