@@ -10,7 +10,7 @@ type Comic = {
   id: number
   comicvine: number
   number: number
-  pdate: Date
+  pdate: Date | null
   date: Date | null
   series: {
     id: number
@@ -29,7 +29,7 @@ type Comic = {
   creators: string
   characters: string
   teams: string
-  adddate: Date
+  adddate: Date | null
   translations: Array<{
     id: number
     siteName: string
@@ -167,7 +167,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                   </Link>
                   <span className="text-text-tertiary mx-2">•</span>
                   <span>
-                    {formatDate(comic.pdate, { month: 'long', year: 'numeric' }).replace(/^./, (m) => m.toUpperCase())}
+                    {comic.pdate ? formatDate(comic.pdate, { month: 'long', year: 'numeric' }).replace(/^./, (m) => m.toUpperCase()) : 'Дата неизвестна'}
                   </span>
                 </div>
 
