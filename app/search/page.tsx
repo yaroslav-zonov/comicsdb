@@ -828,23 +828,27 @@ async function getScanlatorStats(name: string) {
 
     // Вычисляем статистику по датам
     const validComics = comics.filter(c => c.adddate)
-    if (validComics.length === 0) {
-      return null
-    }
 
-    const firstRelease = validComics[0].adddate
-    const lastRelease = validComics[validComics.length - 1].adddate
-    const daysInScanlating = Math.max(0, Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24)))
-
-    return {
+    // Базовая статистика всегда должна возвращаться
+    const stats: any = {
       total: comics.length,
       realName,
-      firstRelease,
-      lastRelease,
       translatedCount,
       editedCount,
-      daysInScanlating,
     }
+
+    // Добавляем даты только если они есть
+    if (validComics.length > 0) {
+      const firstRelease = validComics[0].adddate
+      const lastRelease = validComics[validComics.length - 1].adddate
+      const daysInScanlating = Math.max(0, Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24)))
+
+      stats.firstRelease = firstRelease
+      stats.lastRelease = lastRelease
+      stats.daysInScanlating = daysInScanlating
+    }
+
+    return stats
   } catch (error) {
     console.error('Error getting scanlator stats:', error)
     return null

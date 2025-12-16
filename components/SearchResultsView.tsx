@@ -614,16 +614,20 @@ export default function SearchResultsView({
                   <span className="text-sm text-text-secondary mt-1">оформил</span>
                 </div>
               )}
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-text-primary">{formatTimeInScanlating(scanlatorStats.daysInScanlating)}</span>
-                <span className="text-sm text-text-secondary mt-1">в сканлейте</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-text-primary">
-                  {formatDate(scanlatorStats.lastRelease)}
-                </span>
-                <span className="text-sm text-text-secondary mt-1">последний релиз</span>
-              </div>
+              {scanlatorStats.daysInScanlating !== undefined && (
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-text-primary">{formatTimeInScanlating(scanlatorStats.daysInScanlating)}</span>
+                  <span className="text-sm text-text-secondary mt-1">в сканлейте</span>
+                </div>
+              )}
+              {scanlatorStats.lastRelease && (
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-text-primary">
+                    {formatDate(scanlatorStats.lastRelease)}
+                  </span>
+                  <span className="text-sm text-text-secondary mt-1">последний релиз</span>
+                </div>
+              )}
             </div>
           </div>
         )
