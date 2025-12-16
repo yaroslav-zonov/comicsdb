@@ -30,132 +30,6 @@ async function getGlobalComicIds(): Promise<Set<string>> {
   }
 }
 
-// Тип для результатов поиска комиксов из $queryRaw
-type ComicSearchResult = {
-      id: number
-      comicvine: number
-      number: number
-      serie: number
-      thumb: string | null
-      tiny: string | null
-      site: string
-      site2: string
-      translate: string
-      edit: string
-      date: Date | null
-      pdate: Date
-      link: string
-      adddate: Date
-}
-
-// Вспомогательная функция для обработки результатов поиска комиксов
-async function processComicSearchResults(
-  exactComics: ComicSearchResult[],
-  total: number,
-  page: number,
-  pageSize: number,
-  sort: string,
-  globalComicIds: Set<string>
-) {
-    if (total === 0) {
-      return {
-        results: [],
-        total: 0,
-        page,
-        pageSize,
-      suggestions: [],
-      }
-    }
-
-  // Конвертируем BigInt в Number, так как MySQL возвращает BigInt, а Prisma ожидает Int
-  const comicIds = exactComics.map(c => Number(c.id))
-    const comics = await prisma.comic.findMany({
-      where: {
-        id: { in: comicIds },
-        dateDelete: null,
-      },
-      include: {
-        series: {
-          include: {
-            publisher: true,
-          },
-        },
-      },
-    })
-
-    // Сортируем вручную
-    comics.sort((a, b) => {
-    if (sort === 'name_asc') return (a.series?.name || '').localeCompare(b.series?.name || '')
-    if (sort === 'name_desc') return (b.series?.name || '').localeCompare(a.series?.name || '')
-      if (sort === 'date_asc') return (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0)
-      if (sort === 'date_desc') return (b.pdate?.getTime() || 0) - (a.pdate?.getTime() || 0)
-      if (sort === 'translation_date_asc') return (a.date?.getTime() || 0) - (b.date?.getTime() || 0)
-      if (sort === 'translation_date_desc') return (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
-      return (b.adddate?.getTime() || 0) - (a.adddate?.getTime() || 0)
-    })
-
-    // Получаем названия сайтов
-    const comicSiteIds = [...new Set(comics.flatMap(c => [c.site, c.site2].filter(Boolean)))]
-    const sites = comicSiteIds.length > 0 ? await prisma.site.findMany({
-      where: {
-        id: { in: comicSiteIds },
-        dateDelete: null,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    }) : []
-    const siteMap = new Map(sites.map(s => [s.id, s.name]))
-
-    return {
-      results: comics.map((comic) => {
-        const site1 = siteMap.get(comic.site)
-        const site2 = comic.site2 && comic.site2 !== '0' ? siteMap.get(comic.site2) : null
-        const thumb = getImageUrl(comic.thumb)
-        const tiny = getImageUrl(comic.tiny)
-        
-        return {
-          id: comic.id,
-          comicvine: comic.comicvine,
-          number: Number(comic.number),
-        series: comic.series ? {
-            id: comic.series.id,
-            name: decodeHtmlEntities(comic.series.name),
-            publisher: {
-              id: comic.series.publisher.id,
-              name: decodeHtmlEntities(comic.series.publisher.name),
-            },
-        } : {
-          id: 0,
-          name: 'Неизвестная серия',
-          publisher: {
-            id: 0,
-            name: 'Неизвестное издательство',
-            },
-          },
-          thumb,
-          tiny,
-          siteName: site1 ? decodeHtmlEntities(site1) : comic.site,
-          siteId: comic.site,
-          site2Name: site2 ? decodeHtmlEntities(site2) : null,
-          site2Id: site2 ? comic.site2 : null,
-          translate: decodeHtmlEntities(comic.translate),
-          edit: decodeHtmlEntities(comic.edit),
-          date: comic.date,
-          pdate: comic.pdate,
-          link: comic.link,
-          hasGlobalEvent: globalComicIds.has(String(comic.id)),
-          isJoint: !!site2,
-        }
-      }),
-      total,
-      page,
-      pageSize,
-    suggestions: [],
-  }
-}
-
 /**
  * Поиск по сериям - частичный поиск по одному слову
  */
@@ -171,104 +45,75 @@ async function searchSeries(query: string, page: number = 1, sort: string = 'rel
 
     // Для сортировки по релевантности используем SQL с вычислением релевантности
     // Релевантность = точность совпадения (точное = выше) + позиция совпадения (раньше = выше)
+    // ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: один SQL запрос с COUNT(*) OVER() и всеми JOIN
     if (sort === 'relevance') {
-      const [seriesRaw, total] = await Promise.all([
-        prisma.$queryRaw<Array<{
-      id: number
-          name: string
-          volume: string
-          publisher: number
-          thumb: string
-          status: string
-      comicvine: number
-          total: number
-          relevance: number
-        }>>`
-          SELECT 
-            s.id,
-            s.name,
-            s.volume,
-            s.publisher,
-            s.thumb,
-            s.status,
-            s.comicvine,
-            s.total,
-            (
-              CASE 
-                WHEN LOWER(s.name) = LOWER(${trimmedQuery}) THEN 1000
-                WHEN LOWER(s.name) LIKE LOWER(${`${trimmedQuery}%`}) THEN 500
-                WHEN LOWER(s.name) LIKE LOWER(${`% ${trimmedQuery}%`}) THEN 300
-                ELSE 100
-              END - LOCATE(LOWER(${trimmedQuery}), LOWER(s.name)) + 1
-            ) as relevance
-          FROM cdb_series s
-          WHERE s.date_delete IS NULL
-            AND LOWER(s.name) LIKE LOWER(${`%${trimmedQuery}%`})
-          ORDER BY relevance DESC, s.name ASC
-      LIMIT ${pageSize}
-      OFFSET ${skip}
-        `,
-        prisma.series.count({
-          where: {
-            dateDelete: null,
-            name: {
-              contains: trimmedQuery,
-            },
-          },
-        }),
-      ])
+      const results = await prisma.$queryRaw<Array<{
+        id: number
+        name: string
+        volume: string
+        publisher_id: number
+        publisher_name: string
+        thumb: string | null
+        first_comic_thumb: string | null
+        first_comic_tiny: string | null
+        status: string
+        comicvine: number
+        total: number
+        comics_count: bigint
+        relevance: number
+        total_count: bigint
+      }>>`
+        SELECT
+          s.id,
+          s.name,
+          s.volume,
+          p.id as publisher_id,
+          p.name as publisher_name,
+          s.thumb,
+          (SELECT c.thumb FROM cdb_comics c
+           WHERE c.serie = s.id AND c.date_delete IS NULL
+           ORDER BY c.number ASC LIMIT 1) as first_comic_thumb,
+          (SELECT c.tiny FROM cdb_comics c
+           WHERE c.serie = s.id AND c.date_delete IS NULL
+           ORDER BY c.number ASC LIMIT 1) as first_comic_tiny,
+          s.status,
+          s.comicvine,
+          s.total,
+          (SELECT COUNT(*) FROM cdb_comics c
+           WHERE c.serie = s.id AND c.date_delete IS NULL) as comics_count,
+          (
+            CASE
+              WHEN LOWER(s.name) = LOWER(${trimmedQuery}) THEN 1000
+              WHEN LOWER(s.name) LIKE LOWER(${`${trimmedQuery}%`}) THEN 500
+              WHEN LOWER(s.name) LIKE LOWER(${`% ${trimmedQuery}%`}) THEN 300
+              ELSE 100
+            END - LOCATE(LOWER(${trimmedQuery}), LOWER(s.name)) + 1
+          ) as relevance,
+          COUNT(*) OVER() as total_count
+        FROM cdb_series s
+        INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+        WHERE s.date_delete IS NULL
+          AND LOWER(s.name) LIKE LOWER(${`%${trimmedQuery}%`})
+        ORDER BY relevance DESC, s.name ASC
+        LIMIT ${pageSize}
+        OFFSET ${skip}
+      `
 
-      // Получаем полную информацию о сериях
-      const seriesIds = seriesRaw.map(s => s.id)
-      const seriesFull = await prisma.series.findMany({
-        where: {
-          id: { in: seriesIds },
-          dateDelete: null,
-        },
-        include: {
-          publisher: true,
-          comics: {
-            where: {
-              dateDelete: null,
-            },
-            orderBy: {
-              number: 'asc',
-            },
-            take: 1,
-            select: {
-              thumb: true,
-              tiny: true,
-            },
-          },
-          _count: {
-            select: {
-              comics: {
-                where: {
-                  dateDelete: null,
-                },
-              },
-            },
-          },
-        },
-      })
-
-      // Сохраняем порядок из SQL запроса
-      const seriesMap = new Map(seriesFull.map(s => [s.id, s]))
-      const series = seriesIds.map(id => seriesMap.get(id)!).filter(Boolean)
+      const total = results.length > 0 ? Number(results[0].total_count) : 0
 
       return {
-        results: series.map(s => ({
+        results: results.map(s => ({
           id: s.id,
           name: decodeHtmlEntities(s.name),
           volume: s.volume,
           publisher: {
-            id: s.publisher.id,
-            name: decodeHtmlEntities(s.publisher.name),
+            id: s.publisher_id,
+            name: decodeHtmlEntities(s.publisher_name),
           },
-          thumb: s.comics.length > 0 
-            ? getImageUrl(s.comics[0].thumb) || getImageUrl(s.comics[0].tiny)
+          thumb: s.first_comic_thumb
+            ? getImageUrl(s.first_comic_thumb) || getImageUrl(s.first_comic_tiny)
             : getImageUrl(s.thumb),
-          comicsCount: s._count.comics,
+          comicsCount: Number(s.comics_count),
           status: s.status,
           comicvine: s.comicvine,
           total: s.total,
@@ -363,6 +208,7 @@ async function searchSeries(query: string, page: number = 1, sort: string = 'rel
 
 /**
  * Поиск комиксов по персонажам - точное совпадение
+ * ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: использует один SQL запрос с JOIN и правильной фильтрацией
  */
 async function searchByCharacters(query: string, page: number = 1, sort: string = 'adddate_desc') {
   try {
@@ -374,15 +220,70 @@ async function searchByCharacters(query: string, page: number = 1, sort: string 
     const pageSize = 100
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
-
-    // Ищем точное совпадение в поле characters
-    // Важно: на странице комикса данные декодируются, но в базе могут быть закодированы
     const encodedQuery = encodeHtmlEntities(trimmedQuery)
-    
-    const exactComics = await prisma.$queryRaw<Array<ComicSearchResult>>`
-      SELECT DISTINCT c.id, c.comicvine, c.number, c.serie, c.thumb, c.tiny, c.site, c.site2,
-             c.translate, c.edit, c.date, c.pdate, c.link, c.adddate
+
+    // Определяем ORDER BY для SQL
+    const getOrderByClause = (sortType: string): string => {
+      switch (sortType) {
+        case 'name_asc': return 's.name ASC'
+        case 'name_desc': return 's.name DESC'
+        case 'date_asc': return 'c.pdate ASC, c.adddate ASC'
+        case 'date_desc': return 'c.pdate DESC, c.adddate DESC'
+        case 'translation_date_asc': return 'COALESCE(c.date, c.pdate) ASC, c.adddate ASC'
+        case 'translation_date_desc': return 'COALESCE(c.date, c.pdate) DESC, c.adddate DESC'
+        default: return 'c.adddate DESC'
+      }
+    }
+
+    // ОДИН оптимизированный запрос с JOIN, фильтрацией, сортировкой и пагинацией
+    const results = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      serie_id: number
+      thumb: string | null
+      tiny: string | null
+      site: string
+      site2: string | null
+      translate: string
+      edit: string
+      date: Date | null
+      pdate: Date | null
+      link: string
+      adddate: Date | null
+      series_name: string
+      publisher_id: number
+      publisher_name: string
+      site1_name: string | null
+      site2_name: string | null
+      total_count: bigint
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        c.serie as serie_id,
+        c.thumb,
+        c.tiny,
+        c.site,
+        c.site2,
+        c.translate,
+        c.edit,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        c.link,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END as adddate,
+        s.name as series_name,
+        p.id as publisher_id,
+        p.name as publisher_name,
+        site1.name as site1_name,
+        site2.name as site2_name,
+        COUNT(*) OVER() as total_count
       FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      LEFT JOIN cdb_sites site1 ON c.site = site1.id AND site1.date_delete IS NULL
+      LEFT JOIN cdb_sites site2 ON c.site2 = site2.id AND site2.date_delete IS NULL
       WHERE c.date_delete IS NULL
         AND c.characters IS NOT NULL
         AND c.characters != ''
@@ -390,25 +291,60 @@ async function searchByCharacters(query: string, page: number = 1, sort: string 
           FIND_IN_SET(${trimmedQuery}, REPLACE(c.characters, ', ', ',')) > 0
           OR FIND_IN_SET(${encodedQuery}, REPLACE(c.characters, ', ', ',')) > 0
         )
-      ORDER BY ${Prisma.raw(sort === 'name_asc' ? 'c.serie ASC' : sort === 'name_desc' ? 'c.serie DESC' : sort === 'date_asc' ? 'c.pdate ASC' : sort === 'date_desc' ? 'c.pdate DESC' : sort === 'translation_date_asc' ? 'c.date ASC' : sort === 'translation_date_desc' ? 'c.date DESC' : 'c.adddate DESC')}
+      ORDER BY ${Prisma.raw(getOrderByClause(sort))}
       LIMIT ${pageSize}
       OFFSET ${skip}
     `
 
-    const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(DISTINCT c.id) as count
-      FROM cdb_comics c
-      WHERE c.date_delete IS NULL
-        AND c.characters IS NOT NULL
-        AND c.characters != ''
-        AND (
-          FIND_IN_SET(${trimmedQuery}, REPLACE(c.characters, ', ', ',')) > 0
-          OR FIND_IN_SET(${encodedQuery}, REPLACE(c.characters, ', ', ',')) > 0
-        )
-    `
-    const total = Number(totalResult[0]?.count || 0)
+    const total = results.length > 0 ? Number(results[0].total_count) : 0
 
-    return await processComicSearchResults(exactComics, total, page, pageSize, sort, globalComicIds)
+    if (total === 0) {
+      return {
+        results: [],
+        total: 0,
+        page,
+        pageSize,
+        suggestions: [],
+      }
+    }
+
+    return {
+      results: results.map((comic) => {
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
+
+        return {
+          id: comic.id,
+          comicvine: comic.comicvine,
+          number: Number(comic.number),
+          series: {
+            id: comic.serie_id,
+            name: decodeHtmlEntities(comic.series_name),
+            publisher: {
+              id: comic.publisher_id,
+              name: decodeHtmlEntities(comic.publisher_name),
+            },
+          },
+          thumb,
+          tiny,
+          siteName: comic.site1_name ? decodeHtmlEntities(comic.site1_name) : comic.site,
+          siteId: comic.site,
+          site2Name: comic.site2_name ? decodeHtmlEntities(comic.site2_name) : null,
+          site2Id: comic.site2 && comic.site2 !== '0' ? comic.site2 : null,
+          translate: decodeHtmlEntities(comic.translate),
+          edit: decodeHtmlEntities(comic.edit),
+          date: comic.date,
+          pdate: comic.pdate,
+          link: comic.link,
+          hasGlobalEvent: globalComicIds.has(String(comic.id)),
+          isJoint: !!comic.site2 && comic.site2 !== '0',
+        }
+      }),
+      total,
+      page,
+      pageSize,
+      suggestions: [],
+    }
   } catch (error) {
     console.error('Error searching by characters:', error)
     return { results: [], total: 0, page: 1, pageSize: 100, suggestions: [] }
@@ -417,6 +353,7 @@ async function searchByCharacters(query: string, page: number = 1, sort: string 
 
 /**
  * Поиск комиксов по авторам - точное совпадение
+ * ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: использует один SQL запрос с JOIN и правильной фильтрацией
  */
 async function searchByCreators(query: string, page: number = 1, sort: string = 'adddate_desc') {
   try {
@@ -428,36 +365,70 @@ async function searchByCreators(query: string, page: number = 1, sort: string = 
     const pageSize = 100
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
-
-    // Ищем точное совпадение в поле creators
-    // Обрабатываем формат с ролями: "Name (role)"
-    // Важно: на странице комикса данные декодируются, но в базе могут быть закодированы
-    // Поэтому ищем и по декодированному запросу, и по закодированному
     const encodedQuery = trimmedQuery.replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/&/g, '&amp;')
-    
-    const exactComics = await prisma.$queryRaw<Array<ComicSearchResult>>`
-      SELECT DISTINCT c.id, c.comicvine, c.number, c.serie, c.thumb, c.tiny, c.site, c.site2,
-             c.translate, c.edit, c.date, c.pdate, c.link, c.adddate
-        FROM cdb_comics c
-        WHERE c.date_delete IS NULL
-        AND c.creators IS NOT NULL
-        AND c.creators != ''
-        AND (
-          FIND_IN_SET(${trimmedQuery}, REPLACE(REPLACE(REPLACE(c.creators, ', ', ','), ' (', ','), ')', '')) > 0
-          OR FIND_IN_SET(${encodedQuery}, REPLACE(REPLACE(REPLACE(c.creators, ', ', ','), ' (', ','), ')', '')) > 0
-          OR c.creators LIKE ${`${trimmedQuery} (%`}
-          OR c.creators LIKE ${`%, ${trimmedQuery} (%`}
-          OR c.creators LIKE ${`${encodedQuery} (%`}
-          OR c.creators LIKE ${`%, ${encodedQuery} (%`}
-        )
-      ORDER BY ${Prisma.raw(sort === 'name_asc' ? 'c.serie ASC' : sort === 'name_desc' ? 'c.serie DESC' : sort === 'date_asc' ? 'c.pdate ASC' : sort === 'date_desc' ? 'c.pdate DESC' : sort === 'translation_date_asc' ? 'c.date ASC' : sort === 'translation_date_desc' ? 'c.date DESC' : 'c.adddate DESC')}
-      LIMIT ${pageSize}
-      OFFSET ${skip}
-    `
 
-    const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(DISTINCT c.id) as count
+    // Определяем ORDER BY для SQL
+    const getOrderByClause = (sortType: string): string => {
+      switch (sortType) {
+        case 'name_asc': return 's.name ASC'
+        case 'name_desc': return 's.name DESC'
+        case 'date_asc': return 'c.pdate ASC, c.adddate ASC'
+        case 'date_desc': return 'c.pdate DESC, c.adddate DESC'
+        case 'translation_date_asc': return 'COALESCE(c.date, c.pdate) ASC, c.adddate ASC'
+        case 'translation_date_desc': return 'COALESCE(c.date, c.pdate) DESC, c.adddate DESC'
+        default: return 'c.adddate DESC'
+      }
+    }
+
+    // ОДИН оптимизированный запрос с JOIN, фильтрацией, сортировкой и пагинацией
+    const results = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      serie_id: number
+      thumb: string | null
+      tiny: string | null
+      site: string
+      site2: string | null
+      translate: string
+      edit: string
+      date: Date | null
+      pdate: Date | null
+      link: string
+      adddate: Date | null
+      series_name: string
+      publisher_id: number
+      publisher_name: string
+      site1_name: string | null
+      site2_name: string | null
+      total_count: bigint
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        c.serie as serie_id,
+        c.thumb,
+        c.tiny,
+        c.site,
+        c.site2,
+        c.translate,
+        c.edit,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        c.link,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END as adddate,
+        s.name as series_name,
+        p.id as publisher_id,
+        p.name as publisher_name,
+        site1.name as site1_name,
+        site2.name as site2_name,
+        COUNT(*) OVER() as total_count
       FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      LEFT JOIN cdb_sites site1 ON c.site = site1.id AND site1.date_delete IS NULL
+      LEFT JOIN cdb_sites site2 ON c.site2 = site2.id AND site2.date_delete IS NULL
       WHERE c.date_delete IS NULL
         AND c.creators IS NOT NULL
         AND c.creators != ''
@@ -469,10 +440,60 @@ async function searchByCreators(query: string, page: number = 1, sort: string = 
           OR c.creators LIKE ${`${encodedQuery} (%`}
           OR c.creators LIKE ${`%, ${encodedQuery} (%`}
         )
+      ORDER BY ${Prisma.raw(getOrderByClause(sort))}
+      LIMIT ${pageSize}
+      OFFSET ${skip}
     `
-    const total = Number(totalResult[0]?.count || 0)
 
-    return await processComicSearchResults(exactComics, total, page, pageSize, sort, globalComicIds)
+    const total = results.length > 0 ? Number(results[0].total_count) : 0
+
+    if (total === 0) {
+      return {
+        results: [],
+        total: 0,
+        page,
+        pageSize,
+        suggestions: [],
+      }
+    }
+
+    return {
+      results: results.map((comic) => {
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
+
+        return {
+          id: comic.id,
+          comicvine: comic.comicvine,
+          number: Number(comic.number),
+          series: {
+            id: comic.serie_id,
+            name: decodeHtmlEntities(comic.series_name),
+            publisher: {
+              id: comic.publisher_id,
+              name: decodeHtmlEntities(comic.publisher_name),
+            },
+          },
+          thumb,
+          tiny,
+          siteName: comic.site1_name ? decodeHtmlEntities(comic.site1_name) : comic.site,
+          siteId: comic.site,
+          site2Name: comic.site2_name ? decodeHtmlEntities(comic.site2_name) : null,
+          site2Id: comic.site2 && comic.site2 !== '0' ? comic.site2 : null,
+          translate: decodeHtmlEntities(comic.translate),
+          edit: decodeHtmlEntities(comic.edit),
+          date: comic.date,
+          pdate: comic.pdate,
+          link: comic.link,
+          hasGlobalEvent: globalComicIds.has(String(comic.id)),
+          isJoint: !!comic.site2 && comic.site2 !== '0',
+        }
+      }),
+      total,
+      page,
+      pageSize,
+      suggestions: [],
+    }
   } catch (error) {
     console.error('Error searching by creators:', error)
     return { results: [], total: 0, page: 1, pageSize: 100, suggestions: [] }
@@ -481,6 +502,7 @@ async function searchByCreators(query: string, page: number = 1, sort: string = 
 
 /**
  * Поиск комиксов по командам - точное совпадение
+ * ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: использует один SQL запрос с JOIN и правильной фильтрацией
  */
 async function searchByTeams(query: string, page: number = 1, sort: string = 'adddate_desc') {
   try {
@@ -492,15 +514,70 @@ async function searchByTeams(query: string, page: number = 1, sort: string = 'ad
     const pageSize = 100
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
-
-    // Ищем точное совпадение в поле teams
-    // Важно: на странице комикса данные декодируются, но в базе могут быть закодированы
     const encodedQuery = trimmedQuery.replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/&/g, '&amp;')
-    
-    const exactComics = await prisma.$queryRaw<Array<ComicSearchResult>>`
-      SELECT DISTINCT c.id, c.comicvine, c.number, c.serie, c.thumb, c.tiny, c.site, c.site2,
-             c.translate, c.edit, c.date, c.pdate, c.link, c.adddate
+
+    // Определяем ORDER BY для SQL
+    const getOrderByClause = (sortType: string): string => {
+      switch (sortType) {
+        case 'name_asc': return 's.name ASC'
+        case 'name_desc': return 's.name DESC'
+        case 'date_asc': return 'c.pdate ASC, c.adddate ASC'
+        case 'date_desc': return 'c.pdate DESC, c.adddate DESC'
+        case 'translation_date_asc': return 'COALESCE(c.date, c.pdate) ASC, c.adddate ASC'
+        case 'translation_date_desc': return 'COALESCE(c.date, c.pdate) DESC, c.adddate DESC'
+        default: return 'c.adddate DESC'
+      }
+    }
+
+    // ОДИН оптимизированный запрос с JOIN, фильтрацией, сортировкой и пагинацией
+    const results = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      serie_id: number
+      thumb: string | null
+      tiny: string | null
+      site: string
+      site2: string | null
+      translate: string
+      edit: string
+      date: Date | null
+      pdate: Date | null
+      link: string
+      adddate: Date | null
+      series_name: string
+      publisher_id: number
+      publisher_name: string
+      site1_name: string | null
+      site2_name: string | null
+      total_count: bigint
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        c.serie as serie_id,
+        c.thumb,
+        c.tiny,
+        c.site,
+        c.site2,
+        c.translate,
+        c.edit,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        c.link,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END as adddate,
+        s.name as series_name,
+        p.id as publisher_id,
+        p.name as publisher_name,
+        site1.name as site1_name,
+        site2.name as site2_name,
+        COUNT(*) OVER() as total_count
       FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      LEFT JOIN cdb_sites site1 ON c.site = site1.id AND site1.date_delete IS NULL
+      LEFT JOIN cdb_sites site2 ON c.site2 = site2.id AND site2.date_delete IS NULL
       WHERE c.date_delete IS NULL
         AND c.teams IS NOT NULL
         AND c.teams != ''
@@ -508,25 +585,60 @@ async function searchByTeams(query: string, page: number = 1, sort: string = 'ad
           FIND_IN_SET(${trimmedQuery}, REPLACE(c.teams, ', ', ',')) > 0
           OR FIND_IN_SET(${encodedQuery}, REPLACE(c.teams, ', ', ',')) > 0
         )
-      ORDER BY ${Prisma.raw(sort === 'name_asc' ? 'c.serie ASC' : sort === 'name_desc' ? 'c.serie DESC' : sort === 'date_asc' ? 'c.pdate ASC' : sort === 'date_desc' ? 'c.pdate DESC' : sort === 'translation_date_asc' ? 'c.date ASC' : sort === 'translation_date_desc' ? 'c.date DESC' : 'c.adddate DESC')}
+      ORDER BY ${Prisma.raw(getOrderByClause(sort))}
       LIMIT ${pageSize}
       OFFSET ${skip}
     `
 
-    const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(DISTINCT c.id) as count
-      FROM cdb_comics c
-      WHERE c.date_delete IS NULL
-        AND c.teams IS NOT NULL
-        AND c.teams != ''
-        AND (
-          FIND_IN_SET(${trimmedQuery}, REPLACE(c.teams, ', ', ',')) > 0
-          OR FIND_IN_SET(${encodedQuery}, REPLACE(c.teams, ', ', ',')) > 0
-        )
-    `
-    const total = Number(totalResult[0]?.count || 0)
+    const total = results.length > 0 ? Number(results[0].total_count) : 0
 
-    return await processComicSearchResults(exactComics, total, page, pageSize, sort, globalComicIds)
+    if (total === 0) {
+      return {
+        results: [],
+        total: 0,
+        page,
+        pageSize,
+        suggestions: [],
+      }
+    }
+
+    return {
+      results: results.map((comic) => {
+        const thumb = getImageUrl(comic.thumb)
+        const tiny = getImageUrl(comic.tiny)
+
+        return {
+          id: comic.id,
+          comicvine: comic.comicvine,
+          number: Number(comic.number),
+          series: {
+            id: comic.serie_id,
+            name: decodeHtmlEntities(comic.series_name),
+            publisher: {
+              id: comic.publisher_id,
+              name: decodeHtmlEntities(comic.publisher_name),
+            },
+          },
+          thumb,
+          tiny,
+          siteName: comic.site1_name ? decodeHtmlEntities(comic.site1_name) : comic.site,
+          siteId: comic.site,
+          site2Name: comic.site2_name ? decodeHtmlEntities(comic.site2_name) : null,
+          site2Id: comic.site2 && comic.site2 !== '0' ? comic.site2 : null,
+          translate: decodeHtmlEntities(comic.translate),
+          edit: decodeHtmlEntities(comic.edit),
+          date: comic.date,
+          pdate: comic.pdate,
+          link: comic.link,
+          hasGlobalEvent: globalComicIds.has(String(comic.id)),
+          isJoint: !!comic.site2 && comic.site2 !== '0',
+        }
+      }),
+      total,
+      page,
+      pageSize,
+      suggestions: [],
+    }
   } catch (error) {
     console.error('Error searching by teams:', error)
     return { results: [], total: 0, page: 1, pageSize: 100, suggestions: [] }
