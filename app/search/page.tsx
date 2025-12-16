@@ -715,17 +715,18 @@ async function getScanlatorStats(name: string) {
     const lowerQuery = trimmedName.toLowerCase()
 
     // Используем тот же SQL запрос, что и в поиске, с JOIN для фильтрации удаленных series/publishers
+    // ВАЖНО: используем c.date (дата перевода), а не c.pdate (дата публикации оригинала)
     const allComics = await prisma.$queryRaw<Array<{
       id: number
       translate: string | null
       edit: string | null
-      pdate: Date | null
+      date: Date | null
     }>>`
       SELECT
         c.id,
         c.translate,
         c.edit,
-        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date
       FROM cdb_comics c
       INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
       INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
@@ -740,7 +741,7 @@ async function getScanlatorStats(name: string) {
           OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
           OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
         )
-      ORDER BY c.pdate ASC
+      ORDER BY c.date ASC
     `
 
     if (allComics.length === 0) {
@@ -767,8 +768,8 @@ async function getScanlatorStats(name: string) {
     const translatedCount = allComics.filter(c => extractRealName(c.translate) !== null).length
     const editedCount = allComics.filter(c => extractRealName(c.edit) !== null).length
 
-    // Вычисляем статистику по датам публикации (pdate)
-    const validComics = allComics.filter(c => c.pdate)
+    // Вычисляем статистику по датам ПЕРЕВОДА (c.date), а не оригинальной публикации (c.pdate)
+    const validComics = allComics.filter(c => c.date)
 
     // Базовая статистика
     const stats: any = {
@@ -780,8 +781,8 @@ async function getScanlatorStats(name: string) {
 
     // Добавляем даты только если они есть
     if (validComics.length > 0) {
-      const firstRelease = validComics[0].pdate
-      const lastRelease = validComics[validComics.length - 1].pdate
+      const firstRelease = validComics[0].date
+      const lastRelease = validComics[validComics.length - 1].date
 
       if (firstRelease && lastRelease) {
         const daysInScanlating = Math.max(0, Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24)))
