@@ -548,43 +548,40 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
 
-    // Простой поиск: загружаем сразу все поля включая даты
-    const allComics = await prisma.comic.findMany({
-      where: {
-        dateDelete: null,
-        OR: [
-          { translate: { contains: trimmedQuery } },
-          { edit: { contains: trimmedQuery } }
-        ]
-      },
-      select: {
-        id: true,
-        comicvine: true,
-        number: true,
-        series: {
-          select: {
-            id: true,
-            name: true,
-            publisher: {
-              select: {
-                id: true,
-                name: true,
-              }
-            }
-          }
-        },
-        thumb: true,
-        tiny: true,
-        site: true,
-        site2: true,
-        translate: true,
-        edit: true,
-        link: true,
-        date: true,
-        pdate: true,
-        adddate: true,
-      },
-    })
+    // Используем raw SQL для обработки невалидных дат
+    const allComics = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: number
+      seriesId: number
+      seriesName: string
+      publisherId: number
+      publisherName: string
+      thumb: string | null
+      tiny: string | null
+      site: string
+      site2: string | null
+      translate: string | null
+      edit: string | null
+      link: string | null
+      date: Date | null
+      pdate: Date | null
+      adddate: Date | null
+    }>>`
+      SELECT
+        c.id, c.comicvine, c.number,
+        s.id as seriesId, s.name as seriesName,
+        p.id as publisherId, p.name as publisherName,
+        c.thumb, c.tiny, c.site, c.site2, c.translate, c.edit, c.link,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END as adddate
+      FROM comic c
+      INNER JOIN series s ON c.series = s.id
+      INNER JOIN publisher p ON s.publisher = p.id
+      WHERE c.dateDelete IS NULL
+        AND (c.translate LIKE ${`%${trimmedQuery}%`} OR c.edit LIKE ${`%${trimmedQuery}%`})
+    `
 
     // Фильтруем точно по имени (case-insensitive)
     const lowerQuery = trimmedQuery.toLowerCase()
@@ -622,13 +619,13 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
     // Сортируем комиксы
     comicsWithDates.sort((a, b) => {
       if (sort === 'name_asc') {
-        const nameA = a.series?.name || ''
-        const nameB = b.series?.name || ''
+        const nameA = a.seriesName || ''
+        const nameB = b.seriesName || ''
         return nameA.localeCompare(nameB)
       }
       if (sort === 'name_desc') {
-        const nameA = a.series?.name || ''
-        const nameB = b.series?.name || ''
+        const nameA = a.seriesName || ''
+        const nameB = b.seriesName || ''
         return nameB.localeCompare(nameA)
       }
       if (sort === 'date_asc') return (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0)
@@ -642,7 +639,7 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
     const paginatedComics = comicsWithDates.slice(skip, skip + pageSize)
 
     // Получаем сайты для отображения
-    const siteIds = [...new Set(paginatedComics.flatMap(c => [c.site, c.site2].filter(Boolean)))]
+    const siteIds = [...new Set(paginatedComics.flatMap(c => [c.site, c.site2].filter((x): x is string => Boolean(x))))]
     const sites = siteIds.length > 0 ? await prisma.site.findMany({
       where: {
         id: { in: siteIds },
@@ -667,19 +664,12 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
           id: comic.id,
           comicvine: comic.comicvine,
           number: Number(comic.number),
-          series: comic.series ? {
-            id: comic.series.id,
-            name: decodeHtmlEntities(comic.series.name),
+          series: {
+            id: comic.seriesId,
+            name: decodeHtmlEntities(comic.seriesName),
             publisher: {
-              id: comic.series.publisher.id,
-              name: decodeHtmlEntities(comic.series.publisher.name),
-            },
-          } : {
-            id: 0,
-            name: 'Неизвестная серия',
-            publisher: {
-              id: 0,
-              name: 'Неизвестное издательство',
+              id: comic.publisherId,
+              name: decodeHtmlEntities(comic.publisherName),
             },
           },
           thumb,
@@ -721,22 +711,20 @@ async function getScanlatorStats(name: string) {
 
     const lowerQuery = trimmedName.toLowerCase()
 
-    // Простой поиск: загружаем сразу все поля включая pdate
-    const allComics = await prisma.comic.findMany({
-      where: {
-        dateDelete: null,
-        OR: [
-          { translate: { contains: trimmedName } },
-          { edit: { contains: trimmedName } }
-        ]
-      },
-      select: {
-        id: true,
-        translate: true,
-        edit: true,
-        pdate: true,
-      },
-    })
+    // Используем raw SQL для обработки невалидных дат
+    const allComics = await prisma.$queryRaw<Array<{
+      id: number
+      translate: string | null
+      edit: string | null
+      pdate: Date | null
+    }>>`
+      SELECT
+        id, translate, edit,
+        CASE WHEN pdate = '0000-00-00' OR YEAR(pdate) = 0 OR MONTH(pdate) = 0 OR DAY(pdate) = 0 THEN NULL ELSE pdate END as pdate
+      FROM comic
+      WHERE dateDelete IS NULL
+        AND (translate LIKE ${`%${trimmedName}%`} OR edit LIKE ${`%${trimmedName}%`})
+    `
 
     // Фильтруем точно по имени (case-insensitive)
     const matchScanlator = (field: string | null): boolean => {
