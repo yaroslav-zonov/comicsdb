@@ -544,8 +544,6 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return { results: [], total: 0, page: 1, pageSize: 100, suggestions: [] }
     }
 
-    console.log('[searchByScanlators] Начинаем поиск для:', trimmedQuery)
-
     const pageSize = 100
     const skip = (page - 1) * pageSize
     const globalComicIds = await getGlobalComicIds()
@@ -600,10 +598,7 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
 
     const total = exactMatchComics.length
 
-    console.log('[searchByScanlators] Найдено комиксов (total):', total)
-
     if (total === 0) {
-      console.log('[searchByScanlators] Результатов нет для:', trimmedQuery)
       return {
         results: [],
         total: 0,
@@ -765,8 +760,6 @@ async function getScanlatorStats(name: string) {
       return null
     }
 
-    console.log('[getScanlatorStats] Searching for:', trimmedName)
-
     const lowerQuery = trimmedName.toLowerCase()
 
     // Используем стандартный Prisma ORM - такой же подход как в searchByScanlators
@@ -797,53 +790,35 @@ async function getScanlatorStats(name: string) {
       matchScanlator(c.translate) || matchScanlator(c.edit)
     )
 
-    console.log('[getScanlatorStats] Found comics:', filteredComics.length)
-
     if (filteredComics.length === 0) {
-      console.log('[getScanlatorStats] No comics found for:', trimmedName)
       return null
     }
 
-    // Загружаем даты отдельно через raw SQL (безопасно обрабатываем невалидные даты)
+    // Загружаем pdate отдельно через raw SQL (безопасно обрабатываем невалидные даты)
     const comicIds = filteredComics.map(c => c.id)
     const datesRaw = await prisma.$queryRaw<Array<{
       id: number
-      date: string | null
-      adddate: string | null
+      pdate: string | null
     }>>`
       SELECT id,
-        CASE WHEN date = '0000-00-00' THEN NULL ELSE date END as date,
-        CASE WHEN adddate = '0000-00-00' THEN NULL ELSE adddate END as adddate
+        CASE WHEN pdate = '0000-00-00' THEN NULL ELSE pdate END as pdate
       FROM cdb_comics
       WHERE id IN (${Prisma.join(comicIds)})
-      ORDER BY adddate ASC
     `
 
     // Создаём map с датами
     const datesMap = new Map(datesRaw.map(d => [
       d.id,
-      {
-        date: d.date ? new Date(d.date) : null,
-        adddate: d.adddate ? new Date(d.adddate) : null,
-      }
+      { pdate: d.pdate ? new Date(d.pdate) : null }
     ]))
 
-    // Добавляем даты к комиксам и сортируем по adddate
+    // Добавляем даты к комиксам и сортируем по pdate
     const comics = filteredComics
       .map(c => ({
         ...c,
-        ...datesMap.get(c.id)
+        pdate: datesMap.get(c.id)?.pdate || null
       }))
-      .sort((a, b) => (a.adddate?.getTime() || 0) - (b.adddate?.getTime() || 0))
-
-    if (comics.length > 0) {
-      console.log('[getScanlatorStats] First 3 comics:', comics.slice(0, 3).map(c => ({
-        id: c.id,
-        adddate: c.adddate,
-        translate: c.translate?.substring(0, 50),
-        edit: c.edit?.substring(0, 50)
-      })))
-    }
+      .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
 
     // Находим реальное имя сканлейтера из базы (первое вхождение)
     let realName = trimmedName
@@ -883,9 +858,8 @@ async function getScanlatorStats(name: string) {
       return editList.some(s => normalizeForMatch(s, trimmedName))
     }).length
 
-    // Вычисляем статистику по датам
-    const validComics = comics.filter(c => c.adddate)
-    console.log('[getScanlatorStats] Valid comics with adddate:', validComics.length, '/', comics.length)
+    // Вычисляем статистику по датам перевода (pdate)
+    const validComics = comics.filter(c => c.pdate)
 
     // Базовая статистика всегда должна возвращаться
     const stats: any = {
@@ -897,8 +871,8 @@ async function getScanlatorStats(name: string) {
 
     // Добавляем даты только если они есть
     if (validComics.length > 0) {
-      const firstRelease = validComics[0].adddate
-      const lastRelease = validComics[validComics.length - 1].adddate
+      const firstRelease = validComics[0].pdate
+      const lastRelease = validComics[validComics.length - 1].pdate
 
       if (firstRelease && lastRelease) {
         const daysInScanlating = Math.max(0, Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24)))
@@ -906,18 +880,9 @@ async function getScanlatorStats(name: string) {
         stats.firstRelease = firstRelease
         stats.lastRelease = lastRelease
         stats.daysInScanlating = daysInScanlating
-
-        console.log('[getScanlatorStats] Date stats:', {
-          firstRelease,
-          lastRelease,
-          daysInScanlating
-        })
       }
-    } else {
-      console.log('[getScanlatorStats] No valid dates found')
     }
 
-    console.log('[getScanlatorStats] Returning stats:', stats)
     return stats
   } catch (error) {
     console.error('Error getting scanlator stats:', error)
@@ -976,11 +941,9 @@ async function SearchResults({
   
   // Загружаем статистику сканлейтера ВСЕГДА, когда есть запрос
   // Это гарантирует, что статистика показывается для всех сканлейтеров при переключении на таб
-  console.log('[SearchResults] Загружаем статистику для запроса:', query, 'defaultTab:', defaultTab)
-  const scanlatorStats = query.trim() 
-    ? await getScanlatorStats(query) 
+  const scanlatorStats = query.trim()
+    ? await getScanlatorStats(query)
     : null
-  console.log('[SearchResults] Результат загрузки статистики:', scanlatorStats ? 'есть данные' : 'null')
 
   // Используем уже загруженные total из результатов
   // Если total = 0, возможно результаты еще не загружены, но это нормально для отображения
