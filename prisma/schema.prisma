@@ -63,7 +63,7 @@ model Comic {
   number              Decimal              @db.Decimal(8, 1)
   comicvine           Int
   idk                 String               @default("") @db.VarChar(400)
-  pdate               DateTime             @db.Date
+  pdate               DateTime?            @db.Date
   date                DateTime?            @db.Date
   site                String               @db.VarChar(20)
   site2               String               @default("0") @db.VarChar(20)
@@ -82,7 +82,7 @@ model Comic {
   thumb               String               @db.VarChar(255)
   super               String               @db.VarChar(255)
   downloaded          Int                  @default(0)
-  adddate             DateTime             @db.Date
+  adddate             DateTime?            @db.Date
   addedby             Int?
   dateDelete          DateTime?            @map("date_delete") @db.DateTime(0)
   userDelete          Int?                 @map("user_delete")

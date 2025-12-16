@@ -628,14 +628,20 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return inTranslateLower || inEditLower || null
     }
 
-    // НЕ загружаем даты через Prisma - в БД есть невалидные '0000-00-00' значения
-    // которые вызывают P2020 ошибку. Даты не критичны для отображения результатов поиска.
-    // Для статистики даты загружаются отдельно в getScanlatorStats
+    // Загружаем даты через Prisma - теперь поля nullable в схеме, безопасно для '0000-00-00'
+    const comicIds = exactMatchComics.map(c => c.id)
+    const datesData = await prisma.comic.findMany({
+      where: { id: { in: comicIds } },
+      select: { id: true, date: true, pdate: true, adddate: true }
+    })
+
+    const datesMap = new Map(datesData.map(d => [d.id, d]))
+
     const comicsWithDates = exactMatchComics.map(comic => ({
       ...comic,
-      date: null as Date | null,
-      pdate: null as Date | null,
-      adddate: new Date() as Date, // adddate используется для сортировки, ставим текущую дату как fallback
+      date: datesMap.get(comic.id)?.date || null,
+      pdate: datesMap.get(comic.id)?.pdate || null,
+      adddate: datesMap.get(comic.id)?.adddate || null,
     }))
 
     // Сортируем комиксы
@@ -772,12 +778,21 @@ async function getScanlatorStats(name: string) {
       return null
     }
 
-    // НЕ загружаем pdate через Prisma - в БД могут быть невалидные '0000-00-00'
-    // Возвращаем статистику без дат - это лучше чем полный отказ от статистики
-    const comics = filteredComics.map(c => ({
-      ...c,
-      pdate: null as Date | null
-    }))
+    // Загружаем pdate через Prisma - теперь поле nullable, безопасно для '0000-00-00'
+    const comicIds = filteredComics.map(c => c.id)
+    const datesData = await prisma.comic.findMany({
+      where: { id: { in: comicIds } },
+      select: { id: true, pdate: true }
+    })
+
+    const datesMap = new Map(datesData.map(d => [d.id, d.pdate]))
+
+    const comics = filteredComics
+      .map(c => ({
+        ...c,
+        pdate: datesMap.get(c.id) || null
+      }))
+      .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
 
     // Находим реальное имя сканлейтера из базы (первое вхождение)
     let realName = trimmedName
