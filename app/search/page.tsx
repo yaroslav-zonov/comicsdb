@@ -747,334 +747,104 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
 
 /**
  * Получение статистики сканлейтера
+ * Использует ту же логику поиска, что и searchByScanlators
  */
 async function getScanlatorStats(name: string) {
   try {
     const trimmedName = name.trim()
     if (!trimmedName) {
-      console.log('[getScanlatorStats] Пустое имя, возвращаем null')
       return null
     }
-    
-    console.log('[getScanlatorStats] Начинаем поиск для:', trimmedName)
-    
-    // Используем ТОЧНО ТУ ЖЕ логику поиска, что и в searchByScanlators - БЕЗ УЧЕТА РЕГИСТРА
-    // Это критически важно для правильного подсчета и соответствия результатов
-    // Используем LOCATE для поиска без учета регистра, так как FIND_IN_SET не работает с LOWER
-    // LOCATE ищет подстроку, но мы проверяем что она находится в начале или после запятой/пробела
+
+
     const lowerQuery = trimmedName.toLowerCase()
-    console.log('[getScanlatorStats] Поиск с lowerQuery:', lowerQuery)
-    
-    // Используем CONCAT в SQL для формирования паттернов LIKE
-    // Это позволяет правильно обрабатывать wildcards без экранирования
-    // Используем точно такой же подход, как в searchByScanlators - Prisma.sql с CONCAT
-    // Это должно работать одинаково для всех сканлейтеров
-    let comics: Array<{
+
+    // Получаем все комиксы сканлейтера одним запросом
+    // Используем точно ту же логику, что и в searchByScanlators
+    const comics = await prisma.$queryRaw<Array<{
       id: number
       adddate: Date
       date: Date | null
       translate: string
       edit: string
-    }> = []
-    
-    try {
-      console.log('[getScanlatorStats] Используем searchByScanlators для получения данных...')
-      // Используем searchByScanlators, который работает для всех сканлейтеров, включая KazikZ
-      // Получаем данные порциями, так как прямой запрос без LIMIT падает для некоторых сканлейтеров
-      const allComics: Array<{
-        id: number
-        adddate: Date
-        date: Date | null
-        translate: string
-        edit: string
-      }> = []
-      
-      let page = 1
-      const pageSize = 1000
-      let hasMore = true
-      
-      while (hasMore) {
-        try {
-          const result = await prisma.$queryRaw<Array<{
-            id: number
-            adddate: Date
-            date: Date | null
-            translate: string
-            edit: string
-          }>>(Prisma.sql`
-            SELECT DISTINCT c.id, c.adddate, c.date, c.translate, c.edit
-            FROM cdb_comics c
-            WHERE c.date_delete IS NULL
-              AND (
-                LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
-                OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
-                OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
-              )
-            ORDER BY c.adddate DESC
-            LIMIT ${pageSize}
-            OFFSET ${(page - 1) * pageSize}
-          `)
-          
-          if (result.length === 0) {
-            hasMore = false
-          } else {
-            allComics.push(...result)
-            if (result.length < pageSize) {
-              hasMore = false
-            } else {
-              page++
-            }
-          }
-        } catch (pageError: any) {
-          console.error(`[getScanlatorStats] Ошибка при получении страницы ${page}:`, pageError)
-          hasMore = false
-        }
-      }
-      
-      comics = allComics
-      console.log('[getScanlatorStats] SQL запрос выполнен успешно, найдено комиксов:', comics.length)
-    } catch (sqlError: any) {
-      console.error('[getScanlatorStats] Ошибка SQL запроса с Prisma.sql:', sqlError)
-      console.error('[getScanlatorStats] Детали ошибки:', {
-        code: sqlError?.code,
-        message: sqlError?.message,
-        meta: sqlError?.meta,
-        stack: sqlError?.stack
-      })
-      // Пробуем альтернативный подход - используем обычный template literal
-      console.log('[getScanlatorStats] Пробуем альтернативный подход с обычным template literal...')
-      const patternMiddle = `%,${lowerQuery},%`
-      const patternStart = `${lowerQuery},%`
-      const patternEnd = `%,${lowerQuery}`
-      
-      try {
-        comics = await prisma.$queryRaw<Array<{
-          id: number
-          adddate: Date
-          date: Date | null
-          translate: string
-          edit: string
-        }>>`
-          SELECT DISTINCT c.id, c.adddate, c.date, c.translate, c.edit
-          FROM cdb_comics c
-          WHERE c.date_delete IS NULL
-            AND c.adddate IS NOT NULL
-            AND (
-              LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${patternMiddle}
-              OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${patternStart}
-              OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${patternEnd}
-              OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-              OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${patternMiddle}
-              OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${patternStart}
-              OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${patternEnd}
-              OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
-            )
-          ORDER BY c.adddate ASC
-        `
-        console.log('[getScanlatorStats] Альтернативный запрос выполнен, найдено комиксов:', comics.length)
-      } catch (altError: any) {
-        console.error('[getScanlatorStats] Ошибка альтернативного запроса:', altError)
-        // Если и альтернативный запрос не работает, пробуем использовать searchByScanlators логику напрямую
-        // но без пагинации - получаем все записи
-        console.log('[getScanlatorStats] Пробуем использовать логику из searchByScanlators без LIMIT...')
-        try {
-          // Используем точно такой же запрос, как в searchByScanlators, но без LIMIT/OFFSET
-          // Пробуем использовать обычный template literal, как в других местах
-          const allComics = await prisma.$queryRaw<Array<{
-            id: number
-            comicvine: number
-            number: number
-            serie: number
-            thumb: string | null
-            tiny: string | null
-            site: string
-            site2: string
-            translate: string
-            edit: string
-            date: Date | null
-            pdate: Date
-            link: string
-            adddate: Date
-          }>>`
-            SELECT DISTINCT c.id, c.comicvine, c.number, c.serie, c.thumb, c.tiny, c.site, c.site2,
-                   c.translate, c.edit, c.date, c.pdate, c.link, c.adddate
-            FROM cdb_comics c
-            WHERE c.date_delete IS NULL
-              AND (
-                LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
-                OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-                OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
-                OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
-              )
-            ORDER BY c.adddate ASC
-          `
-          // Преобразуем в нужный формат
-          comics = allComics.map(c => ({
-            id: c.id,
-            adddate: c.adddate,
-            date: c.date,
-            translate: c.translate,
-            edit: c.edit
-          }))
-          console.log('[getScanlatorStats] Запрос через searchByScanlators логику выполнен, найдено комиксов:', comics.length)
-        } catch (finalError: any) {
-          console.error('[getScanlatorStats] Все попытки запроса провалились:', finalError)
-          throw finalError // Пробрасываем ошибку дальше
-        }
-      }
-    }
+    }>>(Prisma.sql`
+      SELECT DISTINCT c.id, c.adddate, c.date, c.translate, c.edit
+      FROM cdb_comics c
+      WHERE c.date_delete IS NULL
+        AND (
+          LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
+        )
+      ORDER BY c.adddate ASC
+    `)
 
-    console.log('[getScanlatorStats] Найдено комиксов:', comics.length)
-    
     if (comics.length === 0) {
-      console.log('[getScanlatorStats] Результатов нет, возвращаем null для:', trimmedName)
-      // Для отладки: проверим, есть ли вообще записи с похожими именами
-      const debugCheck = await prisma.$queryRaw<Array<{
-        translate: string
-        edit: string
-        count: bigint
-      }>>`
-        SELECT c.translate, c.edit, COUNT(*) as count
-        FROM cdb_comics c
-        WHERE c.date_delete IS NULL
-          AND (
-            LOWER(c.translate) LIKE CONCAT('%', LOWER(${trimmedName}), '%')
-            OR LOWER(c.edit) LIKE CONCAT('%', LOWER(${trimmedName}), '%')
-          )
-        GROUP BY c.translate, c.edit
-        LIMIT 5
-      `
-      console.log('[getScanlatorStats] DEBUG: Похожие записи (первые 5):', debugCheck.map(c => ({
-        translate: c.translate,
-        edit: c.edit,
-        count: Number(c.count)
-      })))
       return null
     }
-    
-    // Сортируем по adddate для получения первого и последнего релиза
-    const sortedComics = [...comics].sort((a, b) => {
-      if (!a.adddate || !b.adddate) return 0
-      return a.adddate.getTime() - b.adddate.getTime()
-    })
-    
-    console.log('[getScanlatorStats] Первые 3 комикса для отладки:', sortedComics.slice(0, 3).map(c => ({
-      id: c.id,
-      translate: c.translate,
-      edit: c.edit,
-      adddate: c.adddate
-    })))
 
-    // Вычисляем статистику с обработкой ошибок
-    let firstRelease: Date | null = null
-    let lastRelease: Date | null = null
-    
-    try {
-      if (sortedComics.length > 0) {
-        firstRelease = sortedComics[0].adddate || null
-        lastRelease = sortedComics[sortedComics.length - 1].adddate || null
-        console.log('[getScanlatorStats] Первый релиз:', firstRelease, 'Последний:', lastRelease)
-      }
-    } catch (dateError: any) {
-      console.error('[getScanlatorStats] Ошибка при вычислении дат:', dateError)
-    }
-    
     // Находим реальное имя сканлейтера из базы (первое вхождение)
-    // Ищем без учета регистра, так как поиск тоже без учета регистра
     let realName = trimmedName
     for (const comic of comics) {
       if (comic.translate) {
         const translateList = comic.translate.split(',').map(s => s.trim())
-        // Сначала ищем точное совпадение
-        const found = translateList.find(s => s === trimmedName)
+        const found = translateList.find(s => s.toLowerCase() === lowerQuery)
         if (found) {
           realName = found
-          console.log('[getScanlatorStats] Найдено точное совпадение в translate:', found)
-          break
-        }
-        // Если нет, ищем без учета регистра
-        const foundLower = translateList.find(s => s.toLowerCase() === trimmedName.toLowerCase())
-        if (foundLower) {
-          realName = foundLower
-          console.log('[getScanlatorStats] Найдено совпадение без учета регистра в translate:', foundLower)
           break
         }
       }
       if (comic.edit) {
         const editList = comic.edit.split(',').map(s => s.trim())
-        // Сначала ищем точное совпадение
-        const found = editList.find(s => s === trimmedName)
+        const found = editList.find(s => s.toLowerCase() === lowerQuery)
         if (found) {
           realName = found
-          console.log('[getScanlatorStats] Найдено точное совпадение в edit:', found)
-          break
-        }
-        // Если нет, ищем без учета регистра
-        const foundLower = editList.find(s => s.toLowerCase() === trimmedName.toLowerCase())
-        if (foundLower) {
-          realName = foundLower
-          console.log('[getScanlatorStats] Найдено совпадение без учета регистра в edit:', foundLower)
           break
         }
       }
     }
-    
-    console.log('[getScanlatorStats] Реальное имя:', realName)
-    
-    // Подсчет использует точное совпадение из найденных результатов
-    // Если использовался поиск без учета регистра, находим реальное имя из базы
+
+    // Подсчет переводов и оформлений
     const normalizeForMatch = (name: string, query: string): boolean => {
-      const normalizedName = name.toLowerCase().trim()
-      const normalizedQuery = query.toLowerCase().trim()
-      return normalizedName === normalizedQuery
+      return name.toLowerCase().trim() === query.toLowerCase().trim()
     }
-    
+
     const translatedCount = comics.filter(c => {
       if (!c.translate) return false
       const translateList = c.translate.split(',').map(s => s.trim())
       return translateList.some(s => normalizeForMatch(s, trimmedName))
     }).length
-    
+
     const editedCount = comics.filter(c => {
       if (!c.edit) return false
       const editList = c.edit.split(',').map(s => s.trim())
       return editList.some(s => normalizeForMatch(s, trimmedName))
     }).length
-    
-    // Вычисляем daysInScanlating с обработкой ошибок
-    let daysInScanlating = 0
-    try {
-      if (firstRelease && lastRelease) {
-        daysInScanlating = Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24))
-      }
-    } catch (daysError: any) {
-      console.error('[getScanlatorStats] Ошибка при вычислении daysInScanlating:', daysError)
+
+    // Вычисляем статистику по датам
+    const validComics = comics.filter(c => c.adddate)
+    if (validComics.length === 0) {
+      return null
     }
 
-    // Формируем статистику только с теми полями, которые удалось вычислить
-    const result: any = {
+    const firstRelease = validComics[0].adddate
+    const lastRelease = validComics[validComics.length - 1].adddate
+    const daysInScanlating = Math.max(0, Math.floor((lastRelease.getTime() - firstRelease.getTime()) / (1000 * 60 * 60 * 24)))
+
+    return {
       total: comics.length,
       realName,
+      firstRelease,
+      lastRelease,
+      translatedCount,
+      editedCount,
+      daysInScanlating,
     }
-    
-    if (firstRelease) result.firstRelease = firstRelease
-    if (lastRelease) result.lastRelease = lastRelease
-    if (translatedCount > 0) result.translatedCount = translatedCount
-    if (editedCount > 0) result.editedCount = editedCount
-    if (daysInScanlating > 0) result.daysInScanlating = daysInScanlating
-    
-    console.log('[getScanlatorStats] Итоговая статистика для', trimmedName, ':', result)
-    
-    return result
   } catch (error) {
     console.error('Error getting scanlator stats:', error)
     return null

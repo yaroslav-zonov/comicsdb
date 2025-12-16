@@ -580,16 +580,7 @@ export default function SearchResultsView({
         </div>
       </div>
 
-      {/* Статистика сканлейтера - показываем всегда, когда есть статистика */}
-      {(() => {
-        console.log('[SearchResultsView] Проверка статистики:', {
-          currentTab,
-          isScanlatorsTab: currentTab === 'scanlators',
-          hasStats: !!scanlatorStats,
-          statsData: scanlatorStats
-        })
-        return null
-      })()}
+      {/* Статистика сканлейтера */}
       {currentTab === 'scanlators' && scanlatorStats && (() => {
         // Форматируем время в сканлейте (только годы)
         const formatTimeInScanlating = (days: number): string => {
