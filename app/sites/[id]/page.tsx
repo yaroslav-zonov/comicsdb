@@ -26,7 +26,7 @@ async function getSite(id: string): Promise<{
       date: Date | null
       pdate: Date | null
     }>
-    lastDate: Date
+    lastDate: Date | null
     thumb: string | null
   }>
 } | null> {
@@ -68,7 +68,7 @@ async function getSite(id: string): Promise<{
     const seriesMap = new Map<number, {
       series: typeof comics[0]['series']
       comics: typeof comics
-      lastDate: Date
+      lastDate: Date | null
       firstComic: typeof comics[0] | null
     }>()
 
@@ -85,7 +85,9 @@ async function getSite(id: string): Promise<{
       const entry = seriesMap.get(seriesId)!
       entry.comics.push(comic)
       const comicDate = comic.date || comic.pdate || comic.adddate
-      if (comicDate > entry.lastDate) {
+      if (comicDate && entry.lastDate && comicDate > entry.lastDate) {
+        entry.lastDate = comicDate
+      } else if (comicDate && !entry.lastDate) {
         entry.lastDate = comicDate
       }
       // Сохраняем первый комикс для обложки
@@ -95,8 +97,8 @@ async function getSite(id: string): Promise<{
     })
 
     // Сортируем серии по дате последнего перевода
-    const sortedSeries = Array.from(seriesMap.values()).sort((a, b) => 
-      b.lastDate.getTime() - a.lastDate.getTime()
+    const sortedSeries = Array.from(seriesMap.values()).sort((a, b) =>
+      (b.lastDate?.getTime() || 0) - (a.lastDate?.getTime() || 0)
     )
 
     // Получаем статистику
