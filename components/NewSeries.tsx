@@ -7,7 +7,7 @@ type Comic = {
   id: number
   comicvine: number
   number: number
-  pdate: Date
+  pdate: Date | null
   date: Date | null
   series: {
     id: number
