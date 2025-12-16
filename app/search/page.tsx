@@ -762,6 +762,7 @@ async function getScanlatorStats(name: string) {
 
     // Получаем все комиксы сканлейтера одним запросом
     // Используем точно ту же логику, что и в searchByScanlators
+    // Важно: добавляем LIMIT для избежания проблем с большими результатами
     const comics = await prisma.$queryRaw<Array<{
       id: number
       adddate: Date
@@ -783,6 +784,7 @@ async function getScanlatorStats(name: string) {
           OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
         )
       ORDER BY c.adddate ASC
+      LIMIT 10000
     `)
 
     console.log('[getScanlatorStats] Found comics:', comics.length)

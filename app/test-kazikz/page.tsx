@@ -33,6 +33,7 @@ async function getScanlatorStats(name: string) {
           OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
         )
       ORDER BY c.adddate ASC
+      LIMIT 10000
     `)
 
     console.log('[getScanlatorStats] Found comics:', comics.length)
