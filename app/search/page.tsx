@@ -756,6 +756,7 @@ async function getScanlatorStats(name: string) {
       return null
     }
 
+    console.log('[getScanlatorStats] Searching for:', trimmedName)
 
     const lowerQuery = trimmedName.toLowerCase()
 
@@ -784,7 +785,18 @@ async function getScanlatorStats(name: string) {
       ORDER BY c.adddate ASC
     `)
 
+    console.log('[getScanlatorStats] Found comics:', comics.length)
+    if (comics.length > 0) {
+      console.log('[getScanlatorStats] First 3 comics:', comics.slice(0, 3).map(c => ({
+        id: c.id,
+        adddate: c.adddate,
+        translate: c.translate?.substring(0, 50),
+        edit: c.edit?.substring(0, 50)
+      })))
+    }
+
     if (comics.length === 0) {
+      console.log('[getScanlatorStats] No comics found for:', trimmedName)
       return null
     }
 
@@ -828,6 +840,7 @@ async function getScanlatorStats(name: string) {
 
     // Вычисляем статистику по датам
     const validComics = comics.filter(c => c.adddate)
+    console.log('[getScanlatorStats] Valid comics with adddate:', validComics.length, '/', comics.length)
 
     // Базовая статистика всегда должна возвращаться
     const stats: any = {
@@ -846,8 +859,17 @@ async function getScanlatorStats(name: string) {
       stats.firstRelease = firstRelease
       stats.lastRelease = lastRelease
       stats.daysInScanlating = daysInScanlating
+
+      console.log('[getScanlatorStats] Date stats:', {
+        firstRelease,
+        lastRelease,
+        daysInScanlating
+      })
+    } else {
+      console.log('[getScanlatorStats] No valid dates found')
     }
 
+    console.log('[getScanlatorStats] Returning stats:', stats)
     return stats
   } catch (error) {
     console.error('Error getting scanlator stats:', error)
