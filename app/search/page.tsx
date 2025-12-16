@@ -759,10 +759,15 @@ async function getScanlatorStats(name: string) {
     console.log('[getScanlatorStats] Searching for:', trimmedName)
 
     const lowerQuery = trimmedName.toLowerCase()
+    console.log('[getScanlatorStats] Lower query:', lowerQuery, 'Length:', lowerQuery.length)
 
     // Получаем все комиксы сканлейтера одним запросом
-    // Используем точно ту же логику, что и в searchByScanlators
-    // Важно: добавляем LIMIT для избежания проблем с большими результатами
+    // Используем упрощённую логику без CONCAT для избежания ошибок парсинга
+    // CONCAT может вызывать проблемы с некоторыми именами в Prisma
+    const startPattern = `${lowerQuery},%`
+    const middlePattern = `%,${lowerQuery},%`
+    const endPattern = `%,${lowerQuery}`
+
     const comics = await prisma.$queryRaw<Array<{
       id: number
       adddate: Date
@@ -774,13 +779,13 @@ async function getScanlatorStats(name: string) {
       FROM cdb_comics c
       WHERE c.date_delete IS NULL
         AND (
-          LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${middlePattern}
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${startPattern}
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${endPattern}
           OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${middlePattern}
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${startPattern}
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${endPattern}
           OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
         )
       ORDER BY c.adddate ASC

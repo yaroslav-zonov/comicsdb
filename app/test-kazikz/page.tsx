@@ -11,6 +11,12 @@ async function getScanlatorStats(name: string) {
     console.log('[getScanlatorStats] Searching for:', trimmedName)
 
     const lowerQuery = trimmedName.toLowerCase()
+    console.log('[getScanlatorStats] Lower query:', lowerQuery, 'Length:', lowerQuery.length)
+
+    // Используем упрощённую логику без CONCAT для избежания ошибок парсинга
+    const startPattern = `${lowerQuery},%`
+    const middlePattern = `%,${lowerQuery},%`
+    const endPattern = `%,${lowerQuery}`
 
     const comics = await prisma.$queryRaw<Array<{
       id: number
@@ -23,13 +29,13 @@ async function getScanlatorStats(name: string) {
       FROM cdb_comics c
       WHERE c.date_delete IS NULL
         AND (
-          LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${middlePattern}
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${startPattern}
+          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${endPattern}
           OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT(${lowerQuery}, ',%')
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE CONCAT('%,', ${lowerQuery})
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${middlePattern}
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${startPattern}
+          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${endPattern}
           OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
         )
       ORDER BY c.adddate ASC
