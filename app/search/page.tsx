@@ -628,29 +628,48 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return inTranslateLower || inEditLower || null
     }
 
-    // Загружаем даты отдельно через raw SQL (безопасно обрабатываем невалидные даты)
+    // Загружаем даты без использования Prisma ORM (чтобы избежать P2020 ошибки)
+    // Используем простой подход: загружаем даты как строки и обрабатываем вручную
     const comicIds = exactMatchComics.map(c => c.id)
-    const datesRaw = await prisma.$queryRaw<Array<{
+
+    // Загружаем даты напрямую из БД как строки (без преобразования Prisma в Date)
+    const comicsWithStringDates = await prisma.$queryRawUnsafe<Array<{
       id: number
       date: string | null
       pdate: string | null
       adddate: string | null
-    }>>`
-      SELECT id,
-        CASE WHEN date = '0000-00-00' THEN NULL ELSE date END as date,
-        CASE WHEN pdate = '0000-00-00' THEN NULL ELSE pdate END as pdate,
-        CASE WHEN adddate = '0000-00-00' THEN NULL ELSE adddate END as adddate
-      FROM cdb_comics
-      WHERE id IN (${Prisma.join(comicIds)})
-    `
+    }>>(
+      `SELECT id, date, pdate, adddate FROM cdb_comics WHERE id IN (${comicIds.join(',')})`
+    )
+
+    // Функция безопасного парсинга даты
+    const safeParseDate = (dateStr: string | null): Date | null => {
+      if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00') {
+        return null
+      }
+      try {
+        const date = new Date(dateStr)
+        // Проверяем что дата валидна
+        if (isNaN(date.getTime())) {
+          return null
+        }
+        // Проверяем что год не 0
+        if (date.getFullYear() === 0) {
+          return null
+        }
+        return date
+      } catch {
+        return null
+      }
+    }
 
     // Создаём map с датами
-    const datesMap = new Map(datesRaw.map(d => [
+    const datesMap = new Map(comicsWithStringDates.map(d => [
       d.id,
       {
-        date: d.date ? new Date(d.date) : null,
-        pdate: d.pdate ? new Date(d.pdate) : null,
-        adddate: d.adddate ? new Date(d.adddate) : null,
+        date: safeParseDate(d.date),
+        pdate: safeParseDate(d.pdate),
+        adddate: safeParseDate(d.adddate),
       }
     ]))
 
@@ -794,22 +813,35 @@ async function getScanlatorStats(name: string) {
       return null
     }
 
-    // Загружаем pdate отдельно через raw SQL (безопасно обрабатываем невалидные даты)
+    // Загружаем pdate напрямую из БД как строки (без преобразования Prisma)
     const comicIds = filteredComics.map(c => c.id)
-    const datesRaw = await prisma.$queryRaw<Array<{
+    const datesRaw = await prisma.$queryRawUnsafe<Array<{
       id: number
       pdate: string | null
-    }>>`
-      SELECT id,
-        CASE WHEN pdate = '0000-00-00' THEN NULL ELSE pdate END as pdate
-      FROM cdb_comics
-      WHERE id IN (${Prisma.join(comicIds)})
-    `
+    }>>(
+      `SELECT id, pdate FROM cdb_comics WHERE id IN (${comicIds.join(',')})`
+    )
+
+    // Функция безопасного парсинга даты
+    const safeParseDate = (dateStr: string | null): Date | null => {
+      if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00') {
+        return null
+      }
+      try {
+        const date = new Date(dateStr)
+        if (isNaN(date.getTime()) || date.getFullYear() === 0) {
+          return null
+        }
+        return date
+      } catch {
+        return null
+      }
+    }
 
     // Создаём map с датами
     const datesMap = new Map(datesRaw.map(d => [
       d.id,
-      { pdate: d.pdate ? new Date(d.pdate) : null }
+      { pdate: safeParseDate(d.pdate) }
     ]))
 
     // Добавляем даты к комиксам и сортируем по pdate
