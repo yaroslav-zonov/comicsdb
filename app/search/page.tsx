@@ -628,56 +628,56 @@ async function searchByScanlators(query: string, page: number = 1, sort: string 
       return inTranslateLower || inEditLower || null
     }
 
-    // Загружаем даты без использования Prisma ORM (чтобы избежать P2020 ошибки)
-    // Используем простой подход: загружаем даты как строки и обрабатываем вручную
-    const comicIds = exactMatchComics.map(c => c.id)
+    // Пробуем загрузить даты через Prisma batch запросом
+    // Если падает с ошибкой (невалидные даты), то оставляем даты как null
+    let comicsWithDates: Array<typeof exactMatchComics[0] & {
+      date: Date | null
+      pdate: Date | null
+      adddate: Date | null
+    }> = []
 
-    // Загружаем даты напрямую из БД как строки (без преобразования Prisma в Date)
-    const comicsWithStringDates = await prisma.$queryRawUnsafe<Array<{
-      id: number
-      date: string | null
-      pdate: string | null
-      adddate: string | null
-    }>>(
-      `SELECT id, date, pdate, adddate FROM cdb_comics WHERE id IN (${comicIds.join(',')})`
-    )
+    try {
+      const comicIds = exactMatchComics.map(c => c.id)
+      const datesData = await prisma.comic.findMany({
+        where: { id: { in: comicIds } },
+        select: { id: true, date: true, pdate: true, adddate: true }
+      })
 
-    // Функция безопасного парсинга даты
-    const safeParseDate = (dateStr: string | null): Date | null => {
-      if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00') {
-        return null
-      }
-      try {
-        const date = new Date(dateStr)
-        // Проверяем что дата валидна
-        if (isNaN(date.getTime())) {
-          return null
-        }
-        // Проверяем что год не 0
-        if (date.getFullYear() === 0) {
-          return null
-        }
-        return date
-      } catch {
-        return null
-      }
+      const datesMap = new Map(datesData.map(d => [d.id, d]))
+
+      comicsWithDates = exactMatchComics.map(comic => ({
+        ...comic,
+        date: datesMap.get(comic.id)?.date || null,
+        pdate: datesMap.get(comic.id)?.pdate || null,
+        adddate: datesMap.get(comic.id)?.adddate || null,
+      }))
+    } catch (error) {
+      // Если batch запрос падает, загружаем каждый комикс индивидуально
+      comicsWithDates = await Promise.all(
+        exactMatchComics.map(async (comic) => {
+          let date: Date | null = null
+          let pdate: Date | null = null
+          let adddate: Date | null = null
+
+          try {
+            const comicWithDates = await prisma.comic.findUnique({
+              where: { id: comic.id },
+              select: { date: true, pdate: true, adddate: true }
+            })
+
+            if (comicWithDates) {
+              date = comicWithDates.date || null
+              pdate = comicWithDates.pdate || null
+              adddate = comicWithDates.adddate || null
+            }
+          } catch {
+            // Игнорируем ошибки для невалидных дат
+          }
+
+          return { ...comic, date, pdate, adddate }
+        })
+      )
     }
-
-    // Создаём map с датами
-    const datesMap = new Map(comicsWithStringDates.map(d => [
-      d.id,
-      {
-        date: safeParseDate(d.date),
-        pdate: safeParseDate(d.pdate),
-        adddate: safeParseDate(d.adddate),
-      }
-    ]))
-
-    // Добавляем даты к комиксам
-    const comicsWithDates = exactMatchComics.map(c => ({
-      ...c,
-      ...datesMap.get(c.id)
-    }))
 
     // Сортируем комиксы
     comicsWithDates.sort((a, b) => {
@@ -813,44 +813,46 @@ async function getScanlatorStats(name: string) {
       return null
     }
 
-    // Загружаем pdate напрямую из БД как строки (без преобразования Prisma)
-    const comicIds = filteredComics.map(c => c.id)
-    const datesRaw = await prisma.$queryRawUnsafe<Array<{
-      id: number
-      pdate: string | null
-    }>>(
-      `SELECT id, pdate FROM cdb_comics WHERE id IN (${comicIds.join(',')})`
-    )
+    // Пробуем загрузить даты через Prisma
+    let comics: Array<typeof filteredComics[0] & { pdate: Date | null }> = []
 
-    // Функция безопасного парсинга даты
-    const safeParseDate = (dateStr: string | null): Date | null => {
-      if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00') {
-        return null
-      }
-      try {
-        const date = new Date(dateStr)
-        if (isNaN(date.getTime()) || date.getFullYear() === 0) {
-          return null
-        }
-        return date
-      } catch {
-        return null
-      }
+    try {
+      const comicIds = filteredComics.map(c => c.id)
+      const datesData = await prisma.comic.findMany({
+        where: { id: { in: comicIds } },
+        select: { id: true, pdate: true }
+      })
+
+      const datesMap = new Map(datesData.map(d => [d.id, d.pdate]))
+
+      comics = filteredComics
+        .map(c => ({
+          ...c,
+          pdate: datesMap.get(c.id) || null
+        }))
+        .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
+    } catch (error) {
+      // Если batch запрос падает, загружаем индивидуально
+      const comicsWithDates = await Promise.all(
+        filteredComics.map(async (comic) => {
+          let pdate: Date | null = null
+
+          try {
+            const comicWithDate = await prisma.comic.findUnique({
+              where: { id: comic.id },
+              select: { pdate: true }
+            })
+            pdate = comicWithDate?.pdate || null
+          } catch {
+            // Игнорируем ошибки
+          }
+
+          return { ...comic, pdate }
+        })
+      )
+
+      comics = comicsWithDates.sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
     }
-
-    // Создаём map с датами
-    const datesMap = new Map(datesRaw.map(d => [
-      d.id,
-      { pdate: safeParseDate(d.pdate) }
-    ]))
-
-    // Добавляем даты к комиксам и сортируем по pdate
-    const comics = filteredComics
-      .map(c => ({
-        ...c,
-        pdate: datesMap.get(c.id)?.pdate || null
-      }))
-      .sort((a, b) => (a.pdate?.getTime() || 0) - (b.pdate?.getTime() || 0))
 
     // Находим реальное имя сканлейтера из базы (первое вхождение)
     let realName = trimmedName
