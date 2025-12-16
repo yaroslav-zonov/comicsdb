@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
 
 async function getScanlatorStats(name: string) {
   try {
@@ -11,36 +10,38 @@ async function getScanlatorStats(name: string) {
     console.log('[getScanlatorStats] Searching for:', trimmedName)
 
     const lowerQuery = trimmedName.toLowerCase()
-    console.log('[getScanlatorStats] Lower query:', lowerQuery, 'Length:', lowerQuery.length)
 
-    // Используем упрощённую логику без CONCAT для избежания ошибок парсинга
-    const startPattern = `${lowerQuery},%`
-    const middlePattern = `%,${lowerQuery},%`
-    const endPattern = `%,${lowerQuery}`
+    // Используем стандартный Prisma ORM вместо raw SQL
+    const allComics = await prisma.comic.findMany({
+      where: {
+        dateDelete: null,
+        OR: [
+          { translate: { contains: trimmedName } },
+          { edit: { contains: trimmedName } }
+        ]
+      },
+      select: {
+        id: true,
+        adddate: true,
+        date: true,
+        translate: true,
+        edit: true,
+      },
+      orderBy: {
+        adddate: 'asc'
+      }
+    })
 
-    const comics = await prisma.$queryRaw<Array<{
-      id: number
-      adddate: Date
-      date: Date | null
-      translate: string
-      edit: string
-    }>>(Prisma.sql`
-      SELECT DISTINCT c.id, c.adddate, c.date, c.translate, c.edit
-      FROM cdb_comics c
-      WHERE c.date_delete IS NULL
-        AND (
-          LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${middlePattern}
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${startPattern}
-          OR LOWER(REPLACE(c.translate, ', ', ',')) LIKE ${endPattern}
-          OR LOWER(REPLACE(c.translate, ', ', ',')) = ${lowerQuery}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${middlePattern}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${startPattern}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) LIKE ${endPattern}
-          OR LOWER(REPLACE(c.edit, ', ', ',')) = ${lowerQuery}
-        )
-      ORDER BY c.adddate ASC
-      LIMIT 10000
-    `)
+    // Фильтруем точно по имени в списке (case-insensitive)
+    const matchScanlator = (field: string | null): boolean => {
+      if (!field) return false
+      const names = field.split(',').map(s => s.trim())
+      return names.some(name => name.toLowerCase() === lowerQuery)
+    }
+
+    const comics = allComics.filter(c =>
+      matchScanlator(c.translate) || matchScanlator(c.edit)
+    )
 
     console.log('[getScanlatorStats] Found comics:', comics.length)
 
