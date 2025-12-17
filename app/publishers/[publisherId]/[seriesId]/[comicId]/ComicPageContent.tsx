@@ -56,11 +56,10 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
       
       <div className="flex-1">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Хлебные крошки и навигация по выпускам */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        {/* Хлебные крошки и навигация по выпускам - только на десктопе */}
+        <div className="mb-6 hidden md:flex md:items-center md:justify-between gap-2">
           <nav className="text-sm">
-            {/* Десктопная версия - полные крошки */}
-            <ol className="hidden md:flex items-center space-x-2 text-text-secondary">
+            <ol className="flex items-center space-x-2 text-text-secondary">
               <li>
                 <Link href="/" className="hover:text-accent transition-colors">
                   Главная
@@ -87,22 +86,10 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
               <li>/</li>
               <li className="text-text-primary">#{comic.number}</li>
             </ol>
-            {/* Мобильная версия - только кнопка назад */}
-            <div className="md:hidden">
-              <Link
-                href={getSeriesUrl(comic.series.publisher.id, comic.series.id)}
-                className="inline-flex items-center text-text-secondary hover:text-accent transition-colors"
-              >
-                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Назад
-              </Link>
-            </div>
           </nav>
-          
-          {/* Навигация по выпускам - только на десктопе */}
-          <div className="hidden md:flex items-center justify-end gap-2 text-sm">
+
+          {/* Навигация по выпускам */}
+          <div className="flex items-center justify-end gap-2 text-sm">
             {comic.prevIssue ? (
               <Link
                 href={getComicUrl(comic.series.publisher.id, comic.series.id, comic.prevIssue.comicvine)}
