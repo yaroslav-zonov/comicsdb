@@ -203,11 +203,11 @@ select option {
 
   /* Стандартные карточки */
   .card {
-    @apply bg-bg-card rounded-xl shadow-sm border border-border-primary transition-all duration-300;
+    @apply bg-bg-card shadow-sm border border-border-primary transition-shadow duration-300;
   }
 
   .card-hover {
-    @apply card hover:shadow-xl hover:border-border-secondary hover:-translate-y-1;
+    @apply card hover:shadow-lg hover:border-border-secondary;
   }
 
   /* Стандартные input поля */
@@ -327,10 +327,6 @@ select option {
       var(--color-bg-tertiary) 36%
     );
     background-size: 1000px 100%;
-  }
-
-  .card-lift {
-    @apply transition-all duration-300 hover:-translate-y-1;
   }
 
   .smooth-transition {

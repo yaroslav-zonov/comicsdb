@@ -56,7 +56,7 @@ export default function ComicCard({
         className="block"
       >
         {showCover && (
-          <div className={`relative ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''} bg-bg-tertiary rounded-xl overflow-hidden shadow-sm group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300`}>
+          <div className={`relative ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''} bg-bg-tertiary overflow-hidden shadow-sm group-hover:shadow-lg transition-shadow duration-300`}>
             {comicvineUrl ? (
               <>
                 <Image
@@ -65,7 +65,7 @@ export default function ComicCard({
                   fill={coverAspectRatio === '2/3'}
                   width={coverAspectRatio !== '2/3' ? 200 : undefined}
                   height={coverAspectRatio !== '2/3' ? 300 : undefined}
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   loading="lazy"
                   unoptimized
