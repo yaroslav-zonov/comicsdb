@@ -5,8 +5,8 @@ import Footer from '@/components/Footer'
 import SeriesListView from '@/components/SeriesListView'
 import Pagination from '@/components/Pagination'
 import { prisma } from '@/lib/prisma'
-import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
 import { Prisma } from '@prisma/client'
+import { decodeHtmlEntities, getImageUrl } from '@/lib/utils'
 
 // Кешируем на 60 секунд для ускорения
 export const revalidate = 60
@@ -32,102 +32,55 @@ async function getPublisher(id: number, page: number = 1, pageSize: number = 100
       return null
     }
 
-    // Получаем серии с пагинацией
     const skip = (page - 1) * pageSize
-    const series = await prisma.series.findMany({
-      where: {
-        publisherId: id,
-        dateDelete: null,
-      },
-      orderBy: {
-        name: 'asc',
-      },
-      skip,
-      take: pageSize,
-    })
 
-    if (series.length === 0) {
-      return {
-        id: publisher.id,
-        name: decodeHtmlEntities(publisher.name),
-        series: [],
-        total: totalSeries,
-        page,
-        pageSize,
-      }
-    }
+    // ОПТИМИЗИРОВАННЫЙ SQL: один запрос с подзапросами вместо batch запросов
+    const results = await prisma.$queryRaw<Array<{
+      id: number
+      name: string
+      volume: string
+      thumb: string | null
+      status: string
+      comicvine: number
+      total: number
+      first_comic_thumb: string | null
+      first_comic_tiny: string | null
+      comics_count: bigint
+    }>>`
+      SELECT
+        s.id,
+        s.name,
+        s.volume,
+        s.thumb,
+        s.status,
+        s.comicvine,
+        s.total,
+        (SELECT c.thumb FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL
+         ORDER BY c.number ASC LIMIT 1) as first_comic_thumb,
+        (SELECT c.tiny FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL
+         ORDER BY c.number ASC LIMIT 1) as first_comic_tiny,
+        (SELECT COUNT(*) FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL) as comics_count
+      FROM cdb_series s
+      WHERE s.publisher = ${id}
+        AND s.date_delete IS NULL
+      ORDER BY s.name ASC
+      LIMIT ${pageSize}
+      OFFSET ${skip}
+    `
 
-    // Оптимизация: получаем все обложки и количество комиксов batch запросами
-    const seriesIds = series.map(s => s.id)
-    
-    if (seriesIds.length === 0) {
-      return {
-        id: publisher.id,
-        name: decodeHtmlEntities(publisher.name),
-        series: [],
-        total: totalSeries,
-        page,
-        pageSize,
-      }
-    }
-    
-    // Получаем количество комиксов и обложки одним batch запросом
-    const [comicsCountsRaw, firstComicsRaw] = await Promise.all([
-      // Количество комиксов
-      prisma.comic.groupBy({
-        by: ['serieId'],
-        where: {
-          serieId: { in: seriesIds },
-          dateDelete: null,
-        },
-        _count: {
-          id: true,
-        },
-      }),
-      // Первые комиксы для обложек - получаем все комиксы и фильтруем на клиенте
-      (async () => {
-        // Получаем все комиксы для этих серий одним запросом
-        const allComics = await prisma.comic.findMany({
-          where: {
-            serieId: { in: seriesIds },
-            dateDelete: null,
-          },
-          select: {
-            serieId: true,
-            number: true,
-            thumb: true,
-            tiny: true,
-          },
-          orderBy: {
-            number: 'asc',
-          },
-        })
-        
-        // Группируем по сериям и берем первый (с минимальным номером)
-        const firstComicsMap = new Map<number, { thumb: string | null; tiny: string | null }>()
-        for (const comic of allComics) {
-          if (!firstComicsMap.has(comic.serieId)) {
-            firstComicsMap.set(comic.serieId, {
-              thumb: comic.thumb,
-              tiny: comic.tiny,
-            })
-          }
-        }
-        
-        return Array.from(firstComicsMap.entries()).map(([serie, images]) => ({
-          serie,
-          ...images,
-        }))
-      })(),
-    ])
-
-    const countMap = new Map(comicsCountsRaw.map(c => [c.serieId, c._count.id]))
-    const coverMap = new Map(firstComicsRaw.map(c => [c.serie, c.thumb || c.tiny]))
-
-    const seriesWithData = series.map(series => ({
-      ...series,
-      cover: coverMap.get(series.id) || series.thumb,
-      comicsCount: countMap.get(series.id) || 0,
+    const seriesWithData = results.map(s => ({
+      id: s.id,
+      name: s.name,
+      volume: s.volume,
+      thumb: s.thumb,
+      status: s.status,
+      comicvine: s.comicvine,
+      total: s.total,
+      cover: s.first_comic_thumb || s.first_comic_tiny || s.thumb,
+      comicsCount: Number(s.comics_count),
     }))
 
     return {

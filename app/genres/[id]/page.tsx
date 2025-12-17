@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import SeriesListView from '@/components/SeriesListView'
 import Pagination from '@/components/Pagination'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, getImageUrl, getSeriesUrl } from '@/lib/utils'
 
 // Кешируем на 60 секунд для ускорения
@@ -23,76 +24,73 @@ async function getGenre(id: number, page: number = 1, pageSize: number = 100) {
       return null
     }
 
-    // Получаем все серии этого жанра
-    const seriesGenres = await prisma.seriesGenre.findMany({
-      where: {
-        genre_id: id,
-      },
-      include: {
-        cdb_series: {
-          include: {
-            publisher: true,
-          },
-        },
-      },
-    })
-
-    // Фильтруем серии с dateDelete = null
-    const validSeries = seriesGenres
-      .map(sg => sg.cdb_series)
-      .filter(s => s && !s.dateDelete)
-
-    const total = validSeries.length
-
-    // Применяем пагинацию
     const skip = (page - 1) * pageSize
-    const paginatedSeries = validSeries.slice(skip, skip + pageSize)
 
-    // Получаем обложки и количество комиксов для серий
-    const seriesWithData = await Promise.all(
-      paginatedSeries.map(async (series) => {
-        const firstComic = await prisma.comic.findFirst({
-          where: {
-            serieId: series.id,
-            dateDelete: null,
-          },
-          select: {
-            thumb: true,
-            tiny: true,
-          },
-          orderBy: {
-            number: 'asc',
-          },
-        })
+    // ОПТИМИЗИРОВАННЫЙ SQL: один запрос вместо N+1
+    // Получаем серии с подзапросами для обложек и количества комиксов
+    const results = await prisma.$queryRaw<Array<{
+      id: number
+      name: string
+      volume: string
+      thumb: string | null
+      status: string
+      comicvine: number
+      total: number
+      publisher_id: number
+      publisher_name: string
+      first_comic_thumb: string | null
+      first_comic_tiny: string | null
+      comics_count: bigint
+      total_count: bigint
+    }>>`
+      SELECT
+        s.id,
+        s.name,
+        s.volume,
+        s.thumb,
+        s.status,
+        s.comicvine,
+        s.total,
+        p.id as publisher_id,
+        p.name as publisher_name,
+        (SELECT c.thumb FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL
+         ORDER BY c.number ASC LIMIT 1) as first_comic_thumb,
+        (SELECT c.tiny FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL
+         ORDER BY c.number ASC LIMIT 1) as first_comic_tiny,
+        (SELECT COUNT(*) FROM cdb_comics c
+         WHERE c.serie = s.id AND c.date_delete IS NULL) as comics_count,
+        COUNT(*) OVER() as total_count
+      FROM cdb_series s
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      INNER JOIN cdb_series_genres sg ON s.id = sg.series_id
+      WHERE sg.genre_id = ${id}
+        AND s.date_delete IS NULL
+      ORDER BY s.name ASC
+      LIMIT ${pageSize}
+      OFFSET ${skip}
+    `
 
-        const comicsCount = await prisma.comic.count({
-          where: {
-            serieId: series.id,
-            dateDelete: null,
-          },
-        })
-
-        return {
-          id: series.id,
-          name: decodeHtmlEntities(series.name),
-          volume: series.volume,
-          publisher: {
-            id: series.publisher.id,
-            name: decodeHtmlEntities(series.publisher.name),
-          },
-          thumb: getImageUrl(firstComic?.thumb || firstComic?.tiny || series.thumb),
-          status: series.status,
-          comicvine: series.comicvine,
-          comicsCount,
-          total: series.total,
-        }
-      })
-    )
+    const total = results.length > 0 ? Number(results[0].total_count) : 0
 
     return {
       id: genre.id,
       name: decodeHtmlEntities(genre.name),
-      series: seriesWithData,
+      series: results.map(s => ({
+        id: s.id,
+        name: decodeHtmlEntities(s.name),
+        volume: s.volume,
+        publisher: {
+          id: s.publisher_id,
+          name: decodeHtmlEntities(s.publisher_name),
+        },
+        thumb: getImageUrl(s.first_comic_thumb || s.first_comic_tiny || s.thumb),
+        status: s.status,
+        comicvine: s.comicvine,
+        comicsCount: Number(s.comics_count),
+        total: s.total,
+      })),
       total,
       page,
       pageSize,

@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SeriesComicsView from '@/components/SeriesComicsView'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, getSeriesUrl, getTranslationStatus, getImageUrl } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -23,24 +24,6 @@ async function getSeries(id: number) {
             cdb_zhanr: true,
           },
         },
-        comics: {
-          where: {
-            dateDelete: null,
-          },
-          orderBy: [
-            {
-              number: 'asc',
-            },
-          ],
-          take: 200,
-          include: {
-            series: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
       },
     })
 
@@ -48,33 +31,62 @@ async function getSeries(id: number) {
       return null
     }
 
-    const siteIds = [...new Set(series.comics.flatMap(c => [c.site, c.site2].filter(Boolean)))]
-    const sites = await prisma.site.findMany({
-      where: {
-        id: { in: siteIds },
-        dateDelete: null,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    })
-    const siteMap = new Map(sites.map(s => [s.id, s.name]))
+    // ОПТИМИЗИРОВАННЫЙ SQL: один запрос с LEFT JOIN для сайтов вместо двух отдельных
+    // Убрано include: { series } т.к. данные серии уже есть в переменной series
+    const comics = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      pdate: Date | null
+      date: Date | null
+      thumb: string | null
+      tiny: string | null
+      site: string
+      site2: string | null
+      translate: string
+      edit: string
+      link: string
+      site1_name: string | null
+      site2_name: string | null
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 THEN NULL ELSE c.date END as date,
+        c.thumb,
+        c.tiny,
+        c.site,
+        c.site2,
+        c.translate,
+        c.edit,
+        c.link,
+        site1.name as site1_name,
+        site2.name as site2_name
+      FROM cdb_comics c
+      LEFT JOIN cdb_sites site1 ON c.site = site1.id AND site1.date_delete IS NULL
+      LEFT JOIN cdb_sites site2 ON c.site2 = site2.id AND site2.date_delete IS NULL
+      WHERE c.serie = ${id}
+        AND c.date_delete IS NULL
+      ORDER BY c.number ASC
+      LIMIT 200
+    `
 
     const genres = series.cdb_series_genres
       .filter(sg => !sg.cdb_zhanr.date_delete)
       .map(sg => decodeHtmlEntities(sg.cdb_zhanr.name))
 
     // Вычисляем статус перевода исходя из даты последней публикации перевода (date)
-    const translatedCount = series.comics.length
+    const translatedCount = comics.length
     const totalIssues = series.comicvine || series.total || 0
-    const lastTranslationDate = series.comics.length > 0 
-      ? series.comics.reduce<Date | null>((latest, comic) => {
+    const lastTranslationDate = comics.length > 0
+      ? comics.reduce<Date | null>((latest, comic) => {
           const date = comic.date // Используем только date (дату перевода), а не pdate
           if (!date) return latest
           if (!latest) return date
           return date > latest ? date : latest
-        }, series.comics.find(c => c.date)?.date || null)
+        }, comics.find(c => c.date)?.date || null)
       : null
     const translationStatus = getTranslationStatus(
       translatedCount,
@@ -102,10 +114,10 @@ async function getSeries(id: number) {
       lastIssue: series.lastIssue,
       genres,
       translationStatus,
-      comics: await Promise.all(series.comics.map(async (comic) => {
+      comics: comics.map((comic) => {
         const thumb = getImageUrl(comic.thumb)
         const tiny = getImageUrl(comic.tiny)
-        
+
         return {
           id: comic.id,
           comicvine: comic.comicvine,
@@ -115,10 +127,10 @@ async function getSeries(id: number) {
           thumb,
           tiny,
           site: comic.site,
-          siteName: decodeHtmlEntities(siteMap.get(comic.site) || comic.site),
+          siteName: comic.site1_name ? decodeHtmlEntities(comic.site1_name) : comic.site,
           siteId: comic.site,
           site2: comic.site2,
-          site2Name: comic.site2 && comic.site2 !== '0' ? decodeHtmlEntities(siteMap.get(comic.site2) || comic.site2) : null,
+          site2Name: comic.site2_name && comic.site2 !== '0' ? decodeHtmlEntities(comic.site2_name) : null,
           translate: comic.translate,
           edit: comic.edit,
           link: comic.link,
@@ -131,7 +143,7 @@ async function getSeries(id: number) {
             },
           },
         }
-      })),
+      }),
     }
   } catch (error) {
     console.error('Error fetching series:', error)

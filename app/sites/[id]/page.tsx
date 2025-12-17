@@ -4,9 +4,11 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SiteSeriesView from './SiteSeriesView'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, formatDate } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+// Кэшируем на 2 минуты (данные сайтов меняются реже)
+export const revalidate = 120
 
 async function getSite(id: string): Promise<{
   id: string
@@ -42,83 +44,105 @@ async function getSite(id: string): Promise<{
       return null
     }
 
-    // Получаем все комиксы этого сайта
-    const comics = await prisma.comic.findMany({
-      where: {
-        OR: [
-          { site: id },
-          { site2: id },
-        ],
-        dateDelete: null,
-      },
-      include: {
-        series: {
-          include: {
-            publisher: true,
+    // ОПТИМИЗИРОВАННЫЙ SQL: группировка на уровне БД вместо JavaScript
+    // Один запрос вместо загрузки 10000 комиксов в память
+    const seriesResults = await prisma.$queryRaw<Array<{
+      series_id: number
+      series_name: string
+      publisher_id: number
+      publisher_name: string
+      series_thumb: string | null
+      first_comic_thumb: string | null
+      first_comic_tiny: string | null
+      last_date: Date | null
+      comics_count: number
+    }>>`
+      SELECT
+        s.id as series_id,
+        s.name as series_name,
+        p.id as publisher_id,
+        p.name as publisher_name,
+        s.thumb as series_thumb,
+        (SELECT c2.thumb FROM cdb_comics c2
+         WHERE c2.serie = s.id AND c2.date_delete IS NULL
+           AND (c2.site = ${id} OR c2.site2 = ${id})
+         ORDER BY c2.number ASC LIMIT 1) as first_comic_thumb,
+        (SELECT c2.tiny FROM cdb_comics c2
+         WHERE c2.serie = s.id AND c2.date_delete IS NULL
+           AND (c2.site = ${id} OR c2.site2 = ${id})
+         ORDER BY c2.number ASC LIMIT 1) as first_comic_tiny,
+        MAX(COALESCE(c.date, c.pdate, c.adddate)) as last_date,
+        COUNT(c.id) as comics_count
+      FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      WHERE c.date_delete IS NULL
+        AND (c.site = ${id} OR c.site2 = ${id})
+      GROUP BY s.id, s.name, p.id, p.name, s.thumb
+      ORDER BY last_date DESC
+    `
+
+    // Получаем детальную информацию о комиксах для каждой серии
+    const seriesWithComics = await Promise.all(
+      seriesResults.map(async (seriesData) => {
+        const comics = await prisma.$queryRaw<Array<{
+          id: number
+          comicvine: number
+          number: string
+          date: Date | null
+          pdate: Date | null
+        }>>`
+          SELECT
+            c.id,
+            c.comicvine,
+            c.number,
+            CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 THEN NULL ELSE c.date END as date,
+            CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate
+          FROM cdb_comics c
+          WHERE c.serie = ${seriesData.series_id}
+            AND c.date_delete IS NULL
+            AND (c.site = ${id} OR c.site2 = ${id})
+          ORDER BY c.number ASC
+        `
+
+        return {
+          id: seriesData.series_id,
+          name: decodeHtmlEntities(seriesData.series_name),
+          publisher: {
+            id: seriesData.publisher_id,
+            name: decodeHtmlEntities(seriesData.publisher_name),
           },
-        },
-      },
-      orderBy: {
-        adddate: 'desc',
-      },
-      take: 10000, // Увеличиваем лимит
-    })
-
-    // Группируем по сериям
-    const seriesMap = new Map<number, {
-      series: typeof comics[0]['series']
-      comics: typeof comics
-      lastDate: Date | null
-      firstComic: typeof comics[0] | null
-    }>()
-
-    comics.forEach(comic => {
-      const seriesId = comic.series.id
-      if (!seriesMap.has(seriesId)) {
-        seriesMap.set(seriesId, {
-          series: comic.series,
-          comics: [],
-          lastDate: comic.date || comic.pdate || comic.adddate,
-          firstComic: null,
-        })
-      }
-      const entry = seriesMap.get(seriesId)!
-      entry.comics.push(comic)
-      const comicDate = comic.date || comic.pdate || comic.adddate
-      if (comicDate && entry.lastDate && comicDate > entry.lastDate) {
-        entry.lastDate = comicDate
-      } else if (comicDate && !entry.lastDate) {
-        entry.lastDate = comicDate
-      }
-      // Сохраняем первый комикс для обложки
-      if (!entry.firstComic || comic.number < entry.firstComic.number) {
-        entry.firstComic = comic
-      }
-    })
-
-    // Сортируем серии по дате последнего перевода
-    const sortedSeries = Array.from(seriesMap.values()).sort((a, b) =>
-      (b.lastDate?.getTime() || 0) - (a.lastDate?.getTime() || 0)
+          comics: comics.map(c => ({
+            id: c.id,
+            comicvine: c.comicvine,
+            number: Number(c.number),
+            date: c.date,
+            pdate: c.pdate,
+          })),
+          lastDate: seriesData.last_date,
+          thumb: seriesData.first_comic_thumb || seriesData.first_comic_tiny || seriesData.series_thumb,
+        }
+      })
     )
 
-    // Получаем статистику
-    const totalComics = comics.length
-    const firstRelease = comics.length > 0
-      ? comics.reduce((earliest, comic) => {
-          const date = comic.date || comic.pdate || comic.adddate
-          if (!date) return earliest
-          if (!earliest) return date
-          return date < earliest ? date : earliest
-        }, comics[0].date || comics[0].pdate || comics[0].adddate)
-      : null
-    const lastRelease = comics.length > 0
-      ? comics.reduce((latest, comic) => {
-          const date = comic.date || comic.pdate || comic.adddate
-          if (!date) return latest
-          if (!latest) return date
-          return date > latest ? date : latest
-        }, comics[0].date || comics[0].pdate || comics[0].adddate)
-      : null
+    // Получаем общую статистику
+    const stats = await prisma.$queryRaw<Array<{
+      total_comics: bigint
+      first_release: Date | null
+      last_release: Date | null
+    }>>`
+      SELECT
+        COUNT(*) as total_comics,
+        MIN(COALESCE(c.date, c.pdate, c.adddate)) as first_release,
+        MAX(COALESCE(c.date, c.pdate, c.adddate)) as last_release
+      FROM cdb_comics c
+      WHERE c.date_delete IS NULL
+        AND (c.site = ${id} OR c.site2 = ${id})
+    `
+
+    const totalComics = stats[0] ? Number(stats[0].total_comics) : 0
+    const firstRelease = stats[0]?.first_release || null
+    const lastRelease = stats[0]?.last_release || null
 
     return {
       id: site.id,
@@ -127,23 +151,7 @@ async function getSite(id: string): Promise<{
       totalComics,
       firstRelease,
       lastRelease,
-      series: sortedSeries.map(entry => ({
-        id: entry.series.id,
-        name: decodeHtmlEntities(entry.series.name),
-        publisher: {
-          id: entry.series.publisher.id,
-          name: decodeHtmlEntities(entry.series.publisher.name),
-        },
-        comics: entry.comics.map(c => ({
-          id: c.id,
-          comicvine: c.comicvine,
-          number: Number(c.number),
-          date: c.date,
-          pdate: c.pdate,
-        })),
-        lastDate: entry.lastDate,
-        thumb: entry.firstComic?.thumb || entry.firstComic?.tiny || entry.series.thumb,
-      })),
+      series: seriesWithComics,
     }
   } catch (error) {
     console.error('Error fetching site:', error)
