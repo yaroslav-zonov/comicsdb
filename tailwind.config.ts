@@ -30,9 +30,17 @@ const config: Config = {
           tertiary: 'var(--color-border-tertiary)',
         },
         accent: {
+          50: 'var(--color-accent-50)',
+          100: 'var(--color-accent-100)',
+          200: 'var(--color-accent-200)',
           DEFAULT: 'var(--color-accent)',
           hover: 'var(--color-accent-hover)',
           light: 'var(--color-accent-light)',
+        },
+        status: {
+          new: 'var(--color-status-new)',
+          ongoing: 'var(--color-status-ongoing)',
+          completed: 'var(--color-status-completed)',
         },
         // Обратная совместимость
         background: 'var(--color-background)',

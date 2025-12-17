@@ -83,7 +83,7 @@ export default function ComicsListView({
       {(title || true) && (
         <div className="pb-4 border-b border-border-primary flex items-center justify-between">
           {title && (
-            <h2 className="text-2xl font-bold text-text-primary">
+            <h2 className="heading-section">
               {title}
             </h2>
           )}

@@ -3,7 +3,12 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import QueryProvider from '@/components/QueryProvider'
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] })
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'ComicsDB - База русских переводов комиксов',

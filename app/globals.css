@@ -25,11 +25,19 @@
   --color-border-secondary: #d1d5db; /* border-gray-300 */
   --color-border-tertiary: #9ca3af;  /* border-gray-400 */
   
-  /* Акцентные цвета */
-  --color-accent: #ea580c;           /* orange-600 */
+  /* Акцентные цвета (градации оранжевого) */
+  --color-accent-50: #fff7ed;        /* Очень светлый для hover backgrounds */
+  --color-accent-100: #ffedd5;       /* Светлый для badges */
+  --color-accent-200: #fed7aa;       /* Для borders */
+  --color-accent: #ea580c;           /* orange-600 - основной */
   --color-accent-hover: #c2410c;     /* orange-700 */
-  --color-accent-light: #fff7ed;    /* orange-50 */
-  
+  --color-accent-light: #fff7ed;     /* orange-50 */
+
+  /* Дополнительные цвета для статусов */
+  --color-status-new: #22c55e;       /* Зеленый для "Новое" */
+  --color-status-ongoing: #3b82f6;   /* Синий для "Ongoing" */
+  --color-status-completed: #64748b; /* Серый для "Завершено" */
+
   /* Утилиты */
   --color-background: var(--color-bg-primary);
   --color-foreground: var(--color-text-primary);
@@ -54,11 +62,19 @@
   --color-border-secondary: #1a1a1a; /* Вторичные границы */
   --color-border-tertiary: #111111;  /* Третичные границы */
   
-  /* Акцентные цвета */
-  --color-accent: #f97316;            /* orange-500 */
-  --color-accent-hover: #fb923c;      /* orange-400 */
+  /* Акцентные цвета (градации оранжевого) */
+  --color-accent-50: rgba(249, 115, 22, 0.05);  /* Очень светлый для hover backgrounds */
+  --color-accent-100: rgba(249, 115, 22, 0.1);  /* Светлый для badges */
+  --color-accent-200: rgba(249, 115, 22, 0.2);  /* Для borders */
+  --color-accent: #f97316;                      /* orange-500 - основной */
+  --color-accent-hover: #fb923c;                /* orange-400 */
   --color-accent-light: rgba(249, 115, 22, 0.1); /* orange-900/20 */
-  
+
+  /* Дополнительные цвета для статусов */
+  --color-status-new: #22c55e;       /* Зеленый для "Новое" */
+  --color-status-ongoing: #3b82f6;   /* Синий для "Ongoing" */
+  --color-status-completed: #64748b; /* Серый для "Завершено" */
+
   /* Утилиты */
   --color-background: var(--color-bg-primary);
   --color-foreground: var(--color-text-primary);
@@ -67,7 +83,9 @@
 body {
   color: var(--color-foreground);
   background: var(--color-background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Стили для полей ввода и селектов через переменные */
@@ -99,6 +117,35 @@ select option {
 }
 
 @layer utilities {
+  /* Типографическая система */
+  .heading-hero {
+    @apply text-4xl md:text-5xl font-bold tracking-tight text-text-primary;
+  }
+
+  .heading-section {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight text-text-primary;
+  }
+
+  .heading-card {
+    @apply text-base md:text-lg font-medium text-text-primary;
+  }
+
+  .heading-subsection {
+    @apply text-xl font-semibold text-text-primary;
+  }
+
+  .body-default {
+    @apply text-sm md:text-base font-normal text-text-primary;
+  }
+
+  .body-small {
+    @apply text-xs md:text-sm font-normal text-text-secondary;
+  }
+
+  .body-tiny {
+    @apply text-xs font-normal text-text-tertiary;
+  }
+
   .text-balance {
     text-wrap: balance;
   }
@@ -143,33 +190,33 @@ select option {
 
   /* Стандартные кнопки */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200;
   }
 
   .btn-primary {
-    @apply btn bg-accent text-white hover:bg-accent-hover active:scale-95;
+    @apply btn bg-accent text-white hover:bg-accent-hover hover:shadow-lg active:scale-95;
   }
 
   .btn-secondary {
-    @apply btn bg-bg-tertiary text-text-primary hover:bg-bg-secondary dark:hover:bg-bg-card active:scale-95;
+    @apply btn bg-bg-tertiary text-text-primary hover:bg-bg-secondary dark:hover:bg-bg-card hover:shadow-md active:scale-95;
   }
 
   /* Стандартные карточки */
   .card {
-    @apply bg-bg-card rounded-lg shadow-sm border border-border-primary transition-all duration-200;
+    @apply bg-bg-card rounded-xl shadow-sm border border-border-primary transition-all duration-300;
   }
 
   .card-hover {
-    @apply card hover:shadow-md hover:border-border-secondary;
+    @apply card hover:shadow-xl hover:border-border-secondary hover:-translate-y-1;
   }
 
   /* Стандартные input поля */
   .input {
-    @apply w-full px-4 py-2 bg-bg-input border border-border-primary rounded-lg text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
+    @apply w-full px-4 py-2 bg-bg-input border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
 
   .input-search {
-    @apply w-full px-4 py-2 bg-bg-input border border-border-secondary rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm;
+    @apply w-full px-4 py-2 bg-bg-input border border-border-secondary rounded-xl text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm transition-all duration-200;
   }
 
   /* Таблицы */
@@ -178,27 +225,48 @@ select option {
   }
 
   .table-row {
-    @apply hover:bg-gray-50 dark:hover:bg-bg-secondary transition-colors;
+    @apply hover:bg-gray-50 dark:hover:bg-bg-secondary transition-all duration-200;
   }
 
   /* Пагинация */
   .pagination-btn {
-    @apply px-3 py-2 bg-bg-input text-text-primary rounded-lg hover:bg-bg-secondary transition-colors text-sm;
+    @apply px-3 py-2 bg-bg-input text-text-primary rounded-xl hover:bg-bg-secondary hover:shadow-md transition-all duration-200 text-sm interactive-scale;
   }
 
   .pagination-active {
-    @apply px-3 py-2 bg-accent text-white rounded-lg text-sm font-medium;
+    @apply px-3 py-2 bg-accent text-white rounded-xl text-sm font-medium shadow-md;
   }
 
   /* Анимации */
   .fade-in {
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+  }
+
+  .scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  .slide-in-right {
+    animation: slideInRight 0.4s ease-out;
   }
 
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -206,12 +274,64 @@ select option {
     }
   }
 
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Shimmer эффект для скелетонов */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+      to right,
+      var(--color-bg-tertiary) 4%,
+      var(--color-bg-secondary) 25%,
+      var(--color-bg-tertiary) 36%
+    );
+    background-size: 1000px 100%;
+  }
+
   .card-lift {
-    @apply transition-transform duration-200 hover:-translate-y-1;
+    @apply transition-all duration-300 hover:-translate-y-1;
   }
 
   .smooth-transition {
-    @apply transition-all duration-200 ease-in-out;
+    @apply transition-all duration-200 ease-out;
+  }
+
+  /* Hover эффекты для интерактивных элементов */
+  .interactive-scale {
+    @apply transition-transform duration-200 active:scale-95;
+  }
+
+  .interactive-lift {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
   }
 
   /* FAB (Floating Action Button) для мобильной навигации */
