@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -15,31 +17,66 @@ export default function Header() {
     }
   }
 
+  const isActive = (path: string) => {
+    if (path === '/comics') {
+      return pathname.startsWith('/weeks') || pathname === '/comics'
+    }
+    return pathname.startsWith(path)
+  }
+
   return (
-    <header className="bg-bg-card border-b border-border-secondary sticky top-0 z-50 shadow-sm">
+    <header className="bg-bg-card/80 backdrop-blur-md border-b border-border-secondary/50 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Первая строка: Лого и навигация */}
         <div className="flex items-center justify-between h-14 border-b border-border-secondary">
           {/* Логотип */}
           <div className="flex items-center">
-            <Link href="/" className="text-lg font-semibold text-text-primary hover:text-accent transition-colors">
+            <Link href="/" className="text-lg font-semibold text-text-primary hover:text-accent transition-colors duration-200">
               База переводов комиксов
             </Link>
           </div>
 
           {/* Навигация */}
-          <div className="hidden md:flex items-center space-x-6">
-            <nav className="flex items-center space-x-6">
-              <Link href="/comics" className="text-text-primary hover:text-accent transition-colors">
+          <div className="hidden md:flex items-center space-x-1">
+            <nav className="flex items-center space-x-1">
+              <Link
+                href="/comics"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/comics')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Комиксы
               </Link>
-              <Link href="/publishers" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/publishers"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/publishers')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Издательства
               </Link>
-              <Link href="/sites" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/sites"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/sites')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Сайты
               </Link>
-              <Link href="/genres" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/genres"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/genres')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Жанры
               </Link>
             </nav>
@@ -114,7 +151,7 @@ export default function Header() {
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-text-tertiary hover:text-accent"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-text-tertiary hover:text-accent transition-all duration-200 hover:scale-110 active:scale-95"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -126,19 +163,47 @@ export default function Header() {
 
         {/* Мобильное меню */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border-secondary py-4">
+          <div className="md:hidden border-t border-border-secondary py-4 fade-in">
             {/* Навигация */}
-            <nav className="flex flex-col space-y-3 mb-4">
-              <Link href="/comics" className="text-text-primary hover:text-accent transition-colors">
+            <nav className="flex flex-col space-y-2 mb-4">
+              <Link
+                href="/comics"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/comics')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Комиксы
               </Link>
-              <Link href="/publishers" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/publishers"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/publishers')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Издательства
               </Link>
-              <Link href="/sites" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/sites"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/sites')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Сайты
               </Link>
-              <Link href="/genres" className="text-text-primary hover:text-accent transition-colors">
+              <Link
+                href="/genres"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/genres')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
                 Жанры
               </Link>
             </nav>

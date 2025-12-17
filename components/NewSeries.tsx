@@ -146,9 +146,9 @@ export default async function NewSeries() {
 
         {/* Мобильная версия с горизонтальным скроллом */}
         <div className="md:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
-          <div className="flex gap-4" style={{ width: 'max-content' }}>
+          <div className="flex gap-6" style={{ width: 'max-content' }}>
             {comics.map((comic) => (
-              <div key={comic.id} className="flex-shrink-0" style={{ width: 'calc(40vw - 0.8rem)' }}>
+              <div key={comic.id} className="flex-shrink-0" style={{ width: 'calc(42vw - 1.2rem)' }}>
                 <ComicCard
                   data={{
                     id: comic.id,
@@ -172,7 +172,7 @@ export default async function NewSeries() {
         </div>
 
         {/* Десктопная версия с сеткой */}
-        <div className="hidden md:grid md:grid-cols-5 gap-4">
+        <div className="hidden md:grid md:grid-cols-5 gap-6">
           {comics.map((comic) => (
             <ComicCard
               key={comic.id}
