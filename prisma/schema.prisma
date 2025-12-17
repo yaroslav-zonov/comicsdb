@@ -22,6 +22,7 @@ model Publisher {
   series       Series[]
 
   @@index([dateDelete], map: "date_delete")
+  @@index([id, dateDelete], map: "idx_publishers_id_delete")
   @@map("cdb_publishers")
 }
 
@@ -54,6 +55,8 @@ model Series {
   @@index([dateDelete], map: "date_delete")
   @@index([publisherId], map: "series_to_publisher")
   @@index([type], map: "type")
+  @@index([publisherId, dateDelete, name], map: "idx_series_publisher_delete_name")
+  @@index([id, dateDelete], map: "idx_series_id_delete")
   @@map("cdb_series")
 }
 
@@ -96,6 +99,11 @@ model Comic {
   @@index([serieId], map: "issue_to_series")
   @@index([site], map: "site")
   @@index([site2], map: "site2")
+  @@index([dateDelete, pdate], map: "idx_comics_date_delete_pdate")
+  @@index([serieId, dateDelete, number], map: "idx_comics_serie_delete_number")
+  @@index([site, dateDelete], map: "idx_comics_site_delete")
+  @@index([site2, dateDelete], map: "idx_comics_site2_delete")
+  @@index([dateDelete, pdate, adddate], map: "idx_comics_delete_dates")
   @@map("cdb_comics")
 }
 
@@ -117,6 +125,7 @@ model Site {
   vkId            String?            @map("vk_id") @db.VarChar(255)
   cdb_banners     cdb_banners[]
 
+  @@index([id, dateDelete], map: "idx_sites_id_delete")
   @@map("cdb_sites")
 }
 
@@ -190,6 +199,7 @@ model SeriesGenre {
   @@unique([series_id, genre_id], map: "series_id")
   @@index([genre_id], map: "genre")
   @@index([series_id], map: "series_genre_series")
+  @@index([genre_id, series_id], map: "idx_series_genres_genre_series")
   @@map("cdb_series_genres")
 }
 
