@@ -148,7 +148,7 @@ export default async function NewSeries() {
         <div className="md:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
           <div className="flex gap-4" style={{ width: 'max-content' }}>
             {comics.map((comic) => (
-              <div key={comic.id} className="flex-shrink-0" style={{ width: 'calc(66.666vw - 1rem)' }}>
+              <div key={comic.id} className="flex-shrink-0" style={{ width: 'calc(40vw - 0.8rem)' }}>
                 <ComicCard
                   data={{
                     id: comic.id,
