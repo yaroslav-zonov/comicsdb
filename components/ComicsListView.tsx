@@ -17,6 +17,7 @@ export type ComicsListViewProps = {
   tableVariant?: 'main' | 'comic-page' | 'character-creator-team' | 'scanlator' | 'series'
   showTableOnMobile?: boolean
   groupByNumber?: boolean
+  hideViewToggleOnMobile?: boolean
   className?: string
   additionalTableData?: Array<{
     id: number
@@ -45,6 +46,7 @@ export default function ComicsListView({
   tableVariant = 'main',
   showTableOnMobile = false,
   groupByNumber = false,
+  hideViewToggleOnMobile = false,
   className = '',
   additionalTableData,
 }: ComicsListViewProps) {
@@ -85,11 +87,13 @@ export default function ComicsListView({
               {title}
             </h2>
           )}
-          <ViewToggle
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showTableOnMobile={showTableOnMobile}
-          />
+          <div className={hideViewToggleOnMobile ? 'hidden md:block' : ''}>
+            <ViewToggle
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              showTableOnMobile={showTableOnMobile}
+            />
+          </div>
         </div>
       )}
 

@@ -55,6 +55,7 @@ export default function SeriesComicsView({ comics }: { comics: Comic[] }) {
       tableVariant="series"
       showTableOnMobile={false}
       groupByNumber={true}
+      hideViewToggleOnMobile={true}
       additionalTableData={comics.map(comic => ({
         id: comic.id,
         siteName: comic.siteName,

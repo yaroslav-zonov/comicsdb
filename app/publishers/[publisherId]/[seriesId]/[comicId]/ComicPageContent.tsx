@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TableRow from '@/components/TableRow'
 import ComicNavigationFAB from '@/components/ComicNavigationFAB'
+import Accordion from '@/components/Accordion'
 import { decodeHtmlEntities, getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
 
 type Comic = {
@@ -101,8 +102,8 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
             </ol>
           </nav>
           
-          {/* Навигация по выпускам */}
-          <div className="flex items-center justify-start md:justify-end gap-2 text-sm">
+          {/* Навигация по выпускам - только на десктопе */}
+          <div className="hidden md:flex items-center justify-end gap-2 text-sm">
             {comic.prevIssue ? (
               <Link
                 href={getComicUrl(comic.series.publisher.id, comic.series.id, comic.prevIssue.comicvine)}
@@ -130,7 +131,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Обложка */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 mx-auto md:mx-0">
               <div className="relative w-64 md:w-80 aspect-[2/3]">
                 {coverImage ? (
                   <Image
@@ -152,13 +153,13 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
 
             {/* Информация */}
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-text-primary mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-4 text-center md:text-left">
                 {comic.series.name} #{comic.number}
               </h1>
 
               <div className="space-y-6">
                 {/* Издательство + дата публикации */}
-                <div className="text-sm text-text-primary">
+                <div className="text-sm text-text-primary text-center md:text-left">
                   <Link
                     href={`/publishers/${comic.series.publisher.id}`}
                     className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
@@ -209,6 +210,8 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 {/* Создатели, персонажи, команды - кликабельные */}
                 {(comic.creators || comic.characters || comic.teams) && (
                   <div className="pt-4 border-t border-border-primary space-y-4">
+                    {/* Десктопная версия - без аккордеона */}
+                    <div className="hidden md:block space-y-4">
                     {comic.creators && (
                       <div>
                         <h3 className="text-sm font-semibold text-text-primary mb-2">
@@ -332,6 +335,121 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                         </div>
                       </div>
                     )}
+                    </div>
+
+                    {/* Мобильная версия - с аккордеонами */}
+                    <div className="md:hidden space-y-2">
+                    {comic.creators && (
+                      <Accordion title="Создатели" defaultOpen={true}>
+                        <div className="flex flex-wrap gap-2">
+                          {(() => {
+                            // Парсим строку с учетом скобок и запятых внутри них
+                            const parts: Array<{ name: string; role: string | null }> = []
+                            let current = ''
+                            let inParens = false
+                            let parensContent = ''
+
+                            for (let i = 0; i < comic.creators.length; i++) {
+                              const char = comic.creators[i]
+
+                              if (char === '(') {
+                                inParens = true
+                                parensContent = ''
+                              } else if (char === ')') {
+                                inParens = false
+                              } else if (char === ',' && !inParens) {
+                                const trimmed = current.trim()
+                                if (trimmed) {
+                                  parts.push({
+                                    name: trimmed,
+                                    role: parensContent ? parensContent.trim() : null,
+                                  })
+                                }
+                                current = ''
+                                parensContent = ''
+                              } else {
+                                if (inParens) {
+                                  parensContent += char
+                                } else {
+                                  if (char === ' ' && current.endsWith(' ')) {
+                                    continue
+                                  }
+                                  current += char
+                                }
+                              }
+                            }
+
+                            const trimmed = current.trim()
+                            if (trimmed) {
+                              parts.push({
+                                name: trimmed,
+                                role: parensContent ? parensContent.trim() : null,
+                              })
+                            }
+
+                            return parts.map((part, idx) => (
+                              <span key={idx} className="text-sm text-text-primary">
+                                <Link
+                                  href={`/search?q=${encodeURIComponent(part.name)}&type=creator&tab=creators`}
+                                  className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                                >
+                                  {part.name}
+                                </Link>
+                                {part.role && <span className="text-text-secondary"> ({part.role})</span>}
+                                {idx < parts.length - 1 && <span className="text-text-tertiary">, </span>}
+                              </span>
+                            ))
+                          })()}
+                        </div>
+                      </Accordion>
+                    )}
+                    {comic.characters && (
+                      <Accordion title="Персонажи" defaultOpen={false}>
+                        <div className="flex flex-wrap gap-2">
+                          {comic.characters.split(',').map((character, idx) => {
+                            const trimmed = character.trim()
+                            if (!trimmed) return null
+
+                            const match = trimmed.match(/^(.+?)\s*\((.+?)\)$/)
+                            const name = match ? match[1].trim() : trimmed
+
+                            return (
+                              <Link
+                                key={idx}
+                                href={`/search?q=${encodeURIComponent(name)}&type=character&tab=characters`}
+                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                              >
+                                {name}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </Accordion>
+                    )}
+                    {comic.teams && (
+                      <Accordion title="Команды" defaultOpen={false}>
+                        <div className="flex flex-wrap gap-2">
+                          {comic.teams.split(',').map((team, idx) => {
+                            const trimmed = team.trim()
+                            if (!trimmed) return null
+
+                            const match = trimmed.match(/^(.+?)\s*\((.+?)\)$/)
+                            const name = match ? match[1].trim() : trimmed
+
+                            return (
+                              <Link
+                                key={idx}
+                                href={`/search?q=${encodeURIComponent(name)}&type=team&tab=teams`}
+                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                              >
+                                {name}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </Accordion>
+                    )}
+                    </div>
                   </div>
                 )}
               </div>

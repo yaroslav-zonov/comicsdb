@@ -375,6 +375,9 @@ export default function SearchResultsView({
               <div className="pt-3">
                 <h3 className="font-semibold text-sm text-text-primary mb-1 line-clamp-2 group-hover:text-accent transition-colors">
                   {s.name}
+                  {s.volume && s.volume !== '0' && (
+                    <span className="text-text-secondary ml-1">({s.volume})</span>
+                  )}
                 </h3>
                 <p className="text-xs text-text-secondary">{s.publisher.name}</p>
               </div>

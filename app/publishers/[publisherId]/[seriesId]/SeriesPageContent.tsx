@@ -207,27 +207,26 @@ export default async function SeriesPageContent({
             <li>/</li>
             <li className="text-text-primary">{series.name}</li>
           </ol>
-          {/* Мобильная версия - только издательство */}
-          <ol className="md:hidden flex items-center space-x-2 text-text-secondary">
-            <li>
-              <Link
-                href={`/publishers/${series.publisher.id}`}
-                className="hover:text-accent transition-colors"
-              >
-                {series.publisher.name}
-              </Link>
-            </li>
-            <li>/</li>
-            <li className="text-text-primary">{series.name}</li>
-          </ol>
+          {/* Мобильная версия - только кнопка назад */}
+          <div className="md:hidden">
+            <Link
+              href={`/publishers/${series.publisher.id}`}
+              className="inline-flex items-center text-text-secondary hover:text-accent transition-colors"
+            >
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Назад
+            </Link>
+          </div>
         </nav>
 
         {/* Заголовок серии */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-text-primary mb-2">
+        <div className="mb-8 md:text-left text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
             {series.name}
             {series.volume && series.volume !== '0' && (
-              <span className="text-2xl text-text-secondary ml-2">
+              <span className="text-xl md:text-2xl text-text-secondary ml-2">
                 ({series.volume})
               </span>
             )}
@@ -236,7 +235,7 @@ export default async function SeriesPageContent({
           <div className="space-y-4 mt-6">
             {/* Основная метадата */}
             <div className="text-sm text-text-primary space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                 <Link
                   href={`/publishers/${series.publisher.id}`}
                   className="text-accent hover:text-accent-hover hover:underline"
@@ -260,10 +259,10 @@ export default async function SeriesPageContent({
                   {series.comicvine > 0 && ` из ${series.comicvine}`}
                 </span>
               </div>
-              
+
               {/* Жанры отдельной строкой */}
               {series.genres.length > 0 && (
-                <div className="pt-2">
+                <div className="pt-2 text-center md:text-left">
                   <span className="text-sm text-text-secondary">Жанры: </span>
                   <span className="text-sm">
                     {series.genres.map((genre, idx) => (

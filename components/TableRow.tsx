@@ -134,7 +134,7 @@ export default function TableRow(props: TableRowProps) {
   if (variant === 'comic-page') {
     // На странице выпуска: сайт-переводчик / переводчик / оформитель / дата публикации / кнопка скачать
     const comicData = data as ComicRowData & { isJoint?: boolean; site2Name?: string | null; site2Id?: string | null }
-    
+
     return (
       <tr className="border-t border-border-primary first:border-t-0">
         <td className="py-3 whitespace-nowrap">
@@ -169,7 +169,7 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3">
+        <td className="py-3 hidden md:table-cell">
           {data.translate ? (
             <div className="flex flex-col flex-wrap gap-1 max-h-16">
               {data.translate.split(',').map((name, idx) => {
@@ -190,7 +190,7 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3">
+        <td className="py-3 hidden md:table-cell">
           {data.edit ? (
             <div className="flex flex-col flex-wrap gap-1 max-h-16">
               {data.edit.split(',').map((name, idx) => {
