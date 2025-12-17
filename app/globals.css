@@ -225,7 +225,15 @@ select option {
   }
 
   .table-row {
-    @apply hover:bg-accent-50/30 dark:hover:bg-accent-100/10 transition-all duration-200 cursor-pointer;
+    @apply transition-all duration-200 cursor-pointer;
+  }
+
+  .table-row:hover {
+    background-color: rgba(255, 247, 237, 0.3);
+  }
+
+  .dark .table-row:hover {
+    background-color: rgba(249, 115, 22, 0.1);
   }
 
   .table-header {
