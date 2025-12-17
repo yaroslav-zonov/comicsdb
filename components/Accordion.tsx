@@ -13,12 +13,12 @@ export default function Accordion({ title, children, defaultOpen = false, classN
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <div className={`border border-border-primary rounded-lg ${className}`}>
+    <div className={`border-b border-border-primary ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-bg-secondary transition-colors"
+        className="w-full py-3 flex items-center justify-between text-left hover:bg-bg-secondary transition-colors"
       >
-        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+        <h3 className="text-sm font-medium text-text-secondary">{title}</h3>
         <svg
           className={`w-5 h-5 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -29,7 +29,7 @@ export default function Accordion({ title, children, defaultOpen = false, classN
         </svg>
       </button>
       {isOpen && (
-        <div className="px-4 pb-4">
+        <div className="pb-4">
           {children}
         </div>
       )}

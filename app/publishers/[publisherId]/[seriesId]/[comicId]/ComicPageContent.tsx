@@ -87,19 +87,18 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
               <li>/</li>
               <li className="text-text-primary">#{comic.number}</li>
             </ol>
-            {/* Мобильная версия - только серия */}
-            <ol className="md:hidden flex items-center space-x-2 text-text-secondary">
-              <li>
-                <Link
-                  href={getSeriesUrl(comic.series.publisher.id, comic.series.id)}
-                  className="hover:text-accent transition-colors"
-                >
-                  {comic.series.name}
-                </Link>
-              </li>
-              <li>/</li>
-              <li className="text-text-primary">#{comic.number}</li>
-            </ol>
+            {/* Мобильная версия - только кнопка назад */}
+            <div className="md:hidden">
+              <Link
+                href={getSeriesUrl(comic.series.publisher.id, comic.series.id)}
+                className="inline-flex items-center text-text-secondary hover:text-accent transition-colors"
+              >
+                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Назад
+              </Link>
+            </div>
           </nav>
           
           {/* Навигация по выпускам - только на десктопе */}
@@ -175,7 +174,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 {/* Таблица переводов */}
                 {comic.translations && comic.translations.length > 0 && (
                   <div className="pt-4 border-t border-border-primary">
-                    <h2 className="text-xl font-bold text-text-primary mb-4">Переводы</h2>
+                    <h2 className="text-sm font-medium text-text-secondary mb-4">Переводы</h2>
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
                         <tbody>
@@ -214,7 +213,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                     <div className="hidden md:block space-y-4">
                     {comic.creators && (
                       <div>
-                        <h3 className="text-sm font-semibold text-text-primary mb-2">
+                        <h3 className="text-sm font-medium text-text-secondary mb-2">
                           Создатели
                         </h3>
                         <div className="flex flex-wrap gap-2">
@@ -283,7 +282,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                     )}
                     {comic.characters && (
                       <div>
-                        <h3 className="text-sm font-semibold text-text-primary mb-2">
+                        <h3 className="text-sm font-medium text-text-secondary mb-2">
                           Персонажи
                         </h3>
                         <div className="flex flex-wrap gap-2">
@@ -310,7 +309,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                     )}
                     {comic.teams && (
                       <div>
-                        <h3 className="text-sm font-semibold text-text-primary mb-2">
+                        <h3 className="text-sm font-medium text-text-secondary mb-2">
                           Команды
                         </h3>
                         <div className="flex flex-wrap gap-2">
@@ -338,7 +337,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                     </div>
 
                     {/* Мобильная версия - с аккордеонами */}
-                    <div className="md:hidden space-y-2">
+                    <div className="md:hidden">
                     {comic.creators && (
                       <Accordion title="Создатели" defaultOpen={true}>
                         <div className="flex flex-wrap gap-2">
