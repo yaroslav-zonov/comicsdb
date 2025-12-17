@@ -87,47 +87,39 @@ export async function getTopScanlatorsByYear() {
   try {
     const currentYear = new Date().getFullYear()
 
-    // Получаем все комиксы за текущий год с переводчиками и оформителями
-    const comics = await prisma.comic.findMany({
-      where: {
-        dateDelete: null,
-        date: {
-          gte: new Date(currentYear, 0, 1),
-          lt: new Date(currentYear + 1, 0, 1),
-        },
-      },
-      select: {
-        translate: true,
-        edit: true,
-      },
-    })
+    // ОПТИМИЗИРОВАННЫЙ SQL: агрегация на уровне БД вместо загрузки в память
+    // Используем UNION для объединения переводчиков и оформителей
+    const scanlators = await prisma.$queryRaw<Array<{
+      name: string
+      count: bigint
+    }>>`
+      SELECT
+        TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) as name,
+        COUNT(*) as count
+      FROM (
+        SELECT CONCAT(COALESCE(translate, ''), ',', COALESCE(edit, '')) as names
+        FROM cdb_comics
+        WHERE date_delete IS NULL
+          AND YEAR(date) = ${currentYear}
+          AND (translate IS NOT NULL OR edit IS NOT NULL)
+      ) as combined
+      CROSS JOIN (
+        SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+        SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL
+        SELECT 9 UNION ALL SELECT 10
+      ) as numbers
+      WHERE CHAR_LENGTH(combined.names) - CHAR_LENGTH(REPLACE(combined.names, ',', '')) >= numbers.n - 1
+        AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) != ''
+      GROUP BY name
+      ORDER BY count DESC
+      LIMIT 10
+    `
 
-    // Собираем всех сканлейтеров (переводчики + оформители)
-    const scanlatorCounts = new Map<string, number>()
-    
-    comics.forEach(comic => {
-      // Обрабатываем переводчиков
-      if (comic.translate && comic.translate.trim()) {
-        const translators = comic.translate.split(',').map(t => t.trim()).filter(t => t)
-        translators.forEach(translator => {
-          scanlatorCounts.set(translator, (scanlatorCounts.get(translator) || 0) + 1)
-        })
-      }
-      
-      // Обрабатываем оформителей
-      if (comic.edit && comic.edit.trim()) {
-        const editors = comic.edit.split(',').map(e => e.trim()).filter(e => e)
-        editors.forEach(editor => {
-          scanlatorCounts.set(editor, (scanlatorCounts.get(editor) || 0) + 1)
-        })
-      }
-    })
-
-    // Сортируем и берем топ 10
-    const topScanlators = Array.from(scanlatorCounts.entries())
-      .map(([name, count]) => ({ name: decodeHtmlEntities(name), count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10)
+    // Преобразуем результат
+    const topScanlators = scanlators.map(s => ({
+      name: decodeHtmlEntities(s.name),
+      count: Number(s.count),
+    }))
 
     return {
       year: currentYear,
@@ -275,120 +267,73 @@ export async function getTopSitesByYear() {
 export async function getFreshmenByYear() {
   try {
     const currentYear = new Date().getFullYear()
-    const oneYearAgo = new Date(currentYear, 0, 1)
 
-    // Получаем ВСЕ комиксы (не только за этот год) для поиска первого релиза каждого сканлейтера
-    const allComics = await prisma.comic.findMany({
-      where: {
-        dateDelete: null,
-        date: { not: null },
-      },
-      select: {
-        translate: true,
-        edit: true,
-        date: true,
-      },
-      orderBy: {
-        date: 'asc',
-      },
-    })
-
-    // Находим первый релиз каждого сканлейтера за всё время
-    const scanlatorFirstDates = new Map<string, Date>()
-    
-    allComics.forEach(comic => {
-      if (!comic.date) return
-
-      // Обрабатываем переводчиков
-      if (comic.translate && comic.translate.trim()) {
-        const translators = comic.translate.split(',').map(t => t.trim()).filter(t => t)
-        translators.forEach(translator => {
-          if (!scanlatorFirstDates.has(translator) || comic.date! < scanlatorFirstDates.get(translator)!) {
-            scanlatorFirstDates.set(translator, comic.date!)
-          }
-        })
-      }
-      
-      // Обрабатываем оформителей
-      if (comic.edit && comic.edit.trim()) {
-        const editors = comic.edit.split(',').map(e => e.trim()).filter(e => e)
-        editors.forEach(editor => {
-          if (!scanlatorFirstDates.has(editor) || comic.date! < scanlatorFirstDates.get(editor)!) {
-            scanlatorFirstDates.set(editor, comic.date!)
-          }
-        })
-      }
-    })
-
-    // Фильтруем: первый релиз был в этом году (в сканлейте меньше 1 года)
-    const currentYearStart = new Date(currentYear, 0, 1)
-    const freshmenCandidates = Array.from(scanlatorFirstDates.entries())
-      .filter(([name, firstDate]) => {
-        // Первый релиз должен быть в этом году
-        return firstDate >= currentYearStart && firstDate < new Date(currentYear + 1, 0, 1)
-      })
-      .map(([name, firstDate]) => name)
-
-    if (freshmenCandidates.length === 0) {
-      return { year: currentYear, freshmen: [] }
-    }
-
-    // Подсчитываем количество релизов за этот год для фрешменов
-    const comicsThisYear = await prisma.comic.findMany({
-      where: {
-        dateDelete: null,
-        date: {
-          gte: new Date(currentYear, 0, 1),
-          lt: new Date(currentYear + 1, 0, 1),
-        },
-      },
-      select: {
-        translate: true,
-        edit: true,
-      },
-    })
-
-    const scanlatorCounts = new Map<string, number>()
-    
-    comicsThisYear.forEach(comic => {
-      // Обрабатываем переводчиков
-      if (comic.translate && comic.translate.trim()) {
-        const translators = comic.translate.split(',').map(t => t.trim()).filter(t => t)
-        translators.forEach(translator => {
-          if (freshmenCandidates.includes(translator)) {
-            scanlatorCounts.set(translator, (scanlatorCounts.get(translator) || 0) + 1)
-          }
-        })
-      }
-      
-      // Обрабатываем оформителей
-      if (comic.edit && comic.edit.trim()) {
-        const editors = comic.edit.split(',').map(e => e.trim()).filter(e => e)
-        editors.forEach(editor => {
-          if (freshmenCandidates.includes(editor)) {
-            scanlatorCounts.set(editor, (scanlatorCounts.get(editor) || 0) + 1)
-          }
-        })
-      }
-    })
-
-    // Сортируем и берем топ 3
-    const freshmen = Array.from(scanlatorCounts.entries())
-      .map(([name, count]) => ({
-        name: decodeHtmlEntities(name),
-        firstDate: scanlatorFirstDates.get(name)!,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3)
+    // ОПТИМИЗИРОВАННЫЙ SQL: один комплексный запрос для нахождения фрешменов
+    // Находим сканлейтеров, чей первый релиз был в текущем году, и считаем их релизы за год
+    const freshmen = await prisma.$queryRaw<Array<{
+      name: string
+      first_date: Date
+      count: bigint
+    }>>`
+      WITH scanlator_first_dates AS (
+        SELECT
+          TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) as name,
+          MIN(c.date) as first_date
+        FROM (
+          SELECT id, date, CONCAT(COALESCE(translate, ''), ',', COALESCE(edit, '')) as names
+          FROM cdb_comics
+          WHERE date_delete IS NULL
+            AND date IS NOT NULL
+            AND (translate IS NOT NULL OR edit IS NOT NULL)
+        ) as combined
+        JOIN cdb_comics c ON c.id = combined.id
+        CROSS JOIN (
+          SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+          SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL
+          SELECT 9 UNION ALL SELECT 10
+        ) as numbers
+        WHERE CHAR_LENGTH(combined.names) - CHAR_LENGTH(REPLACE(combined.names, ',', '')) >= numbers.n - 1
+          AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) != ''
+        GROUP BY name
+        HAVING YEAR(MIN(c.date)) = ${currentYear}
+      ),
+      scanlator_year_counts AS (
+        SELECT
+          TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) as name,
+          COUNT(*) as count
+        FROM (
+          SELECT CONCAT(COALESCE(translate, ''), ',', COALESCE(edit, '')) as names
+          FROM cdb_comics
+          WHERE date_delete IS NULL
+            AND YEAR(date) = ${currentYear}
+            AND (translate IS NOT NULL OR edit IS NOT NULL)
+        ) as combined
+        CROSS JOIN (
+          SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+          SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL
+          SELECT 9 UNION ALL SELECT 10
+        ) as numbers
+        WHERE CHAR_LENGTH(combined.names) - CHAR_LENGTH(REPLACE(combined.names, ',', '')) >= numbers.n - 1
+          AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) != ''
+        GROUP BY name
+      )
+      SELECT
+        sfd.name,
+        sfd.first_date,
+        COALESCE(syc.count, 0) as count
+      FROM scanlator_first_dates sfd
+      LEFT JOIN scanlator_year_counts syc ON sfd.name = syc.name
+      ORDER BY count DESC
+      LIMIT 3
+    `
 
     return {
       year: currentYear,
       freshmen: freshmen.map(f => ({
-        siteId: f.name,
-        siteName: f.name,
-        firstDate: f.firstDate,
-        count: f.count,
+        siteId: decodeHtmlEntities(f.name),
+        siteName: decodeHtmlEntities(f.name),
+        firstDate: f.first_date,
+        count: Number(f.count),
       })),
     }
   } catch (error) {

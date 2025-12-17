@@ -4,7 +4,6 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SiteSeriesView from './SiteSeriesView'
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
 import { decodeHtmlEntities, formatDate } from '@/lib/utils'
 
 // Кэшируем на 2 минуты (данные сайтов меняются реже)
@@ -44,8 +43,8 @@ async function getSite(id: string): Promise<{
       return null
     }
 
-    // ОПТИМИЗИРОВАННЫЙ SQL: группировка на уровне БД вместо JavaScript
-    // Один запрос вместо загрузки 10000 комиксов в память
+    // ОПТИМИЗИРОВАННЫЙ SQL: один запрос вместо N+1
+    // Получаем все данные о сериях и комиксах за один запрос с JSON агрегацией
     const seriesResults = await prisma.$queryRaw<Array<{
       series_id: number
       series_name: string
@@ -55,7 +54,7 @@ async function getSite(id: string): Promise<{
       first_comic_thumb: string | null
       first_comic_tiny: string | null
       last_date: Date | null
-      comics_count: number
+      comics_json: string // JSON array комиксов
     }>>`
       SELECT
         s.id as series_id,
@@ -72,7 +71,15 @@ async function getSite(id: string): Promise<{
            AND (c2.site = ${id} OR c2.site2 = ${id})
          ORDER BY c2.number ASC LIMIT 1) as first_comic_tiny,
         MAX(COALESCE(c.date, c.pdate, c.adddate)) as last_date,
-        COUNT(c.id) as comics_count
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', c.id,
+            'comicvine', c.comicvine,
+            'number', c.number,
+            'date', CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 THEN NULL ELSE c.date END,
+            'pdate', CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 THEN NULL ELSE c.pdate END
+          )
+        ) as comics_json
       FROM cdb_comics c
       INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
       INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
@@ -82,48 +89,37 @@ async function getSite(id: string): Promise<{
       ORDER BY last_date DESC
     `
 
-    // Получаем детальную информацию о комиксах для каждой серии
-    const seriesWithComics = await Promise.all(
-      seriesResults.map(async (seriesData) => {
-        const comics = await prisma.$queryRaw<Array<{
-          id: number
-          comicvine: number
-          number: string
-          date: Date | null
-          pdate: Date | null
-        }>>`
-          SELECT
-            c.id,
-            c.comicvine,
-            c.number,
-            CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 THEN NULL ELSE c.date END as date,
-            CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate
-          FROM cdb_comics c
-          WHERE c.serie = ${seriesData.series_id}
-            AND c.date_delete IS NULL
-            AND (c.site = ${id} OR c.site2 = ${id})
-          ORDER BY c.number ASC
-        `
+    // Парсим JSON данные о комиксах
+    const seriesWithComics = seriesResults.map((seriesData) => {
+      const comicsData = JSON.parse(seriesData.comics_json) as Array<{
+        id: number
+        comicvine: number
+        number: string
+        date: string | null
+        pdate: string | null
+      }>
 
-        return {
-          id: seriesData.series_id,
-          name: decodeHtmlEntities(seriesData.series_name),
-          publisher: {
-            id: seriesData.publisher_id,
-            name: decodeHtmlEntities(seriesData.publisher_name),
-          },
-          comics: comics.map(c => ({
-            id: c.id,
-            comicvine: c.comicvine,
-            number: Number(c.number),
-            date: c.date,
-            pdate: c.pdate,
-          })),
-          lastDate: seriesData.last_date,
-          thumb: seriesData.first_comic_thumb || seriesData.first_comic_tiny || seriesData.series_thumb,
-        }
-      })
-    )
+      // Сортируем комиксы по номеру (так как JSON_ARRAYAGG не гарантирует порядок)
+      const sortedComics = comicsData.sort((a, b) => Number(a.number) - Number(b.number))
+
+      return {
+        id: seriesData.series_id,
+        name: decodeHtmlEntities(seriesData.series_name),
+        publisher: {
+          id: seriesData.publisher_id,
+          name: decodeHtmlEntities(seriesData.publisher_name),
+        },
+        comics: sortedComics.map(c => ({
+          id: c.id,
+          comicvine: c.comicvine,
+          number: Number(c.number),
+          date: c.date ? new Date(c.date) : null,
+          pdate: c.pdate ? new Date(c.pdate) : null,
+        })),
+        lastDate: seriesData.last_date,
+        thumb: seriesData.first_comic_thumb || seriesData.first_comic_tiny || seriesData.series_thumb,
+      }
+    })
 
     // Получаем общую статистику
     const stats = await prisma.$queryRaw<Array<{
