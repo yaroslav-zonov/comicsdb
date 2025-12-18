@@ -44,23 +44,23 @@
 }
 
 .dark {
-  /* Фоны */
-  --color-bg-primary: #0a0a0a;       /* Почти чёрный */
-  --color-bg-secondary: #111111;     /* Тёмно-серый */
-  --color-bg-tertiary: #1a1a1a;     /* Карточки и блоки */
-  --color-bg-card: #1a1a1a;         /* Карточки */
-  --color-bg-input: #1a1a1a;        /* Поля ввода */
-  
+  /* Фоны - более мягкие, как у Letterboxd/Кинопоиск */
+  --color-bg-primary: #14181c;       /* Синевато-серый фон (как Letterboxd) */
+  --color-bg-secondary: #1c2228;     /* Немного светлее для карточек */
+  --color-bg-tertiary: #283038;      /* Ещё светлее для hover */
+  --color-bg-card: #1c2228;          /* Карточки */
+  --color-bg-input: #283038;         /* Поля ввода */
+
   /* Текст */
-  --color-text-primary: #e5e5e5;     /* Основной текст */
-  --color-text-secondary: #a0a0a0;   /* Вторичный текст */
-  --color-text-tertiary: #666666;    /* Placeholder, disabled */
-  --color-text-muted: #4a4a4a;      /* Очень приглушённый */
-  
-  /* Границы */
-  --color-border-primary: #2a2a2a;   /* Основные границы */
-  --color-border-secondary: #1a1a1a; /* Вторичные границы */
-  --color-border-tertiary: #111111;  /* Третичные границы */
+  --color-text-primary: #e0e6ed;     /* Основной текст - более голубоватый */
+  --color-text-secondary: #99aabb;   /* Вторичный текст */
+  --color-text-tertiary: #678;       /* Placeholder, disabled */
+  --color-text-muted: #445566;       /* Очень приглушённый */
+
+  /* Границы - менее контрастные */
+  --color-border-primary: #2c3440;   /* Основные границы */
+  --color-border-secondary: #456;    /* Вторичные границы */
+  --color-border-tertiary: #384048;  /* Третичные границы */
   
   /* Акцентные цвета (градации оранжевого) */
   --color-accent-50: rgba(249, 115, 22, 0.05);  /* Очень светлый для hover backgrounds */
@@ -229,11 +229,11 @@ select option {
   }
 
   .table-row:hover {
-    background-color: rgba(255, 247, 237, 0.3);
+    background-color: rgba(243, 244, 246, 0.5);
   }
 
   .dark .table-row:hover {
-    background-color: rgba(249, 115, 22, 0.1);
+    background-color: rgba(40, 48, 56, 0.5);
   }
 
   .table-header {

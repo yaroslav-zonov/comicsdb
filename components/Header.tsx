@@ -25,10 +25,10 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-bg-card/80 backdrop-blur-md border-b border-border-secondary/50 sticky top-0 z-50 shadow-sm">
+    <header className="bg-bg-card/95 backdrop-blur-xl border-b border-border-primary sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Первая строка: Лого и навигация */}
-        <div className="flex items-center justify-between h-14 border-b border-border-secondary">
+        <div className="flex items-center justify-between h-14 border-b border-border-primary/50">
           {/* Логотип */}
           <div className="flex items-center">
             <Link href="/" className="text-lg font-semibold text-text-primary hover:text-accent transition-colors duration-200">
@@ -127,13 +127,13 @@ export default function Header() {
             </Link>
             <Link
               href="/faq"
-              className="text-text-secondary hover:text-text-primary transition-colors"
+              className="text-text-secondary hover:text-accent transition-colors"
             >
               F.A.Q.
             </Link>
             <Link
               href="/stats"
-              className="text-text-secondary hover:text-text-primary transition-colors"
+              className="text-text-secondary hover:text-accent transition-colors"
             >
               Статистика
             </Link>
@@ -163,7 +163,7 @@ export default function Header() {
 
         {/* Мобильное меню */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border-secondary py-4 fade-in">
+          <div className="md:hidden border-t border-border-primary/50 py-4 fade-in">
             {/* Навигация */}
             <nav className="flex flex-col space-y-2 mb-4">
               <Link
@@ -210,7 +210,7 @@ export default function Header() {
 
 
             {/* Социальные ссылки */}
-            <div className="flex flex-wrap items-center gap-3 text-sm pt-4 border-t border-border-secondary">
+            <div className="flex flex-wrap items-center gap-3 text-sm pt-4 border-t border-border-primary/50">
               <a href="https://vk.com/comicsdb" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-blue-600 dark:hover:text-blue-400">
                 ВКонтакте
               </a>
@@ -220,10 +220,10 @@ export default function Header() {
               <Link href="/rss" className="text-text-secondary hover:text-accent">
                 RSS
               </Link>
-              <Link href="/faq" className="text-text-secondary hover:text-text-primary">
+              <Link href="/faq" className="text-text-secondary hover:text-accent">
                 F.A.Q.
               </Link>
-              <Link href="/stats" className="text-text-secondary hover:text-text-primary">
+              <Link href="/stats" className="text-text-secondary hover:text-accent">
                 Статистика
               </Link>
             </div>

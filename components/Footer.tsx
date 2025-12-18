@@ -23,22 +23,22 @@ export default function Footer() {
             <h4 className="text-text-primary font-semibold mb-4">Навигация</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/comics" className="hover:text-text-primary transition-colors">
+                <Link href="/comics" className="hover:text-accent transition-colors">
                   Комиксы
                 </Link>
               </li>
               <li>
-                <Link href="/publishers" className="hover:text-text-primary transition-colors">
+                <Link href="/publishers" className="hover:text-accent transition-colors">
                   Издательства
                 </Link>
               </li>
               <li>
-                <Link href="/sites" className="hover:text-text-primary transition-colors">
+                <Link href="/sites" className="hover:text-accent transition-colors">
                   Сайты
                 </Link>
               </li>
               <li>
-                <Link href="/genres" className="hover:text-text-primary transition-colors">
+                <Link href="/genres" className="hover:text-accent transition-colors">
                   Жанры
                 </Link>
               </li>
@@ -50,22 +50,22 @@ export default function Footer() {
             <h4 className="text-text-primary font-semibold mb-4">Информация</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/faq" className="hover:text-text-primary transition-colors">
+                <Link href="/faq" className="hover:text-accent transition-colors">
                   F.A.Q.
                 </Link>
               </li>
               <li>
-                <Link href="/stats" className="hover:text-text-primary transition-colors">
+                <Link href="/stats" className="hover:text-accent transition-colors">
                   Статистика
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-text-primary transition-colors">
+                <Link href="/about" className="hover:text-accent transition-colors">
                   О проекте
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-text-primary transition-colors">
+                <Link href="/contact" className="hover:text-accent transition-colors">
                   Контакты
                 </Link>
               </li>
