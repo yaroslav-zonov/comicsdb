@@ -25,13 +25,13 @@ export default function Header() {
   }
 
   return (
-    <header className="relative bg-bg-secondary/80 dark:bg-bg-card/98 backdrop-blur-md border-b border-border-primary/30 sticky top-0 z-50 shadow-sm">
+    <header className="relative header-bg backdrop-blur-md border-b border-border-primary sticky top-0 z-50 shadow-sm">
       {/* Градиентная подложка для улучшения контраста */}
-      <div className="absolute inset-0 bg-gradient-to-b from-bg-secondary/60 via-bg-secondary/40 to-transparent dark:from-bg-primary/70 dark:via-bg-primary/50 dark:to-transparent pointer-events-none" />
+      <div className="absolute inset-0 header-gradient pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Первая строка: Лого и навигация */}
-        <div className="flex items-center justify-between h-14 border-b border-border-primary/20">
+        <div className="flex items-center justify-between h-14 border-b border-border-primary">
           {/* Логотип */}
           <div className="flex items-center">
             <Link href="/" className="text-lg font-semibold text-text-primary hover:text-accent transition-colors duration-200">
@@ -166,7 +166,7 @@ export default function Header() {
 
         {/* Мобильное меню */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border-primary/20 py-4 fade-in">
+          <div className="md:hidden border-t border-border-primary py-4 fade-in">
             {/* Навигация */}
             <nav className="flex flex-col space-y-2 mb-4">
               <Link
@@ -213,7 +213,7 @@ export default function Header() {
 
 
             {/* Социальные ссылки */}
-            <div className="flex flex-wrap items-center gap-3 text-sm pt-4 border-t border-border-primary/20">
+            <div className="flex flex-wrap items-center gap-3 text-sm pt-4 border-t border-border-primary">
               <a href="https://vk.com/comicsdb" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-blue-600 dark:hover:text-blue-400">
                 ВКонтакте
               </a>

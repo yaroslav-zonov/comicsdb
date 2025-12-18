@@ -372,4 +372,21 @@ select option {
   .fab-divider {
     @apply w-px h-8 bg-border-primary;
   }
+
+  /* Хедер с правильной прозрачностью для обеих тем */
+  .header-bg {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .dark .header-bg {
+    background-color: rgba(28, 34, 40, 0.8); /* bg-card с 80% opacity */
+  }
+
+  .header-gradient {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4), transparent);
+  }
+
+  .dark .header-gradient {
+    background: linear-gradient(to bottom, rgba(28, 34, 40, 0.6), rgba(28, 34, 40, 0.4), transparent); /* bg-card с градиентом */
+  }
 }
