@@ -201,13 +201,12 @@ async function getSite(id: string): Promise<{
 export default async function SitePage({
   params,
 }: {
-  params: Promise<{ id: string }> | { id: string }
+  params: { id: string }
 }) {
-  // В Next.js 14/15 params может быть Promise
-  const resolvedParams = await Promise.resolve(params)
+  // В Next.js 14.0.4 params НЕ является Promise
   // Декодируем ID из URL (на случай если есть URL-кодирование)
   // Также обрезаем пробелы и приводим к строке
-  let siteId = String(resolvedParams.id || '').trim()
+  let siteId = String(params.id || '').trim()
   
   // Пробуем декодировать, но если это вызывает ошибку, используем исходное значение
   try {
@@ -223,13 +222,13 @@ export default async function SitePage({
   }
   
   // Логируем для отладки
-  console.log(`Looking for site with ID: "${siteId}" (original: "${resolvedParams.id}")`)
+  console.log(`Looking for site with ID: "${siteId}" (original: "${params.id}")`)
   
   const site = await getSite(siteId)
 
   if (!site) {
     // Логируем для отладки
-    console.error(`Site not found: ${siteId} (original: ${resolvedParams.id})`)
+    console.error(`Site not found: ${siteId} (original: ${params.id})`)
     notFound()
   }
 
