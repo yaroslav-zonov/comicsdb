@@ -255,7 +255,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <span key={idx} className="text-sm text-text-primary">
                                 <Link
                                   href={`/search?q=${encodeURIComponent(part.name)}&type=creator&tab=creators`}
-                                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                                  className="text-text-primary hover:text-accent hover:underline transition-colors"
                                 >
                                   {part.name}
                                 </Link>
@@ -377,7 +377,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <span key={idx} className="text-sm text-text-primary">
                                 <Link
                                   href={`/search?q=${encodeURIComponent(part.name)}&type=creator&tab=creators`}
-                                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                                  className="text-text-primary hover:text-accent hover:underline transition-colors"
                                 >
                                   {part.name}
                                 </Link>

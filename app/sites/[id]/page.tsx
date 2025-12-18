@@ -158,9 +158,10 @@ async function getSite(id: string): Promise<{
 export default async function SitePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
-  const site = await getSite(params.id)
+  const resolvedParams = await Promise.resolve(params)
+  const site = await getSite(resolvedParams.id)
 
   if (!site) {
     notFound()

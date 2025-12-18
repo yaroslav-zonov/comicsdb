@@ -537,7 +537,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline"
+                    className="text-sm text-text-primary hover:text-accent hover:underline"
                   >
                     {trimmed}
                   </Link>
@@ -558,7 +558,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline"
+                    className="text-sm text-text-primary hover:text-accent hover:underline"
                   >
                     {trimmed}
                   </Link>
