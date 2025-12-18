@@ -33,13 +33,38 @@ async function getSite(id: string): Promise<{
   }>
 } | null> {
   try {
-    const site = await prisma.site.findUnique({
+    // Пробуем найти сайт по точному совпадению ID
+    let site = await prisma.site.findUnique({
       where: {
         id: id,
       },
     })
 
+    // Если не найдено, пробуем найти без учёта регистра (MySQL обычно case-insensitive, но на всякий случай)
+    if (!site) {
+      // Используем SQL запрос для поиска без учёта регистра
+      const sites = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM cdb_sites 
+        WHERE LOWER(id) = LOWER(${id}) 
+        AND date_delete IS NULL
+        LIMIT 1
+      `
+      if (sites.length > 0) {
+        site = await prisma.site.findUnique({
+          where: {
+            id: sites[0].id,
+          },
+        })
+      }
+    }
+
     if (!site || site.dateDelete !== null) {
+      // Логируем для отладки
+      if (!site) {
+        console.error(`Site with id "${id}" not found in database`)
+      } else if (site.dateDelete !== null) {
+        console.error(`Site with id "${id}" is deleted (dateDelete: ${site.dateDelete})`)
+      }
       return null
     }
 
@@ -189,7 +214,8 @@ export default async function SitePage({
 }) {
   // В Next.js 14/15 params может быть Promise
   const resolvedParams = await Promise.resolve(params)
-  const siteId = resolvedParams.id
+  // Декодируем ID из URL (на случай если есть URL-кодирование)
+  const siteId = decodeURIComponent(resolvedParams.id)
   
   if (!siteId) {
     notFound()
@@ -198,6 +224,8 @@ export default async function SitePage({
   const site = await getSite(siteId)
 
   if (!site) {
+    // Логируем для отладки
+    console.error(`Site not found: ${siteId}`)
     notFound()
   }
 
