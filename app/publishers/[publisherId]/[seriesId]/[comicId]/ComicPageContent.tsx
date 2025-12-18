@@ -285,7 +285,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=character&tab=characters`}
-                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
+                                className="text-sm text-text-primary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -312,7 +312,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=team&tab=teams`}
-                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
+                                className="text-sm text-text-primary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -403,7 +403,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=character&tab=characters`}
-                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
+                                className="text-sm text-text-primary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -426,7 +426,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=team&tab=teams`}
-                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
+                                className="text-sm text-text-primary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>

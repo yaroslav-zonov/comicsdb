@@ -179,7 +179,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline whitespace-nowrap"
+                    className="text-sm text-text-primary hover:text-accent hover:underline whitespace-nowrap"
                   >
                     {trimmed}
                   </Link>
@@ -200,7 +200,7 @@ export default function TableRow(props: TableRowProps) {
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-secondary hover:text-accent hover:underline whitespace-nowrap"
+                    className="text-sm text-text-primary hover:text-accent hover:underline whitespace-nowrap"
                   >
                     {trimmed}
                   </Link>
@@ -211,27 +211,27 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
-          {data.date
-            ? formatDate(data.date)
-            : '-'}
-        </td>
         <td className="py-3 whitespace-nowrap text-right pr-0">
-          {data.link ? (
-            <a
-              href={data.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-text-tertiary hover:text-accent transition-colors"
-              title="Скачать"
-            >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-            </a>
-          ) : (
-            <span className="text-text-muted" title="Ссылка недоступна">
-              <XMarkIcon className="w-5 h-5" />
+          <div className="flex items-center justify-end gap-3">
+            <span className="text-sm text-text-secondary hidden md:inline">
+              {data.date ? formatDate(data.date) : '-'}
             </span>
-          )}
+            {data.link ? (
+              <a
+                href={data.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-text-tertiary hover:text-accent transition-colors"
+                title="Скачать"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+              </a>
+            ) : (
+              <span className="text-text-muted" title="Ссылка недоступна">
+                <XMarkIcon className="w-5 h-5" />
+              </span>
+            )}
+          </div>
         </td>
       </tr>
     )

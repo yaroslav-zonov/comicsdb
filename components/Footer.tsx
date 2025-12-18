@@ -4,78 +4,31 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-bg-primary text-text-secondary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* О проекте */}
-          <div>
-            <h3 className="text-text-primary font-bold text-lg mb-4">ComicsDB</h3>
-            <p className="text-sm mb-4">
-              База русских переводов комиксов. Каталог из более чем 56,000 переведенных комиксов.
+    <footer className="bg-bg-primary text-text-secondary border-t border-border-primary">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Основная информация */}
+          <div className="text-center md:text-left">
+            <h3 className="text-text-primary font-bold text-lg mb-2">ComicsDB</h3>
+            <p className="text-sm mb-2">
+              База русских переводов комиксов. Более 56,000 выпусков.
             </p>
-            <p className="text-xs text-text-secondary">
-              © {currentYear} ComicsDB. Все права защищены.
+            <p className="text-xs text-text-tertiary">
+              Данные о комиксах из{' '}
+              <a
+                href="https://comicvine.gamespot.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent transition-colors"
+              >
+                Comicvine API
+              </a>
             </p>
           </div>
 
-          {/* Навигация */}
-          <div>
-            <h4 className="text-text-primary font-semibold mb-4">Навигация</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/comics" className="hover:text-accent transition-colors">
-                  Комиксы
-                </Link>
-              </li>
-              <li>
-                <Link href="/publishers" className="hover:text-accent transition-colors">
-                  Издательства
-                </Link>
-              </li>
-              <li>
-                <Link href="/sites" className="hover:text-accent transition-colors">
-                  Сайты
-                </Link>
-              </li>
-              <li>
-                <Link href="/genres" className="hover:text-accent transition-colors">
-                  Жанры
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Информация */}
-          <div>
-            <h4 className="text-text-primary font-semibold mb-4">Информация</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/faq" className="hover:text-accent transition-colors">
-                  F.A.Q.
-                </Link>
-              </li>
-              <li>
-                <Link href="/stats" className="hover:text-accent transition-colors">
-                  Статистика
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-accent transition-colors">
-                  О проекте
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-accent transition-colors">
-                  Контакты
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Социальные сети */}
-          <div>
-            <h4 className="text-text-primary font-semibold mb-4">Мы в соцсетях</h4>
-            <div className="flex space-x-4 mb-4">
+          {/* Социальные сети и полезные ссылки */}
+          <div className="flex flex-col items-center md:items-end gap-4">
+            <div className="flex items-center gap-4">
               <a
                 href="https://vk.com/comicsdb"
                 target="_blank"
@@ -88,7 +41,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://t.me/comicsdb"
+                href="https://t.me/comicsdatabase"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-text-tertiary hover:text-blue-400 transition-colors"
@@ -98,7 +51,7 @@ export default function Footer() {
                   <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                 </svg>
               </a>
-              <a
+              <Link
                 href="/rss"
                 className="text-text-tertiary hover:text-accent transition-colors"
                 title="RSS"
@@ -106,10 +59,24 @@ export default function Footer() {
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M6.503 20.752c0 1.794-1.456 3.248-3.251 3.248-1.796 0-3.252-1.454-3.252-3.248 0-1.794 1.456-3.248 3.252-3.248 1.795.001 3.251 1.454 3.251 3.248zm-6.503-12.572v4.811c6.05.062 10.96 4.966 11.022 11.009h4.817c-.062-8.71-7.118-15.758-15.839-15.82zm0-3.368c10.58.046 19.152 8.594 19.183 19.188h4.817c-.03-13.231-10.755-23.954-24-24v4.812z"/>
                 </svg>
-              </a>
+              </Link>
             </div>
-            <p className="text-xs text-text-secondary">
-              Используем API Comicvine для наполнения базы данными
+            <div className="flex items-center gap-4 text-xs">
+              <Link href="/about" className="text-text-secondary hover:text-accent transition-colors">
+                О проекте
+              </Link>
+              <Link href="/faq" className="text-text-secondary hover:text-accent transition-colors">
+                F.A.Q.
+              </Link>
+              <Link href="/stats" className="text-text-secondary hover:text-accent transition-colors">
+                Статистика
+              </Link>
+              <Link href="/contact" className="text-text-secondary hover:text-accent transition-colors">
+                Контакты
+              </Link>
+            </div>
+            <p className="text-xs text-text-tertiary">
+              © {currentYear} ComicsDB
             </p>
           </div>
         </div>
