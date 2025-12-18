@@ -135,21 +135,9 @@ export default function ComicsListView({
         <div className={`overflow-hidden ${showTableOnMobile ? '' : 'hidden md:block'} pt-6`}>
           <table className="min-w-full">
             <tbody>
-              {(groupByNumber ? displayComics : comics).map((comic, idx) => {
-                // Для группированных комиксов находим соответствующие данные из оригинального массива
-                let additional
-                if (groupByNumber && additionalTableData) {
-                  // Находим первый комикс с таким же номером в оригинальном массиве
-                  const originalIdx = comics.findIndex(c => c.number === comic.number && c.id === comic.id)
-                  if (originalIdx >= 0) {
-                    additional = additionalTableData[originalIdx]
-                  } else {
-                    const firstMatch = comics.findIndex(c => c.number === comic.number)
-                    additional = firstMatch >= 0 ? additionalTableData[firstMatch] : undefined
-                  }
-                } else {
-                  additional = additionalTableData?.[idx]
-                }
+              {comics.map((comic, idx) => {
+                // В таблице всегда показываем все комиксы, даже дубликаты
+                const additional = additionalTableData?.[idx]
                 return (
                   <TableRow
                     key={comic.id}

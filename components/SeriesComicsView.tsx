@@ -60,11 +60,14 @@ export default function SeriesComicsView({ comics }: { comics: Comic[] }) {
         id: comic.id,
         siteName: comic.siteName,
         siteId: comic.siteId,
+        site2Name: comic.site2Name,
+        site2Id: comic.site2,
         date: comic.date,
         link: comic.link,
         translate: comic.translate,
         edit: comic.edit,
         pdate: comic.pdate,
+        isJoint: comic.site2 && comic.site2 !== '0',
       }))}
     />
   )
