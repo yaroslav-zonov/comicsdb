@@ -36,11 +36,10 @@ async function getSite(id: string): Promise<{
     const site = await prisma.site.findUnique({
       where: {
         id: id,
-        dateDelete: null,
       },
     })
 
-    if (!site) {
+    if (!site || site.dateDelete !== null) {
       return null
     }
 
@@ -186,9 +185,11 @@ async function getSite(id: string): Promise<{
 export default async function SitePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
-  const siteId = params.id
+  // В Next.js 14/15 params может быть Promise
+  const resolvedParams = await Promise.resolve(params)
+  const siteId = resolvedParams.id
   
   if (!siteId) {
     notFound()
