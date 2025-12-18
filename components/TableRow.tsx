@@ -171,7 +171,7 @@ export default function TableRow(props: TableRowProps) {
         </td>
         <td className="py-3 hidden md:table-cell">
           {data.translate ? (
-            <div className="flex flex-col flex-wrap gap-1 max-h-16">
+            <div className="flex flex-wrap gap-1">
               {data.translate.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -192,7 +192,7 @@ export default function TableRow(props: TableRowProps) {
         </td>
         <td className="py-3 hidden md:table-cell">
           {data.edit ? (
-            <div className="flex flex-col flex-wrap gap-1 max-h-16">
+            <div className="flex flex-wrap gap-1">
               {data.edit.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -287,7 +287,7 @@ export default function TableRow(props: TableRowProps) {
               <div className="flex flex-wrap gap-1">
                 <Link
                   href={`/sites/${data.siteId}`}
-                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                  className="text-text-primary hover:text-accent hover:underline transition-colors"
                 >
                   {data.siteName}
                 </Link>
@@ -296,7 +296,7 @@ export default function TableRow(props: TableRowProps) {
                     <span className="text-text-tertiary">,</span>
                     <Link
                       href={`/sites/${data.site2Id}`}
-                      className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                      className="text-text-primary hover:text-accent hover:underline transition-colors"
                     >
                       {data.site2Name}
                     </Link>
@@ -430,7 +430,7 @@ export default function TableRow(props: TableRowProps) {
             <div className="flex flex-wrap gap-1">
               <Link
                 href={`/sites/${data.siteId}`}
-                className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                className="text-text-primary hover:text-accent hover:underline transition-colors"
               >
                 {data.siteName}
               </Link>
@@ -439,7 +439,7 @@ export default function TableRow(props: TableRowProps) {
                   <span className="text-text-tertiary">,</span>
                   <Link
                     href={`/sites/${data.site2Id}`}
-                    className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                    className="text-text-primary hover:text-accent hover:underline transition-colors"
                   >
                     {data.site2Name}
                   </Link>
@@ -509,7 +509,7 @@ export default function TableRow(props: TableRowProps) {
             <div className="flex flex-wrap gap-1">
               <Link
                 href={`/sites/${data.siteId}`}
-                className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                className="text-text-primary hover:text-accent hover:underline transition-colors"
               >
                 {data.siteName}
               </Link>
@@ -518,7 +518,7 @@ export default function TableRow(props: TableRowProps) {
                   <span className="text-text-tertiary">,</span>
                   <Link
                     href={`/sites/${data.site2Id}`}
-                    className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                    className="text-text-primary hover:text-accent hover:underline transition-colors"
                   >
                     {data.site2Name}
                   </Link>
@@ -666,7 +666,7 @@ export default function TableRow(props: TableRowProps) {
               <div className="flex flex-wrap gap-1">
                 <Link
                   href={`/sites/${data.siteId}`}
-                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                  className="text-text-primary hover:text-accent hover:underline transition-colors"
                 >
                   {data.siteName}
                 </Link>
@@ -675,7 +675,7 @@ export default function TableRow(props: TableRowProps) {
                     <span className="text-text-tertiary">,</span>
                     <Link
                       href={`/sites/${data.site2Id}`}
-                      className="text-text-secondary hover:text-accent hover:underline transition-colors"
+                      className="text-text-primary hover:text-accent hover:underline transition-colors"
                     >
                       {data.site2Name}
                     </Link>

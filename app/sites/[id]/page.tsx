@@ -8,6 +8,7 @@ import { decodeHtmlEntities, formatDate } from '@/lib/utils'
 
 // Кэшируем на 2 минуты (данные сайтов меняются реже)
 export const revalidate = 120
+export const dynamic = 'force-dynamic'
 
 async function getSite(id: string): Promise<{
   id: string
@@ -160,7 +161,8 @@ export default async function SitePage({
 }: {
   params: Promise<{ id: string }> | { id: string }
 }) {
-  const resolvedParams = await Promise.resolve(params)
+  // В Next.js 15 params может быть Promise
+  const resolvedParams = params instanceof Promise ? await params : params
   const site = await getSite(resolvedParams.id)
 
   if (!site) {
