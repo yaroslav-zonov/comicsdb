@@ -34,31 +34,32 @@ async function getSite(id: string): Promise<{
   }>
 } | null> {
   try {
+    // Нормализуем ID - обрезаем пробелы и приводим к строке
+    const normalizedId = String(id).trim()
+    if (!normalizedId) {
+      console.error('Empty site ID provided to getSite')
+      return null
+    }
+    
     // Ищем сайт по точному совпадению ID
     const site = await prisma.site.findUnique({
       where: {
-        id: id,
+        id: normalizedId,
       },
     })
 
     if (!site) {
-      console.error(`Site with id "${id}" not found in database`)
+      console.error(`Site with id "${normalizedId}" not found in database`)
       return null
     }
 
     if (site.dateDelete !== null) {
-      console.error(`Site with id "${id}" is deleted (dateDelete: ${site.dateDelete})`)
+      console.error(`Site with id "${normalizedId}" is deleted (dateDelete: ${site.dateDelete})`)
       return null
     }
 
     // Используем SQL запрос для получения всех комиксов этого сайта
-    // Убеждаемся, что id - это строка и не пустая
-    const siteId = String(id).trim()
-    if (!siteId) {
-      console.error('Empty site ID provided')
-      return null
-    }
-
+    // Используем Prisma.sql для правильной обработки строковых параметров
     const comics = await prisma.$queryRaw<Array<{
       id: number
       comicvine: number
@@ -73,7 +74,7 @@ async function getSite(id: string): Promise<{
       series_thumb: string | null
       publisher_id: number
       publisher_name: string
-    }>>`
+    }>>(Prisma.sql`
       SELECT
         c.id,
         c.comicvine,
@@ -92,9 +93,9 @@ async function getSite(id: string): Promise<{
       INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
       INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE c.date_delete IS NULL
-        AND (c.site = ${siteId} OR c.site2 = ${siteId})
+        AND (c.site = ${normalizedId} OR c.site2 = ${normalizedId})
       ORDER BY COALESCE(c.date, c.pdate, c.adddate) DESC
-    `
+    `)
 
     if (comics.length === 0) {
       return {
@@ -205,17 +206,30 @@ export default async function SitePage({
   // В Next.js 14/15 params может быть Promise
   const resolvedParams = await Promise.resolve(params)
   // Декодируем ID из URL (на случай если есть URL-кодирование)
-  const siteId = decodeURIComponent(resolvedParams.id)
+  // Также обрезаем пробелы и приводим к строке
+  let siteId = String(resolvedParams.id || '').trim()
+  
+  // Пробуем декодировать, но если это вызывает ошибку, используем исходное значение
+  try {
+    siteId = decodeURIComponent(siteId)
+  } catch (e) {
+    // Если декодирование не удалось, используем исходное значение
+    console.warn(`Failed to decode siteId: ${siteId}`, e)
+  }
   
   if (!siteId) {
+    console.error('Empty siteId after processing')
     notFound()
   }
+  
+  // Логируем для отладки
+  console.log(`Looking for site with ID: "${siteId}" (original: "${resolvedParams.id}")`)
   
   const site = await getSite(siteId)
 
   if (!site) {
     // Логируем для отладки
-    console.error(`Site not found: ${siteId}`)
+    console.error(`Site not found: ${siteId} (original: ${resolvedParams.id})`)
     notFound()
   }
 
