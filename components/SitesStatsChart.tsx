@@ -4,6 +4,8 @@ type SiteStat = {
   id: string
   name: string
   count: number
+  ownCount: number
+  jointCount: number
 }
 
 type SitesStatsChartProps = {
@@ -22,7 +24,9 @@ export default function SitesStatsChart({ data }: SitesStatsChartProps) {
       <h3 className="text-lg font-semibold text-text-primary mb-4">Переводы по сайтам</h3>
       <div className="space-y-3">
         {data.map((site, index) => {
-          const percentage = (site.count / maxCount) * 100
+          const totalPercentage = (site.count / maxCount) * 100
+          const ownPercentage = (site.ownCount / maxCount) * 100
+          const jointPercentage = (site.jointCount / maxCount) * 100
           return (
             <div key={site.id} className="flex items-center gap-4">
               <div className="w-8 text-sm font-semibold text-text-secondary flex-shrink-0">
@@ -41,11 +45,25 @@ export default function SitesStatsChart({ data }: SitesStatsChartProps) {
                     {site.count.toLocaleString('ru-RU')} {site.count === 1 ? 'перевод' : site.count < 5 ? 'перевода' : 'переводов'}
                   </span>
                 </div>
-                <div className="w-full bg-bg-tertiary rounded-full h-2">
-                  <div
-                    className="bg-accent h-2 rounded-full transition-all"
-                    style={{ width: `${percentage}%` }}
-                  />
+                <div className="w-full bg-bg-tertiary rounded-full h-2 relative overflow-hidden">
+                  {/* Собственные релизы - полная непрозрачность */}
+                  {ownPercentage > 0 && (
+                    <div
+                      className="bg-accent h-2 rounded-full transition-all absolute left-0 top-0"
+                      style={{ width: `${ownPercentage}%` }}
+                    />
+                  )}
+                  {/* Совместные релизы - 50% прозрачность */}
+                  {jointPercentage > 0 && (
+                    <div
+                      className="bg-accent h-2 rounded-full transition-all absolute top-0"
+                      style={{ 
+                        width: `${jointPercentage}%`,
+                        left: `${ownPercentage}%`,
+                        opacity: 0.5
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

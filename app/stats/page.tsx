@@ -10,6 +10,7 @@ import {
   getMostTranslatedComicByYear,
   getTopSitesByYear,
   getFreshmenByYear,
+  getTopScanlatorsAllTime,
 } from './getStatsData'
 
 export const dynamic = 'force-dynamic'
@@ -77,6 +78,7 @@ export default async function StatsPage() {
     mostTranslatedComic,
     topSitesByYear,
     freshmen,
+    topScanlatorsAllTime,
   ] = await Promise.all([
     getStats(),
     getTranslationDynamics(),
@@ -85,6 +87,7 @@ export default async function StatsPage() {
     getMostTranslatedComicByYear(),
     getTopSitesByYear(),
     getFreshmenByYear(),
+    getTopScanlatorsAllTime(),
   ])
 
   return (
@@ -181,6 +184,7 @@ export default async function StatsPage() {
             mostTranslatedComic={mostTranslatedComic}
             topSitesByYear={topSitesByYear}
             freshmen={freshmen}
+            topScanlatorsAllTime={topScanlatorsAllTime}
           />
         </div>
       </div>

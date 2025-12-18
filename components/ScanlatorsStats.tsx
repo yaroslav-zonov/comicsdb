@@ -12,6 +12,8 @@ type TopScanlatorSite = {
   siteId: string
   siteName: string
   count: number
+  ownCount: number
+  jointCount: number
 }
 
 type Freshman = {
@@ -38,6 +40,7 @@ type ScanlatorsStatsProps = {
   mostTranslatedComic: MostTranslatedComic
   topSitesByYear: { year: number; topSites: TopScanlatorSite[] }
   freshmen: { year: number; freshmen: Freshman[] }
+  topScanlatorsAllTime: TopScanlator[]
 }
 
 export default function ScanlatorsStats({
@@ -45,6 +48,7 @@ export default function ScanlatorsStats({
   mostTranslatedComic,
   topSitesByYear,
   freshmen,
+  topScanlatorsAllTime,
 }: ScanlatorsStatsProps) {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('ru-RU', {
@@ -154,7 +158,9 @@ export default function ScanlatorsStats({
           <div className="space-y-2">
             {topSitesByYear.topSites.map((site, i) => {
               const maxCount = topSitesByYear.topSites[0].count
-              const percentage = (site.count / maxCount) * 100
+              const totalPercentage = (site.count / maxCount) * 100
+              const ownPercentage = (site.ownCount / maxCount) * 100
+              const jointPercentage = (site.jointCount / maxCount) * 100
               return (
                 <div key={site.siteId} className="flex items-center gap-4">
                   <div className="w-8 text-sm font-semibold text-text-secondary">
@@ -172,11 +178,25 @@ export default function ScanlatorsStats({
                         {site.count.toLocaleString('ru-RU')} {pluralize(site.count, ['релиз', 'релиза', 'релизов'])}
                       </span>
                     </div>
-                    <div className="w-full bg-bg-tertiary rounded-full h-2">
-                      <div
-                        className="bg-accent h-2 rounded-full transition-all"
-                        style={{ width: `${percentage}%` }}
-                      />
+                    <div className="w-full bg-bg-tertiary rounded-full h-2 relative overflow-hidden">
+                      {/* Собственные релизы - полная непрозрачность */}
+                      {ownPercentage > 0 && (
+                        <div
+                          className="bg-accent h-2 rounded-full transition-all absolute left-0 top-0"
+                          style={{ width: `${ownPercentage}%` }}
+                        />
+                      )}
+                      {/* Совместные релизы - 50% прозрачность */}
+                      {jointPercentage > 0 && (
+                        <div
+                          className="bg-accent h-2 rounded-full transition-all absolute top-0"
+                          style={{ 
+                            width: `${jointPercentage}%`,
+                            left: `${ownPercentage}%`,
+                            opacity: 0.5
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -213,6 +233,49 @@ export default function ScanlatorsStats({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Топ за всё время */}
+      <div className="bg-bg-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
+          Топ 30 сканлейтеров за всё время
+        </h3>
+        {topScanlatorsAllTime.length === 0 ? (
+          <p className="text-text-secondary">Нет данных</p>
+        ) : (
+          <div className="space-y-2">
+            {topScanlatorsAllTime.map((scanlator, i) => {
+              const maxCount = topScanlatorsAllTime[0].count
+              const percentage = (scanlator.count / maxCount) * 100
+              return (
+                <div key={scanlator.siteId} className="flex items-center gap-4">
+                  <div className="w-8 text-sm font-semibold text-text-secondary">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <Link
+                        href={`/search?q=${encodeURIComponent(scanlator.siteName)}&type=scanlator&tab=scanlators`}
+                        className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
+                      >
+                        {scanlator.siteName}
+                      </Link>
+                      <span className="text-sm text-text-secondary">
+                        {scanlator.count.toLocaleString('ru-RU')} {pluralize(scanlator.count, ['релиз', 'релиза', 'релизов'])}
+                      </span>
+                    </div>
+                    <div className="w-full bg-bg-tertiary rounded-full h-2">
+                      <div
+                        className="bg-accent h-2 rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

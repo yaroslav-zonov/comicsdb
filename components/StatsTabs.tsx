@@ -19,6 +19,8 @@ type StatsTabsProps = {
     id: string
     name: string
     count: number
+    ownCount: number
+    jointCount: number
   }>
   topScanlatorsByYear: {
     year: number
@@ -45,6 +47,8 @@ type StatsTabsProps = {
       siteId: string
       siteName: string
       count: number
+      ownCount: number
+      jointCount: number
     }>
   }
   freshmen: {
@@ -56,6 +60,11 @@ type StatsTabsProps = {
       count: number
     }>
   }
+  topScanlatorsAllTime: Array<{
+    siteId: string
+    siteName: string
+    count: number
+  }>
 }
 
 export default function StatsTabs({
@@ -66,6 +75,7 @@ export default function StatsTabs({
   mostTranslatedComic,
   topSitesByYear,
   freshmen,
+  topScanlatorsAllTime,
 }: StatsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('summary')
 
@@ -128,6 +138,7 @@ export default function StatsTabs({
             mostTranslatedComic={mostTranslatedComic || null}
             topSitesByYear={topSitesByYear}
             freshmen={freshmen}
+            topScanlatorsAllTime={topScanlatorsAllTime}
           />
         )}
       </div>
