@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import SiteSeriesView from './SiteSeriesView'
 import { prisma } from '@/lib/prisma'
 import { decodeHtmlEntities, formatDate } from '@/lib/utils'
+import { Prisma } from '@prisma/client'
 
 // Кэшируем на 2 минуты (данные сайтов меняются реже)
 export const revalidate = 120
@@ -51,6 +52,13 @@ async function getSite(id: string): Promise<{
     }
 
     // Используем SQL запрос для получения всех комиксов этого сайта
+    // Убеждаемся, что id - это строка и не пустая
+    const siteId = String(id).trim()
+    if (!siteId) {
+      console.error('Empty site ID provided')
+      return null
+    }
+
     const comics = await prisma.$queryRaw<Array<{
       id: number
       comicvine: number
@@ -84,7 +92,7 @@ async function getSite(id: string): Promise<{
       INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
       INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE c.date_delete IS NULL
-        AND (c.site = ${id} OR c.site2 = ${id})
+        AND (c.site = ${siteId} OR c.site2 = ${siteId})
       ORDER BY COALESCE(c.date, c.pdate, c.adddate) DESC
     `
 
