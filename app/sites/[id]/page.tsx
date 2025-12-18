@@ -37,7 +37,6 @@ async function getSite(id: string): Promise<{
     // Нормализуем ID - обрезаем пробелы и приводим к строке
     const normalizedId = String(id).trim()
     if (!normalizedId) {
-      console.error('Empty site ID provided to getSite')
       return null
     }
     
@@ -49,17 +48,14 @@ async function getSite(id: string): Promise<{
     })
 
     if (!site) {
-      console.error(`Site with id "${normalizedId}" not found in database`)
       return null
     }
 
     if (site.dateDelete !== null) {
-      console.error(`Site with id "${normalizedId}" is deleted (dateDelete: ${site.dateDelete})`)
       return null
     }
 
-    // Используем SQL запрос для получения всех комиксов этого сайта
-    // Используем Prisma.sql для правильной обработки строковых параметров
+    // Используем SQL запрос с обработкой невалидных дат, как в других местах
     const comics = await prisma.$queryRaw<Array<{
       id: number
       comicvine: number
@@ -74,14 +70,14 @@ async function getSite(id: string): Promise<{
       series_thumb: string | null
       publisher_id: number
       publisher_name: string
-    }>>(Prisma.sql`
+    }>>`
       SELECT
         c.id,
         c.comicvine,
         c.number,
-        c.date,
-        c.pdate,
-        c.adddate,
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END as date,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END as pdate,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END as adddate,
         c.thumb,
         c.tiny,
         s.id as series_id,
@@ -94,8 +90,12 @@ async function getSite(id: string): Promise<{
       INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE c.date_delete IS NULL
         AND (c.site = ${normalizedId} OR c.site2 = ${normalizedId})
-      ORDER BY COALESCE(c.date, c.pdate, c.adddate) DESC
-    `)
+      ORDER BY COALESCE(
+        CASE WHEN c.date = '0000-00-00' OR YEAR(c.date) = 0 OR MONTH(c.date) = 0 OR DAY(c.date) = 0 THEN NULL ELSE c.date END,
+        CASE WHEN c.pdate = '0000-00-00' OR YEAR(c.pdate) = 0 OR MONTH(c.pdate) = 0 OR DAY(c.pdate) = 0 THEN NULL ELSE c.pdate END,
+        CASE WHEN c.adddate = '0000-00-00' OR YEAR(c.adddate) = 0 OR MONTH(c.adddate) = 0 OR DAY(c.adddate) = 0 THEN NULL ELSE c.adddate END
+      ) DESC
+    `
 
     if (comics.length === 0) {
       return {
@@ -213,22 +213,15 @@ export default async function SitePage({
     siteId = decodeURIComponent(siteId)
   } catch (e) {
     // Если декодирование не удалось, используем исходное значение
-    console.warn(`Failed to decode siteId: ${siteId}`, e)
   }
   
   if (!siteId) {
-    console.error('Empty siteId after processing')
     notFound()
   }
-  
-  // Логируем для отладки
-  console.log(`Looking for site with ID: "${siteId}" (original: "${params.id}")`)
   
   const site = await getSite(siteId)
 
   if (!site) {
-    // Логируем для отладки
-    console.error(`Site not found: ${siteId} (original: ${params.id})`)
     notFound()
   }
 
