@@ -67,7 +67,7 @@ export default function SeriesComicsView({ comics }: { comics: Comic[] }) {
         translate: comic.translate,
         edit: comic.edit,
         pdate: comic.pdate,
-        isJoint: comic.site2 && comic.site2 !== '0',
+        isJoint: comic.site2 && comic.site2 !== '0' ? true : undefined,
       }))}
     />
   )
