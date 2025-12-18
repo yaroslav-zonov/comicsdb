@@ -111,3 +111,22 @@ export function formatDate(date: Date | string | null | undefined, options?: Int
   // Убираем точку после месяца и "г." после года
   return formatted.replace(/\./g, '').replace(/\sг\.?\s?$/, '')
 }
+
+/**
+ * Правильно склоняет числительные по-русски
+ * @param count - Число
+ * @param forms - Массив форм: [1, 2-4, 5+] например: ['день', 'дня', 'дней']
+ * @returns Строка с правильно склонённым числительным
+ */
+export function pluralize(count: number, forms: [string, string, string]): string {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  
+  if (mod10 === 1 && mod100 !== 11) {
+    return forms[0] // 1 день, 21 день, 31 день
+  } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return forms[1] // 2-4 дня, 22-24 дня
+  } else {
+    return forms[2] // 5-20 дней, 25-30 дней
+  }
+}

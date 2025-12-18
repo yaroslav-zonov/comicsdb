@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import NextImage from 'next/image'
-import { getComicUrl } from '@/lib/utils'
+import { getComicUrl, pluralize } from '@/lib/utils'
 
 type TopScanlator = {
   siteId: string
@@ -82,7 +82,7 @@ export default function ScanlatorsStats({
                         {scanlator.siteName}
                       </Link>
                       <span className="text-sm text-text-secondary">
-                        {scanlator.count.toLocaleString('ru-RU')} релизов
+                        {scanlator.count.toLocaleString('ru-RU')} {pluralize(scanlator.count, ['релиз', 'релиза', 'релизов'])}
                       </span>
                     </div>
                     <div className="w-full bg-bg-tertiary rounded-full h-2">
@@ -134,7 +134,7 @@ export default function ScanlatorsStats({
                 {mostTranslatedComic.seriesName} #{mostTranslatedComic.number}
               </Link>
               <p className="text-sm text-text-secondary mt-2">
-                {mostTranslatedComic.count} {mostTranslatedComic.count === 1 ? 'перевод' : mostTranslatedComic.count < 5 ? 'перевода' : 'переводов'}
+                {mostTranslatedComic.count} {pluralize(mostTranslatedComic.count, ['перевод', 'перевода', 'переводов'])}
               </p>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function ScanlatorsStats({
                         {site.siteName}
                       </Link>
                       <span className="text-sm text-text-secondary">
-                        {site.count.toLocaleString('ru-RU')} релизов
+                        {site.count.toLocaleString('ru-RU')} {pluralize(site.count, ['релиз', 'релиза', 'релизов'])}
                       </span>
                     </div>
                     <div className="w-full bg-bg-tertiary rounded-full h-2">
@@ -198,15 +198,18 @@ export default function ScanlatorsStats({
             {freshmen.freshmen.map((freshman, i) => (
               <div key={freshman.siteId} className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
                 <div>
-                  <span className="text-sm font-medium text-text-primary">
+                  <Link
+                    href={`/search?q=${encodeURIComponent(freshman.siteName)}&type=scanlator&tab=scanlators`}
+                    className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
+                  >
                     {freshman.siteName}
-                  </span>
+                  </Link>
                   <p className="text-xs text-text-secondary mt-1">
                     Первый релиз: {formatDate(freshman.firstDate)}
                   </p>
                 </div>
                 <div className="text-sm font-semibold text-accent">
-                  {freshman.count.toLocaleString('ru-RU')} релизов
+                  {freshman.count.toLocaleString('ru-RU')} {pluralize(freshman.count, ['релиз', 'релиза', 'релизов'])}
                 </div>
               </div>
             ))}

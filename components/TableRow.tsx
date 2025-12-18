@@ -169,7 +169,7 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3 hidden md:table-cell">
+        <td className="py-3 hidden lg:table-cell">
           {data.translate ? (
             <div className="flex flex-wrap gap-1">
               {data.translate.split(',').map((name, idx) => {
@@ -190,7 +190,7 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
-        <td className="py-3 hidden md:table-cell">
+        <td className="py-3 hidden lg:table-cell">
           {data.edit ? (
             <div className="flex flex-wrap gap-1">
               {data.edit.split(',').map((name, idx) => {
@@ -211,11 +211,11 @@ export default function TableRow(props: TableRowProps) {
             <span className="text-sm text-text-secondary">-</span>
           )}
         </td>
+        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+          {data.date ? formatDate(data.date) : '-'}
+        </td>
         <td className="py-3 whitespace-nowrap text-right pr-0">
           <div className="flex items-center justify-end gap-3">
-            <span className="text-sm text-text-secondary hidden md:inline">
-              {data.date ? formatDate(data.date) : '-'}
-            </span>
             {data.link ? (
               <a
                 href={data.link}

@@ -164,6 +164,15 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                     <h2 className="text-sm font-medium text-text-secondary mb-4">Переводы</h2>
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
+                        <thead>
+                          <tr className="border-b border-border-primary">
+                            <th className="py-2 text-left text-xs text-text-secondary">Сайт</th>
+                            <th className="py-2 text-left text-xs text-text-secondary hidden lg:table-cell">Перевод</th>
+                            <th className="py-2 text-left text-xs text-text-secondary hidden lg:table-cell">Оформление</th>
+                            <th className="py-2 text-left text-xs text-text-secondary">Дата</th>
+                            <th className="py-2 text-right text-xs text-text-secondary"></th>
+                          </tr>
+                        </thead>
                         <tbody>
                           {comic.translations.map((translation) => (
                             <TableRow

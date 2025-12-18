@@ -300,9 +300,9 @@ export async function getFreshmenByYear() {
       scanlator_year_counts AS (
         SELECT
           TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(combined.names, ',', numbers.n), ',', -1)) as name,
-          COUNT(*) as count
+          COUNT(DISTINCT combined.id) as count
         FROM (
-          SELECT CONCAT(COALESCE(translate, ''), ',', COALESCE(edit, '')) as names
+          SELECT id, CONCAT(COALESCE(translate, ''), ',', COALESCE(edit, '')) as names
           FROM cdb_comics
           WHERE date_delete IS NULL
             AND YEAR(date) = ${currentYear}

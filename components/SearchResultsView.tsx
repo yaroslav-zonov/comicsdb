@@ -15,7 +15,7 @@ import ComicCard from './ComicCard'
 import Pagination from './Pagination'
 import SeriesCardSkeleton from './skeletons/SeriesCardSkeleton'
 import ComicCardSkeleton from './skeletons/ComicCardSkeleton'
-import { getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
+import { getComicUrl, getSeriesUrl, formatDate, pluralize } from '@/lib/utils'
 
 type Comic = {
   id: number
@@ -445,7 +445,7 @@ export default function SearchResultsView({
   if (seriesTotal > 0) summaryParts.push(`${seriesTotal} сери${seriesTotal === 1 ? 'ю' : seriesTotal < 5 ? 'и' : 'й'}`)
   if (charactersTotal > 0) summaryParts.push(`${charactersTotal} появлени${charactersTotal === 1 ? 'е' : charactersTotal < 5 ? 'я' : 'й'} персонажа`)
   if (creatorsTotal > 0) summaryParts.push(`${creatorsTotal} работ${creatorsTotal === 1 ? 'а' : creatorsTotal < 5 ? 'ы' : ''} автора`)
-  if (scanlatorsTotal > 0) summaryParts.push(`${scanlatorsTotal} релиз${scanlatorsTotal === 1 ? '' : scanlatorsTotal < 5 ? 'а' : 'ов'}`)
+  if (scanlatorsTotal > 0) summaryParts.push(`${scanlatorsTotal} ${pluralize(scanlatorsTotal, ['релиз', 'релиза', 'релизов'])}`)
   if (teamsTotal > 0) summaryParts.push(`${teamsTotal} появлени${teamsTotal === 1 ? 'е' : teamsTotal < 5 ? 'я' : 'й'} команды`)
 
   return (
@@ -588,13 +588,19 @@ export default function SearchResultsView({
 
       {/* Статистика сканлейтера */}
       {currentTab === 'scanlators' && scanlatorStats && (() => {
-        // Форматируем время в сканлейте (только годы)
+        // Форматируем время в сканлейте (годы, месяцы, недели, дни)
         const formatTimeInScanlating = (days: number): string => {
-          if (days < 365) {
-            return `${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`
-          } else {
+          if (days >= 365) {
             const years = Math.floor(days / 365)
-            return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`
+            return `${years} ${pluralize(years, ['год', 'года', 'лет'])}`
+          } else if (days >= 30) {
+            const months = Math.floor(days / 30)
+            return `${months} ${pluralize(months, ['месяц', 'месяца', 'месяцев'])}`
+          } else if (days >= 7) {
+            const weeks = Math.floor(days / 7)
+            return `${weeks} ${pluralize(weeks, ['неделя', 'недели', 'недель'])}`
+          } else {
+            return `${days} ${pluralize(days, ['день', 'дня', 'дней'])}`
           }
         }
 

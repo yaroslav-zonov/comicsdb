@@ -99,7 +99,7 @@ export default function ComicCard({
               </a>
             )}
             {showSite && data.siteName && (
-              <p className="body-tiny truncate mt-1" title={data.site2Name ? `${data.siteName}, ${data.site2Name}` : data.siteName}>
+              <p className="body-tiny truncate mt-1 md:hidden lg:block" title={data.site2Name ? `${data.siteName}, ${data.site2Name}` : data.siteName}>
                 {data.site2Name ? `${data.siteName}, ${data.site2Name}` : data.siteName}
               </p>
             )}

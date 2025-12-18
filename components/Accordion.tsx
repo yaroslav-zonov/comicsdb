@@ -16,7 +16,7 @@ export default function Accordion({ title, children, defaultOpen = false, classN
     <div className={`border-b border-border-primary ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-3 flex items-center justify-between text-left hover:bg-bg-secondary transition-colors"
+        className="w-full py-3 flex items-center justify-between text-left"
       >
         <h3 className="text-sm font-medium text-text-secondary">{title}</h3>
         <svg
