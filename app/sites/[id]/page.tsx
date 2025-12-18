@@ -92,13 +92,29 @@ async function getSite(id: string): Promise<{
 
     // Парсим JSON данные о комиксах
     const seriesWithComics = seriesResults.map((seriesData) => {
-      const comicsData = JSON.parse(seriesData.comics_json) as Array<{
+      // JSON_ARRAYAGG может вернуть NULL если нет комиксов
+      let comicsData: Array<{
         id: number
         comicvine: number
         number: string
         date: string | null
         pdate: string | null
-      }>
+      }> = []
+      
+      if (seriesData.comics_json && seriesData.comics_json !== 'null') {
+        try {
+          comicsData = JSON.parse(seriesData.comics_json) as Array<{
+            id: number
+            comicvine: number
+            number: string
+            date: string | null
+            pdate: string | null
+          }>
+        } catch (e) {
+          console.error('Error parsing comics_json:', e, seriesData.comics_json)
+          comicsData = []
+        }
+      }
 
       // Сортируем комиксы по номеру (так как JSON_ARRAYAGG не гарантирует порядок)
       const sortedComics = comicsData.sort((a, b) => Number(a.number) - Number(b.number))
@@ -152,6 +168,11 @@ async function getSite(id: string): Promise<{
     }
   } catch (error) {
     console.error('Error fetching site:', error)
+    console.error('Site ID:', id)
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
     return null
   }
 }
@@ -161,11 +182,19 @@ export default async function SitePage({
 }: {
   params: Promise<{ id: string }> | { id: string }
 }) {
-  // В Next.js 15 params может быть Promise
-  const resolvedParams = params instanceof Promise ? await params : params
-  const site = await getSite(resolvedParams.id)
+  // В Next.js 14 params может быть Promise
+  const resolvedParams = await Promise.resolve(params)
+  const siteId = resolvedParams.id
+  
+  if (!siteId) {
+    console.error('Site ID is missing')
+    notFound()
+  }
+  
+  const site = await getSite(siteId)
 
   if (!site) {
+    console.error('Site not found for ID:', siteId)
     notFound()
   }
 
