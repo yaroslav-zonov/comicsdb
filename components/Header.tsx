@@ -25,9 +25,9 @@ export default function Header() {
   }
 
   return (
-    <header className="relative bg-white/80 dark:bg-bg-card/98 backdrop-blur-md border-b border-border-primary/30 sticky top-0 z-50 shadow-sm">
+    <header className="relative bg-bg-secondary/80 dark:bg-bg-card/98 backdrop-blur-md border-b border-border-primary/30 sticky top-0 z-50 shadow-sm">
       {/* Градиентная подложка для улучшения контраста */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-transparent dark:from-bg-primary/70 dark:via-bg-primary/50 dark:to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-bg-secondary/60 via-bg-secondary/40 to-transparent dark:from-bg-primary/70 dark:via-bg-primary/50 dark:to-transparent pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Первая строка: Лого и навигация */}
