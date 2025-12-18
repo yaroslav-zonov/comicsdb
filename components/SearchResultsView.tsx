@@ -356,16 +356,19 @@ export default function SearchResultsView({
               href={getSeriesUrl(s.publisher.id, s.id)}
               className="overflow-hidden group card-lift"
             >
-              <div className="relative aspect-[2/3] bg-bg-tertiary">
+              <div className="relative aspect-[2/3] bg-bg-tertiary overflow-hidden shadow-sm group-hover:shadow-lg transition-shadow duration-300">
                 {s.thumb ? (
-                  <Image
-                    src={s.thumb}
-                    alt={s.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                    unoptimized
-                  />
+                  <>
+                    <Image
+                      src={s.thumb}
+                      alt={s.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="text-text-tertiary text-xs">Нет обложки</span>

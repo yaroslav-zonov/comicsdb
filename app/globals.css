@@ -342,6 +342,11 @@ select option {
     @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
   }
 
+  /* Подъём карточки при hover */
+  .card-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 active:translate-y-0;
+  }
+
   /* FAB (Floating Action Button) для мобильной навигации */
   .fab-container {
     @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-40 md:hidden;
