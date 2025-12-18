@@ -43,43 +43,43 @@ async function getSite(id: string): Promise<{
       return null
     }
 
-    // Получаем комиксы этого сайта с сериями и издательствами
-    const comics = await prisma.comic.findMany({
-      where: {
-        OR: [
-          { site: id },
-          { site2: id },
-        ],
-        dateDelete: null,
-      },
-      select: {
-        id: true,
-        comicvine: true,
-        number: true,
-        date: true,
-        pdate: true,
-        adddate: true,
-        thumb: true,
-        tiny: true,
-        serie: true,
-        series: {
-          select: {
-            id: true,
-            name: true,
-            thumb: true,
-            publisher: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        adddate: 'desc',
-      },
-    })
+    // Используем SQL запрос для получения всех комиксов этого сайта
+    const comics = await prisma.$queryRaw<Array<{
+      id: number
+      comicvine: number
+      number: string
+      date: Date | null
+      pdate: Date | null
+      adddate: Date | null
+      thumb: string | null
+      tiny: string | null
+      series_id: number
+      series_name: string
+      series_thumb: string | null
+      publisher_id: number
+      publisher_name: string
+    }>>`
+      SELECT
+        c.id,
+        c.comicvine,
+        c.number,
+        c.date,
+        c.pdate,
+        c.adddate,
+        c.thumb,
+        c.tiny,
+        s.id as series_id,
+        s.name as series_name,
+        s.thumb as series_thumb,
+        p.id as publisher_id,
+        p.name as publisher_name
+      FROM cdb_comics c
+      INNER JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      INNER JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
+      WHERE c.date_delete IS NULL
+        AND (c.site = ${id} OR c.site2 = ${id})
+      ORDER BY COALESCE(c.date, c.pdate, c.adddate) DESC
+    `
 
     if (comics.length === 0) {
       return {
@@ -110,16 +110,14 @@ async function getSite(id: string): Promise<{
     }>()
 
     comics.forEach(comic => {
-      if (!comic.series) return
-
-      const seriesId = comic.series.id
+      const seriesId = comic.series_id
       if (!seriesMap.has(seriesId)) {
         seriesMap.set(seriesId, {
-          id: comic.series.id,
-          name: decodeHtmlEntities(comic.series.name),
+          id: comic.series_id,
+          name: decodeHtmlEntities(comic.series_name),
           publisher: {
-            id: comic.series.publisher.id,
-            name: decodeHtmlEntities(comic.series.publisher.name),
+            id: comic.publisher_id,
+            name: decodeHtmlEntities(comic.publisher_name),
           },
           comics: [],
           lastDate: null,
@@ -142,8 +140,8 @@ async function getSite(id: string): Promise<{
       if (!series.lastDate || (comicDate && comicDate > series.lastDate)) {
         series.lastDate = comicDate
       }
-      if (!series.thumb && (comic.thumb || comic.tiny || comic.series.thumb)) {
-        series.thumb = comic.thumb || comic.tiny || comic.series.thumb
+      if (!series.thumb && (comic.thumb || comic.tiny || comic.series_thumb)) {
+        series.thumb = comic.thumb || comic.tiny || comic.series_thumb
       }
     })
 
@@ -194,14 +192,12 @@ export default async function SitePage({
   const siteId = resolvedParams.id
   
   if (!siteId) {
-    console.error('Site ID is missing')
     notFound()
   }
   
   const site = await getSite(siteId)
 
   if (!site) {
-    console.error('Site not found for ID:', siteId)
     notFound()
   }
 
