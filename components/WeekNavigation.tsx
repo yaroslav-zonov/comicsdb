@@ -107,7 +107,7 @@ export default function WeekNavigation({
       <div className="flex gap-4 items-center flex-wrap">
         <Link
           href={`/weeks/${formatWeekRange(prevWeekStart, prevWeekEnd)}`}
-          className="text-accent hover:text-accent-hover font-medium"
+          className="text-text-secondary hover:text-accent transition-colors font-medium"
         >
           ← Предыдущая неделя
         </Link>
@@ -147,7 +147,7 @@ export default function WeekNavigation({
         ) : (
           <Link
             href={`/weeks/${formatWeekRange(nextWeekStart, nextWeekEnd)}`}
-            className="text-accent hover:text-accent-hover font-medium"
+            className="text-text-secondary hover:text-accent transition-colors font-medium"
           >
             Следующая неделя →
           </Link>

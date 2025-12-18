@@ -43,7 +43,7 @@ export default function ContactPage() {
                     href="https://vk.com/comicsdb"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-accent-hover hover:text-accent"
+                    className="text-text-secondary hover:text-accent transition-colors"
                   >
                     vk.com/comicsdb
                   </a>
@@ -54,7 +54,7 @@ export default function ContactPage() {
                     href="https://t.me/comicsdatabase"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-accent-hover hover:text-accent"
+                    className="text-text-secondary hover:text-accent transition-colors"
                   >
                     t.me/comicsdatabase
                   </a>

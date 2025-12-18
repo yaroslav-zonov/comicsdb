@@ -203,7 +203,7 @@ export default async function SitePage({
                   href={site.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
                 >
                   {site.url}
                 </a>

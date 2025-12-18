@@ -118,7 +118,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Обложка */}
             <div className="flex-shrink-0 mx-auto md:mx-0">
-              <div className="relative w-64 md:w-80 aspect-[2/3]">
+              <div className="relative w-48 md:w-80 aspect-[2/3]">
                 {coverImage ? (
                   <Image
                     src={coverImage}
@@ -148,7 +148,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 <div className="text-sm text-text-primary text-center md:text-left">
                   <Link
                     href={`/publishers/${comic.series.publisher.id}`}
-                    className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                    className="text-text-primary hover:text-accent hover:underline transition-colors"
                   >
                     {comic.series.publisher.name}
                   </Link>
@@ -255,7 +255,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <span key={idx} className="text-sm text-text-primary">
                                 <Link
                                   href={`/search?q=${encodeURIComponent(part.name)}&type=creator&tab=creators`}
-                                  className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
                                 >
                                   {part.name}
                                 </Link>
@@ -285,7 +285,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=character&tab=characters`}
-                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -312,7 +312,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=team&tab=teams`}
-                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -377,7 +377,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <span key={idx} className="text-sm text-text-primary">
                                 <Link
                                   href={`/search?q=${encodeURIComponent(part.name)}&type=creator&tab=creators`}
-                                  className="text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                                  className="text-text-secondary hover:text-accent hover:underline transition-colors"
                                 >
                                   {part.name}
                                 </Link>
@@ -403,7 +403,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=character&tab=characters`}
-                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>
@@ -426,7 +426,7 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                               <Link
                                 key={idx}
                                 href={`/search?q=${encodeURIComponent(name)}&type=team&tab=teams`}
-                                className="text-sm text-accent hover:text-accent-hover hover:underline"
+                                className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
                               >
                                 {name}
                               </Link>

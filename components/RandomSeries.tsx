@@ -217,13 +217,13 @@ export default async function RandomSeries() {
               </div>
               
               <h2 className="text-2xl font-bold text-text-primary mb-2">
-                <Link href={getSeriesUrl(series.publisher.id, series.id)} className="text-accent hover:text-accent-hover hover:text-accent hover:underline">
+                <Link href={getSeriesUrl(series.publisher.id, series.id)} className="text-text-secondary hover:text-accent hover:underline transition-colors">
                   {series.name}
                 </Link>
               </h2>
               
               <p className="text-text-secondary mb-3 text-sm">
-                <Link href={`/publishers/${series.publisher.id}`} className="text-accent hover:text-accent-hover hover:text-accent hover:underline">
+                <Link href={`/publishers/${series.publisher.id}`} className="text-text-secondary hover:text-accent hover:underline transition-colors">
                   {series.publisher.name}
                 </Link>
               </p>

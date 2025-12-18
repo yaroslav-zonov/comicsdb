@@ -105,7 +105,7 @@ export default function SiteSeriesView({ series }: { series: SeriesData[] }) {
                           <Link
                             key={comic.id}
                             href={getComicUrl(s.publisher.id, s.id, comic.comicvine)}
-                            className="text-sm text-accent hover:text-accent-hover hover:text-accent hover:underline"
+                            className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
                           >
                             #{comic.number}
                           </Link>

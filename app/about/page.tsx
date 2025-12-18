@@ -88,7 +88,7 @@ export default function AboutPage() {
                 Источники данных
               </h2>
               <p className="text-text-secondary">
-                Данные о комиксах берутся из <a href="https://comicvine.gamespot.com/" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover">Comicvine API</a>. 
+                Данные о комиксах берутся из <a href="https://comicvine.gamespot.com/" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-accent transition-colors">Comicvine API</a>. 
                 Информация о переводах добавляется администраторами проекта на основе данных, 
                 предоставленных командами переводчиков.
               </p>
@@ -100,7 +100,7 @@ export default function AboutPage() {
               </h2>
               <p className="text-text-secondary">
                 По вопросам и предложениям обращайтесь через{' '}
-                <Link href="/contact" className="text-accent hover:text-accent-hover hover:text-accent">
+                <Link href="/contact" className="text-text-secondary hover:text-accent transition-colors">
                   форму обратной связи
                 </Link>.
               </p>

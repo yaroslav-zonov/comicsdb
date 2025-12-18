@@ -226,7 +226,7 @@ export default function SearchResultsView({
             <Link
               key={idx}
               href={getSearchUrl(suggestion)}
-              className="text-sm text-accent hover:text-accent-hover hover:underline"
+              className="text-sm text-text-secondary hover:text-accent hover:underline transition-colors"
             >
               {suggestion}
             </Link>

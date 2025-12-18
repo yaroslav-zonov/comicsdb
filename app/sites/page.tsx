@@ -114,7 +114,7 @@ export default async function SitesPage({
                                 href={site.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-accent hover:text-accent-hover hover:text-accent mt-1 inline-block"
+                                className="text-sm text-text-secondary hover:text-accent transition-colors mt-1 inline-block"
                               >
                                 {site.url}
                               </a>

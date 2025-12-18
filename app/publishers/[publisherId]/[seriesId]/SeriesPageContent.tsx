@@ -225,7 +225,7 @@ export default async function SeriesPageContent({
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                 <Link
                   href={`/publishers/${series.publisher.id}`}
-                  className="text-accent hover:text-accent-hover hover:underline"
+                  className="text-text-primary hover:text-accent hover:underline transition-colors"
                 >
                   {series.publisher.name}
                 </Link>
@@ -256,7 +256,7 @@ export default async function SeriesPageContent({
                       <span key={idx}>
                         <Link
                           href={`/search?q=${encodeURIComponent(genre)}&tab=series`}
-                          className="text-accent hover:text-accent-hover hover:underline"
+                          className="text-text-secondary hover:text-accent hover:underline transition-colors"
                         >
                           {genre}
                         </Link>

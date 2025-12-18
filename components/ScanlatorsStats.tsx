@@ -129,7 +129,7 @@ export default function ScanlatorsStats({
               </p>
               <Link
                 href={getComicUrl(mostTranslatedComic.publisherId, mostTranslatedComic.seriesId, mostTranslatedComic.comicvine)}
-                className="text-lg font-semibold text-accent hover:text-accent-hover block"
+                className="text-lg font-semibold text-text-secondary hover:text-accent transition-colors block"
               >
                 {mostTranslatedComic.seriesName} #{mostTranslatedComic.number}
               </Link>

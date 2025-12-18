@@ -25,8 +25,11 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-bg-card/95 backdrop-blur-xl border-b border-border-primary sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="relative bg-bg-card/95 backdrop-blur-xl border-b border-border-primary sticky top-0 z-50 shadow-sm">
+      {/* Градиентная подложка для улучшения контраста */}
+      <div className="absolute inset-0 bg-gradient-to-b from-bg-primary/50 via-bg-primary/30 to-transparent pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Первая строка: Лого и навигация */}
         <div className="flex items-center justify-between h-14 border-b border-border-primary/50">
           {/* Логотип */}

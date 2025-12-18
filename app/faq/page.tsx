@@ -62,7 +62,7 @@ export default function FAQPage() {
               </h2>
               <p className="text-text-secondary">
                 Для добавления переводов в базу данных свяжитесь с администрацией проекта через 
-                <Link href="/contact" className="text-accent hover:text-accent-hover hover:text-accent ml-1">
+                <Link href="/contact" className="text-text-secondary hover:text-accent transition-colors ml-1">
                   форму обратной связи
                 </Link>.
               </p>
@@ -84,7 +84,7 @@ export default function FAQPage() {
               </h2>
               <p className="text-text-secondary">
                 База данных обновляется регулярно по мере поступления новых переводов. 
-                Вы можете подписаться на <Link href="/rss" className="text-accent hover:text-accent-hover">RSS ленту</Link>, 
+                Вы можете подписаться на <Link href="/rss" className="text-text-secondary hover:text-accent transition-colors">RSS ленту</Link>, 
                 чтобы получать уведомления о новых релизах.
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function FAQPage() {
               </h2>
               <p className="text-text-secondary">
                 Да, доступны API endpoints для получения данных о комиксах, сериях и издательствах. 
-                Подробнее смотрите в <Link href="/about" className="text-accent hover:text-accent-hover">документации</Link>.
+                Подробнее смотрите в <Link href="/about" className="text-text-secondary hover:text-accent transition-colors">документации</Link>.
               </p>
             </div>
           </div>
