@@ -36,7 +36,7 @@ async function getSites(page: number = 1, pageSize: number = 100) {
       sites: sites.map(site => ({
         id: site.id,
         name: decodeHtmlEntities(site.name),
-        url: site.url,
+        url: site.url ? decodeHtmlEntities(site.url) : null,
         numofcoms: Number(site.numofcoms) || 0,
       })),
       total,

@@ -100,9 +100,9 @@ async function getSite(id: string): Promise<{
     if (comics.length === 0) {
       return {
         id: site.id,
-        name: decodeHtmlEntities(site.name),
-        url: site.url,
-        totalComics: 0,
+      name: decodeHtmlEntities(site.name),
+      url: site.url ? decodeHtmlEntities(site.url) : null,
+      totalComics: 0,
         firstRelease: null,
         lastRelease: null,
         series: [],
@@ -182,7 +182,7 @@ async function getSite(id: string): Promise<{
     return {
       id: site.id,
       name: decodeHtmlEntities(site.name),
-      url: site.url,
+      url: site.url ? decodeHtmlEntities(site.url) : null,
       totalComics: comics.length,
       firstRelease: dates.length > 0 ? dates[0] : null,
       lastRelease: dates.length > 0 ? dates[dates.length - 1] : null,

@@ -1,6 +1,6 @@
 /**
  * Декодирует HTML-сущности в тексте
- * Например: &#39; -> ', &quot; -> ", &amp; -> &
+ * Например: &#39; -> ', &quot; -> ", &amp; -> &, &#58; -> :
  */
 export function decodeHtmlEntities(text: string | null | undefined): string {
   if (!text) return ''
@@ -14,6 +14,7 @@ export function decodeHtmlEntities(text: string | null | undefined): string {
     .replace(/&nbsp;/g, ' ')
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, '/')
+    .replace(/&#58;/g, ':')
 }
 
 /**
