@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
@@ -5,6 +8,7 @@ import Footer from '@/components/Footer'
 import TableRow from '@/components/TableRow'
 import ComicNavigationFAB from '@/components/ComicNavigationFAB'
 import Accordion from '@/components/Accordion'
+import TranslationBottomSheet from '@/components/TranslationBottomSheet'
 import { decodeHtmlEntities, getComicUrl, getSeriesUrl, formatDate } from '@/lib/utils'
 
 type Comic = {
@@ -43,12 +47,29 @@ type Comic = {
     date: Date | null
     isJoint: boolean
   }>
+  globalEvent?: {
+    id: number
+    name: string
+    genreName: string | null
+    order: number
+  } | null
   prevIssue: { comicvine: number; number: number } | null
   nextIssue: { comicvine: number; number: number } | null
 }
 
 export default function ComicPageContent({ comic }: { comic: Comic }) {
   const coverImage = comic.super || comic.thumb || comic.small || comic.tiny
+  const [selectedTranslation, setSelectedTranslation] = useState<Comic['translations'][0] | null>(null)
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+
+  const handleTranslationInfoClick = (translation: Comic['translations'][0]) => {
+    setSelectedTranslation(translation)
+    setIsBottomSheetOpen(true)
+  }
+
+  const handleCloseBottomSheet = () => {
+    setIsBottomSheetOpen(false)
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-bg-primary">
@@ -194,10 +215,32 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                                 link: translation.link,
                                 isJoint: translation.isJoint,
                               }}
+                              onInfoClick={() => handleTranslationInfoClick(translation)}
                             />
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Глобальное событие */}
+                {comic.globalEvent && (
+                  <div className="pt-4 border-t border-border-primary">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-accent text-lg" title="Глобальное событие">★</span>
+                      <h3 className="text-sm font-medium text-text-secondary">
+                        Глобальное событие
+                      </h3>
+                    </div>
+                    <div className="text-sm text-text-primary">
+                      {comic.globalEvent.genreName && (
+                        <span className="text-text-secondary">{comic.globalEvent.genreName}: </span>
+                      )}
+                      <span className="font-medium">{comic.globalEvent.name}</span>
+                      {comic.globalEvent.order > 0 && (
+                        <span className="text-text-secondary ml-1">(#{comic.globalEvent.order})</span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -463,6 +506,13 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
       />
 
       <Footer />
+
+      {/* BottomSheet для информации о переводе */}
+      <TranslationBottomSheet
+        isOpen={isBottomSheetOpen}
+        onClose={handleCloseBottomSheet}
+        translation={selectedTranslation}
+      />
     </div>
   )
 }

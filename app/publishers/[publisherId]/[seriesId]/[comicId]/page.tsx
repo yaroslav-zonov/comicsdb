@@ -43,6 +43,21 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
       },
     })
 
+    // Получаем информацию о глобальном событии (если есть)
+    const globalEvent = await prisma.cdb_globcom.findFirst({
+      where: {
+        comics: String(firstComic.id),
+        date_delete: null,
+      },
+      include: {
+        cdb_globals: {
+          include: {
+            cdb_globgenl: true,
+          },
+        },
+      },
+    })
+
     // Получаем все уникальные номера выпусков серии для навигации
     // Используем comicvine ID для навигации
     const allIssuesByNumber = await prisma.$queryRaw<Array<{
@@ -158,6 +173,12 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
       teams: decodeHtmlEntities(mainComic.teams),
       adddate: mainComic.adddate,
       translations,
+      globalEvent: globalEvent ? {
+        id: globalEvent.id,
+        name: decodeHtmlEntities(globalEvent.cdb_globals.name),
+        genreName: globalEvent.cdb_globals.cdb_globgenl ? decodeHtmlEntities(globalEvent.cdb_globals.cdb_globgenl.name) : null,
+        order: globalEvent.order,
+      } : null,
       prevIssue: prevIssue ? { comicvine: Number(prevIssue.comicvine), number: Number(prevIssue.number) } : null,
       nextIssue: nextIssue ? { comicvine: Number(nextIssue.comicvine), number: Number(nextIssue.number) } : null,
     }

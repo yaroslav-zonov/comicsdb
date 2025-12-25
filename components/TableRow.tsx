@@ -3,6 +3,7 @@ import Image from 'next/image'
 import {
   ArrowDownTrayIcon,
   XMarkIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 import { getComicUrl, getSeriesUrl, getImageUrl, formatDate } from '@/lib/utils'
 
@@ -47,12 +48,13 @@ type SeriesRowData = {
   total?: number
 }
 
-type TableRowProps = 
+type TableRowProps =
   | {
       type: 'comic'
       variant: 'main' | 'comic-page' | 'character-creator-team' | 'scanlator' | 'series'
       data: ComicRowData
       scanlatorQuery?: string // Для фильтрации ролей искомого сканлейтера
+      onInfoClick?: () => void // Для открытия BottomSheet на мобильных
     }
   | {
       type: 'series'
@@ -134,6 +136,7 @@ export default function TableRow(props: TableRowProps) {
   if (variant === 'comic-page') {
     // На странице выпуска: сайт-переводчик / переводчик / оформитель / дата публикации / кнопка скачать
     const comicData = data as ComicRowData & { isJoint?: boolean; site2Name?: string | null; site2Id?: string | null }
+    const onInfoClick = props.type === 'comic' ? props.onInfoClick : undefined
 
     return (
       <tr className="border-t border-border-primary first:border-t-0">
@@ -216,21 +219,31 @@ export default function TableRow(props: TableRowProps) {
         </td>
         <td className="py-3 whitespace-nowrap text-right pr-0">
           <div className="flex items-center justify-end gap-3">
+            {/* Десктопная версия - кнопка скачать */}
             {data.link ? (
               <a
                 href={data.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-tertiary hover:text-accent transition-colors"
+                className="hidden lg:inline-block text-text-tertiary hover:text-accent transition-colors"
                 title="Скачать"
               >
                 <ArrowDownTrayIcon className="w-5 h-5" />
               </a>
             ) : (
-              <span className="text-text-muted" title="Ссылка недоступна">
+              <span className="hidden lg:inline-block text-text-muted" title="Ссылка недоступна">
                 <XMarkIcon className="w-5 h-5" />
               </span>
             )}
+            {/* Мобильная версия - кнопка Info */}
+            <button
+              onClick={onInfoClick}
+              className="lg:hidden text-text-tertiary hover:text-accent transition-colors"
+              title="Подробнее"
+              aria-label="Показать подробную информацию"
+            >
+              <InformationCircleIcon className="w-5 h-5" />
+            </button>
           </div>
         </td>
       </tr>
