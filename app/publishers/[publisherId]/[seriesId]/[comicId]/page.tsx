@@ -44,9 +44,11 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
     })
 
     // Получаем информацию о глобальном событии (если есть)
+    // Проверяем все переводы, так как событие может быть привязано к любому из них
+    const comicIds = allTranslations.map(t => String(t.id))
     const globalEvent = await prisma.cdb_globcom.findFirst({
       where: {
-        comics: String(firstComic.id),
+        comics: { in: comicIds },
         date_delete: null,
       },
       include: {
