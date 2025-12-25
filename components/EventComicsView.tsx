@@ -34,9 +34,10 @@ type EventComic = {
 type EventComicsViewProps = {
   comics: EventComic[]
   title?: string
+  stats?: string
 }
 
-export default function EventComicsView({ comics, title }: EventComicsViewProps) {
+export default function EventComicsView({ comics, title, stats }: EventComicsViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
 
   if (comics.length === 0) {
@@ -69,19 +70,26 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
   return (
     <div>
       {(title || true) && (
-        <div className="pb-4 border-b border-border-primary flex items-center justify-between">
-          {title && (
-            <h2 className="heading-section">
-              {title}
-            </h2>
-          )}
-          <div>
-            <ViewToggle
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              showTableOnMobile={false}
-            />
+        <div className="pb-4 border-b border-border-primary">
+          <div className="flex items-center justify-between mb-2">
+            {title && (
+              <h2 className="heading-section">
+                {title}
+              </h2>
+            )}
+            <div>
+              <ViewToggle
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                showTableOnMobile={false}
+              />
+            </div>
           </div>
+          {stats && (
+            <p className="text-sm text-text-secondary">
+              {stats}
+            </p>
+          )}
         </div>
       )}
 

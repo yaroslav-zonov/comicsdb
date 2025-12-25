@@ -119,6 +119,22 @@ async function getEventDetails(publisherId: number, eventId: string) {
       }
     })
 
+    // Подсчитываем уникальные комиксы (по comicvine для переведенных, по id для непереведенных)
+    const uniqueComicsSet = new Set<string | number>()
+    const translatedComicsSet = new Set<number>()
+    
+    comics.forEach(comic => {
+      if (comic.hasTranslation && comic.translation) {
+        uniqueComicsSet.add(comic.translation.comicvine)
+        translatedComicsSet.add(comic.translation.comicvine)
+      } else {
+        uniqueComicsSet.add(comic.id)
+      }
+    })
+    
+    const totalComics = uniqueComicsSet.size
+    const translatedComics = translatedComicsSet.size
+
     return {
       event: {
         id: event.id,
@@ -136,6 +152,8 @@ async function getEventDetails(publisherId: number, eventId: string) {
         },
       },
       comics,
+      totalComics,
+      translatedComics,
     }
   } catch (error) {
     console.error('Error fetching event details:', error)
@@ -237,7 +255,8 @@ export default async function EventPage({
           {/* Список комиксов */}
           <EventComicsView
             comics={data.comics}
-            title={`Выпуски (${data.comics.length})`}
+            title={`Выпуски (${data.totalComics})`}
+            stats={`Переведено ${data.translatedComics} из ${data.totalComics}`}
           />
         </div>
       </div>

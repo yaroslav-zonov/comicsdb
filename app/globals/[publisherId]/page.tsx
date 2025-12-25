@@ -11,7 +11,6 @@ type EventItem = {
   id: string
   name: string
   years: string | null
-  text: string | null
   order: number | null
 }
 
@@ -47,7 +46,6 @@ async function getPublisherEvents(publisherId: number) {
             'id', g.id,
             'name', g.name,
             'years', g.years,
-            'text', g.text,
             'order', g.order
           )
         ) as events
@@ -60,6 +58,27 @@ async function getPublisherEvents(publisherId: number) {
       ORDER BY gl.name ASC
     `
 
+    // Получаем количество выпусков для каждого события
+    const eventComicsCounts = await prisma.$queryRaw<Array<{
+      event_id: string
+      comics_count: bigint
+    }>>`
+      SELECT
+        gc.global as event_id,
+        COUNT(DISTINCT gc.id) as comics_count
+      FROM cdb_globcom gc
+      INNER JOIN cdb_globals g ON gc.global = g.id
+      WHERE g.publisher = ${publisherId}
+        AND gc.date_delete IS NULL
+        AND g.date_delete IS NULL
+      GROUP BY gc.global
+    `
+    
+    const comicsCountMap = new Map<string, number>()
+    eventComicsCounts.forEach(item => {
+      comicsCountMap.set(item.event_id, Number(item.comics_count))
+    })
+
     const categories = eventCategories.map(cat => ({
       id: cat.genl_id,
       name: decodeHtmlEntities(cat.genl_name),
@@ -69,8 +88,8 @@ async function getPublisherEvents(publisherId: number) {
           id: e.id,
           name: decodeHtmlEntities(e.name),
           years: e.years,
-          text: e.text ? decodeHtmlEntities(e.text) : null,
           order: e.order,
+          comicsCount: comicsCountMap.get(e.id) || 0,
         }))
         .sort((a: { order: number | null }, b: { order: number | null }) => (a.order || 0) - (b.order || 0)),
     }))
@@ -146,7 +165,7 @@ export default async function PublisherEventsPage({
                     {category.name}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {category.events.map((event: { id: string; name: string; years: string | null; text: string | null }) => (
+                    {category.events.map((event: { id: string; name: string; years: string | null; comicsCount: number }) => (
                       <Link
                         key={event.id}
                         href={`/globals/${publisherId}/${event.id}`}
@@ -155,16 +174,17 @@ export default async function PublisherEventsPage({
                         <h3 className="font-semibold text-text-primary group-hover:text-accent transition-colors mb-2">
                           {event.name}
                         </h3>
-                        {event.years && (
-                          <p className="text-sm text-text-secondary mb-1">
-                            {event.years}
-                          </p>
-                        )}
-                        {event.text && (
-                          <p className="text-sm text-text-tertiary line-clamp-2">
-                            {event.text}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-2 text-sm text-text-secondary">
+                          {event.years && (
+                            <span>{event.years}</span>
+                          )}
+                          {event.years && event.comicsCount > 0 && (
+                            <span>•</span>
+                          )}
+                          {event.comicsCount > 0 && (
+                            <span>{event.comicsCount} {event.comicsCount === 1 ? 'выпуск' : event.comicsCount < 5 ? 'выпуска' : 'выпусков'}</span>
+                          )}
+                        </div>
                       </Link>
                     ))}
                   </div>
