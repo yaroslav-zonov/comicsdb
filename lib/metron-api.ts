@@ -200,6 +200,11 @@ export async function checkMetronForIssue(
   return new Promise((resolve) => {
     requestQueue.push(async () => {
       try {
+        // Логируем начало запроса (только в development)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 [Metron] Проверяю ComicVine ID: ${comicvineId}`)
+        }
+        
         const issue = await fetchMetronIssue(comicvineId)
         
         if (issue && issue.image) {
@@ -212,11 +217,22 @@ export async function checkMetronForIssue(
           checked.add(id)
           await saveCacheIndex(cached, Array.from(checked))
           
+          // Логируем успешное нахождение (только в development)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ [Metron] Найдено изображение для ${id}: ${imageUrl.substring(0, 60)}...`)
+          }
+          
           resolve(imageUrl)
         } else {
           // Не нашли в Metron - помечаем как проверенное
           checked.add(id)
           await saveCacheIndex(cached, Array.from(checked))
+          
+          // Логируем отсутствие (только в development)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`⚠️  [Metron] Не найдено изображение для ${id}`)
+          }
+          
           resolve(null)
         }
       } catch (error: any) {
