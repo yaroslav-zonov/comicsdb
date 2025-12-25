@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -81,14 +84,27 @@ export default function TableRow(props: TableRowProps) {
           <Link href={getSeriesUrl(data.publisher.id, data.id)}>
             <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
               {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={data.name}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                  unoptimized
-                />
+                <>
+                  <Image
+                    src={imageUrl}
+                    alt={data.name}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                    unoptimized
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                      if (placeholder) {
+                        (placeholder as HTMLElement).style.display = 'flex'
+                      }
+                    }}
+                  />
+                  <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                    <span className="text-text-tertiary text-xs">Нет</span>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-text-tertiary text-xs">Нет</span>
@@ -262,15 +278,28 @@ export default function TableRow(props: TableRowProps) {
             <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)}>
               <div className="relative w-12 aspect-[2/3]">
                 {comicvineUrl ? (
-                  <Image
-                    src={comicvineUrl}
-                    alt={`${data.series.name} #${data.number}`}
-                    fill
-                    className="object-cover"
-                    sizes="48px"
-                    loading="lazy"
-                    unoptimized
-                  />
+                  <>
+                    <Image
+                      src={comicvineUrl}
+                      alt={`${data.series.name} #${data.number}`}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                      loading="lazy"
+                      unoptimized
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                        if (placeholder) {
+                          (placeholder as HTMLElement).style.display = 'flex'
+                        }
+                      }}
+                    />
+                    <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                      <span className="text-text-tertiary text-xs">Нет</span>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                     <span className="text-text-tertiary text-xs">Нет</span>
@@ -348,15 +377,28 @@ export default function TableRow(props: TableRowProps) {
               <Link href={getComicUrl(data.series.publisher.id, data.series.id, data.comicvine)} className="flex-shrink-0">
                 <div className="relative w-10 aspect-[2/3]">
                   {comicvineUrl ? (
-                    <Image
-                      src={comicvineUrl}
-                      alt={`${data.series.name} #${data.number}`}
-                      fill
-                      className="object-cover"
-                      sizes="40px"
-                      loading="lazy"
-                      unoptimized
-                    />
+                    <>
+                      <Image
+                        src={comicvineUrl}
+                        alt={`${data.series.name} #${data.number}`}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                        loading="lazy"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                          if (placeholder) {
+                            (placeholder as HTMLElement).style.display = 'flex'
+                          }
+                        }}
+                      />
+                      <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                        <span className="text-text-tertiary text-xs">Нет</span>
+                      </div>
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                       <span className="text-text-tertiary text-xs">Нет</span>

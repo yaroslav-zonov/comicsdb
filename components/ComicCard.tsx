@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getComicUrl, formatDate } from '@/lib/utils'
@@ -48,6 +51,7 @@ export default function ComicCard({
   const releaseDate = data.date || data.pdate
   // Для карточек используем большой размер: thumb (приоритет) > tiny (fallback)
   const comicvineUrl = data.thumb || data.tiny
+  const [imageError, setImageError] = useState(false)
 
   return (
     <div className={`overflow-hidden group card-lift ${className}`}>
@@ -57,7 +61,7 @@ export default function ComicCard({
       >
         {showCover && (
           <div className={`relative ${coverAspectRatio === '2/3' ? 'aspect-[2/3]' : ''} bg-bg-tertiary overflow-hidden shadow-sm group-hover:shadow-lg transition-shadow duration-300`}>
-            {comicvineUrl ? (
+            {comicvineUrl && !imageError ? (
               <>
                 <Image
                   src={comicvineUrl}
@@ -69,6 +73,7 @@ export default function ComicCard({
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   loading="lazy"
                   unoptimized
+                  onError={() => setImageError(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </>

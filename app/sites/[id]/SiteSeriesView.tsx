@@ -55,7 +55,18 @@ export default function SiteSeriesView({ series }: { series: SeriesData[] }) {
                         className="object-cover"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                         unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                          if (placeholder) {
+                            (placeholder as HTMLElement).style.display = 'flex'
+                          }
+                        }}
                       />
+                      <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                        <span className="text-text-tertiary text-xs">Нет обложки</span>
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </>
                   ) : (

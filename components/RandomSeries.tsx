@@ -184,23 +184,49 @@ export default async function RandomSeries() {
             {/* Обложка - уменьшенная высота */}
             <div className="md:w-1/4 relative aspect-[2/3] h-64 md:h-auto">
               {series.thumb && series.thumb !== '' ? (
-                <Image
-                  src={series.thumb}
-                  alt={series.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                  unoptimized
-                />
+                <>
+                  <Image
+                    src={series.thumb}
+                    alt={series.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    unoptimized
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                      if (placeholder) {
+                        (placeholder as HTMLElement).style.display = 'flex'
+                      }
+                    }}
+                  />
+                  <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                    <span className="text-text-tertiary text-sm">Нет обложки</span>
+                  </div>
+                </>
               ) : series.icon && series.icon !== '' ? (
-                <Image
-                  src={series.icon}
-                  alt={series.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                  unoptimized
-                />
+                <>
+                  <Image
+                    src={series.icon}
+                    alt={series.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    unoptimized
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                      if (placeholder) {
+                        (placeholder as HTMLElement).style.display = 'flex'
+                      }
+                    }}
+                  />
+                  <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                    <span className="text-text-tertiary text-sm">Нет обложки</span>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full bg-bg-tertiary flex items-center justify-center">
                   <span className="text-text-tertiary text-sm">Нет обложки</span>

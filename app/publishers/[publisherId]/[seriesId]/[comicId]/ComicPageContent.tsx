@@ -142,15 +142,28 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
             <div className="flex-shrink-0 mx-auto md:mx-0">
               <div className="relative w-48 md:w-80 aspect-[2/3]">
                 {coverImage ? (
-                  <Image
-                    src={coverImage}
-                    alt={`${comic.series.name} #${comic.number}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 256px, 320px"
-                    loading="lazy"
-                    unoptimized
-                  />
+                  <>
+                    <Image
+                      src={coverImage}
+                      alt={`${comic.series.name} #${comic.number}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 256px, 320px"
+                      loading="lazy"
+                      unoptimized
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                        if (placeholder) {
+                          (placeholder as HTMLElement).style.display = 'flex'
+                        }
+                      }}
+                    />
+                    <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                      <span className="text-text-tertiary text-xs">Нет обложки</span>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                     <span className="text-text-tertiary text-xs">Нет обложки</span>

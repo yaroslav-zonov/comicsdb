@@ -143,7 +143,18 @@ export default function EventComicsView({ comics, title, stats }: EventComicsVie
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                           loading="lazy"
                           unoptimized
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                            if (placeholder) {
+                              (placeholder as HTMLElement).style.display = 'flex'
+                            }
+                          }}
                         />
+                        <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                          <span className="text-text-tertiary text-xs">Нет обложки</span>
+                        </div>
                         <div className="absolute inset-0 bg-bg-secondary/30" />
                       </>
                     ) : (
@@ -196,15 +207,28 @@ export default function EventComicsView({ comics, title, stats }: EventComicsVie
                           <Link href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)}>
                             <div className="relative w-12 aspect-[2/3]">
                               {coverImage ? (
-                                <Image
-                                  src={coverImage}
-                                  alt={`${comic.name} #${comic.number}`}
-                                  fill
-                                  className="object-cover"
-                                  sizes="48px"
-                                  loading="lazy"
-                                  unoptimized
-                                />
+                                <>
+                                  <Image
+                                    src={coverImage}
+                                    alt={`${comic.name} #${comic.number}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="48px"
+                                    loading="lazy"
+                                    unoptimized
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement
+                                      target.style.display = 'none'
+                                      const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                                      if (placeholder) {
+                                        (placeholder as HTMLElement).style.display = 'flex'
+                                      }
+                                    }}
+                                  />
+                                  <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                                    <span className="text-text-tertiary text-xs">Нет</span>
+                                  </div>
+                                </>
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                                   <span className="text-text-tertiary text-xs">Нет</span>
@@ -240,15 +264,28 @@ export default function EventComicsView({ comics, title, stats }: EventComicsVie
                             <Link href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)} className="flex-shrink-0">
                               <div className="relative w-10 aspect-[2/3]">
                                 {coverImage ? (
-                                  <Image
-                                    src={coverImage}
-                                    alt={`${comic.name} #${comic.number}`}
-                                    fill
-                                    className="object-cover"
-                                    sizes="40px"
-                                    loading="lazy"
-                                    unoptimized
-                                  />
+                                  <>
+                                    <Image
+                                      src={coverImage}
+                                      alt={`${comic.name} #${comic.number}`}
+                                      fill
+                                      className="object-cover"
+                                      sizes="40px"
+                                      loading="lazy"
+                                      unoptimized
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement
+                                        target.style.display = 'none'
+                                        const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                                        if (placeholder) {
+                                          (placeholder as HTMLElement).style.display = 'flex'
+                                        }
+                                      }}
+                                    />
+                                    <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                                      <span className="text-text-tertiary text-[10px]">Нет</span>
+                                    </div>
+                                  </>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
                                     <span className="text-text-tertiary text-[10px]">Нет</span>
@@ -283,14 +320,27 @@ export default function EventComicsView({ comics, title, stats }: EventComicsVie
                       <td className="py-3 whitespace-nowrap">
                         <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
                           {coverImage ? (
-                            <Image
-                              src={coverImage}
-                              alt={`${comic.name} #${comic.number}`}
-                              fill
-                              className="object-cover grayscale"
-                              sizes="48px"
-                              unoptimized
-                            />
+                            <>
+                              <Image
+                                src={coverImage}
+                                alt={`${comic.name} #${comic.number}`}
+                                fill
+                                className="object-cover grayscale"
+                                sizes="48px"
+                                unoptimized
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                                  if (placeholder) {
+                                    (placeholder as HTMLElement).style.display = 'flex'
+                                  }
+                                }}
+                              />
+                              <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                                <span className="text-text-tertiary text-xs">Нет</span>
+                              </div>
+                            </>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <span className="text-text-tertiary text-xs">Нет</span>
@@ -313,14 +363,27 @@ export default function EventComicsView({ comics, title, stats }: EventComicsVie
                         <div className="flex items-start gap-3">
                           <div className="relative w-10 aspect-[2/3] bg-bg-tertiary flex-shrink-0">
                             {coverImage ? (
-                              <Image
-                                src={coverImage}
-                                alt={`${comic.name} #${comic.number}`}
-                                fill
-                                className="object-cover grayscale"
-                                sizes="40px"
-                                unoptimized
-                              />
+                              <>
+                                <Image
+                                  src={coverImage}
+                                  alt={`${comic.name} #${comic.number}`}
+                                  fill
+                                  className="object-cover grayscale"
+                                  sizes="40px"
+                                  unoptimized
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    target.style.display = 'none'
+                                    const placeholder = target.parentElement?.querySelector('.image-placeholder')
+                                    if (placeholder) {
+                                      (placeholder as HTMLElement).style.display = 'flex'
+                                    }
+                                  }}
+                                />
+                                <div className="image-placeholder absolute inset-0 flex items-center justify-center bg-bg-tertiary" style={{ display: 'none' }}>
+                                  <span className="text-text-tertiary text-[10px]">Нет</span>
+                                </div>
+                              </>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <span className="text-text-tertiary text-[10px]">Нет</span>
