@@ -45,6 +45,7 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
 
     // Получаем информацию о глобальном событии (если есть)
     // Проверяем все переводы, так как событие может быть привязано к любому из них
+    // Ищем событие как по ID комиксов, так и по ComicVine ID
     const comicIds = allTranslations.map(t => t.id)
     const globalEvent = comicIds.length > 0 ? await prisma.$queryRaw<Array<{
       id: number
@@ -62,7 +63,10 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
       FROM cdb_globcom gc
       INNER JOIN cdb_globals g ON gc.global = g.id
       LEFT JOIN cdb_globgenl gl ON g.genl = gl.id
-      WHERE gc.comics IN (${Prisma.join(comicIds)})
+      WHERE (
+        gc.comics IN (${Prisma.join(comicIds)})
+        OR (gc.comics IS NOT NULL AND gc.comics != '' AND gc.comics != '0' AND CAST(gc.comics AS UNSIGNED) = ${comicvineId})
+      )
         AND gc.date_delete IS NULL
         AND g.date_delete IS NULL
       LIMIT 1

@@ -4,7 +4,8 @@ import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { decodeHtmlEntities, getImageUrl, formatDate } from '@/lib/utils'
+import ComicCard, { ComicCardData } from '@/components/ComicCard'
+import { decodeHtmlEntities, formatDate } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,8 @@ async function getEventDetails(publisherId: number, eventId: string) {
     }
 
     // Получаем ВСЕ выпуски события из cdb_globcom
-    // Пытаемся найти соответствующий комикс в нашей базе по названию серии и номеру
+    // Ищем комиксы в нашей базе по ID или по ComicVine ID
+    // Поле gc.comics может содержать либо ID комикса, либо ComicVine ID
     const eventComics = await prisma.$queryRaw<Array<{
       gc_id: number
       gc_name: string
@@ -61,7 +63,16 @@ async function getEventDetails(publisherId: number, eventId: string) {
         p.id as publisher_id,
         p.name as publisher_name
       FROM cdb_globcom gc
-      LEFT JOIN cdb_comics c ON gc.comics = c.id AND c.date_delete IS NULL
+      LEFT JOIN cdb_comics c ON (
+        gc.comics IS NOT NULL
+        AND gc.comics != ''
+        AND gc.comics != '0'
+        AND (
+          gc.comics = CAST(c.id AS CHAR)
+          OR (CAST(gc.comics AS UNSIGNED) > 0 AND CAST(gc.comics AS UNSIGNED) = c.comicvine)
+        )
+        AND c.date_delete IS NULL
+      )
       LEFT JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
       LEFT JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE gc.global = ${eventId}
@@ -69,30 +80,45 @@ async function getEventDetails(publisherId: number, eventId: string) {
       ORDER BY gc.order ASC, gc.pdate ASC
     `
 
-    const comics = eventComics.map(comic => ({
-      id: comic.gc_id,
-      name: decodeHtmlEntities(comic.gc_name),
-      number: comic.gc_number,
-      order: comic.gc_order,
-      tiny: comic.gc_tiny,
-      thumb: comic.gc_thumb,
-      super: comic.gc_super,
-      pdate: comic.gc_pdate,
-      // Информация о переводе (если есть)
-      hasTranslation: !!comic.comic_id,
-      translation: comic.comic_id ? {
-        comicId: comic.comic_id,
-        comicvine: comic.comic_comicvine!,
-        series: {
-          id: comic.series_id!,
-          name: decodeHtmlEntities(comic.series_name!),
-          publisher: {
-            id: comic.publisher_id!,
-            name: decodeHtmlEntities(comic.publisher_name!),
+    const comics = eventComics.map(comic => {
+      const hasTranslation = !!comic.comic_id
+      const baseData = {
+        id: comic.gc_id,
+        name: decodeHtmlEntities(comic.gc_name),
+        number: Number(comic.gc_number),
+        order: comic.gc_order,
+        tiny: comic.gc_tiny || null,
+        thumb: comic.gc_thumb || null,
+        super: comic.gc_super || null,
+        pdate: comic.gc_pdate,
+        hasTranslation,
+      }
+
+      // Если есть перевод, формируем данные для ComicCard
+      if (hasTranslation && comic.comic_id && comic.comic_comicvine && comic.series_id && comic.series_name && comic.publisher_id && comic.publisher_name) {
+        return {
+          ...baseData,
+          translation: {
+            comicId: comic.comic_id,
+            comicvine: comic.comic_comicvine,
+            series: {
+              id: comic.series_id,
+              name: decodeHtmlEntities(comic.series_name),
+              publisher: {
+                id: comic.publisher_id,
+                name: decodeHtmlEntities(comic.publisher_name),
+              },
+            },
           },
-        },
-      } : null,
-    }))
+        }
+      }
+
+      // Если нет перевода, возвращаем только базовые данные
+      return {
+        ...baseData,
+        translation: null,
+      }
+    })
 
     return {
       event: {
@@ -216,71 +242,101 @@ export default async function EventPage({
             </h2>
 
             {data.comics.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid-cards">
                 {data.comics.map(comic => {
-                  const coverImage = comic.super || comic.thumb || comic.tiny
-                  const cardContent = (
-                    <>
-                      <div className="relative aspect-[2/3] bg-bg-tertiary rounded-lg overflow-hidden mb-2 border border-border-primary group-hover:border-accent transition-colors">
-                        {coverImage ? (
-                          <Image
-                            src={coverImage}
-                            alt={`${comic.name} #${comic.number}`}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-                            loading="lazy"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-text-tertiary text-xs">
-                              Нет обложки
-                            </span>
-                          </div>
-                        )}
-                        {/* Порядковый номер в событии */}
+                  // Для комиксов с переводом используем ComicCard
+                  if (comic.hasTranslation && comic.translation) {
+                    const cardData: ComicCardData = {
+                      id: comic.translation.comicId,
+                      comicvine: comic.translation.comicvine,
+                      number: comic.number,
+                      series: comic.translation.series,
+                      thumb: comic.thumb || comic.super || null,
+                      tiny: comic.tiny || null,
+                      pdate: comic.pdate,
+                    }
+
+                    return (
+                      <div key={comic.id} className="relative">
+                        <ComicCard
+                          data={cardData}
+                          showCover={true}
+                          showTitle={true}
+                          titleMode="full"
+                          showDate={true}
+                        />
+                        {/* Порядковый номер в событии - поверх обложки */}
                         {comic.order > 0 && (
-                          <div className="absolute top-2 left-2 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
+                          <div className="absolute top-2 left-2 z-20 bg-accent text-white text-xs font-semibold px-2 py-1 rounded pointer-events-none">
                             #{comic.order}
                           </div>
                         )}
-                        {/* Маркер "Нет перевода" */}
-                        {!comic.hasTranslation && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
-                              <p className="text-xs font-medium text-text-secondary text-center">
-                                Нет перевода
-                              </p>
+                      </div>
+                    )
+                  }
+
+                  // Для комиксов без перевода создаем обертку с маркером
+                  const coverImage = comic.super || comic.thumb || comic.tiny
+                  return (
+                    <div key={comic.id} className="overflow-hidden group card-lift relative">
+                      <div className="block cursor-default">
+                        {coverImage && (
+                          <div className="relative aspect-[2/3] bg-bg-tertiary overflow-hidden shadow-sm">
+                            <Image
+                              src={coverImage}
+                              alt={`${comic.name} #${comic.number}`}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                              loading="lazy"
+                              unoptimized
+                            />
+                            {/* Порядковый номер в событии */}
+                            {comic.order > 0 && (
+                              <div className="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
+                                #{comic.order}
+                              </div>
+                            )}
+                            {/* Маркер "Нет перевода" */}
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
+                                <p className="text-xs font-medium text-text-secondary text-center">
+                                  Нет перевода
+                                </p>
+                              </div>
                             </div>
                           </div>
                         )}
+                        {!coverImage && (
+                          <div className="relative aspect-[2/3] bg-bg-tertiary overflow-hidden shadow-sm flex items-center justify-center">
+                            <span className="text-text-tertiary text-xs">Нет обложки</span>
+                            {/* Порядковый номер в событии */}
+                            {comic.order > 0 && (
+                              <div className="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
+                                #{comic.order}
+                              </div>
+                            )}
+                            {/* Маркер "Нет перевода" */}
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
+                                <p className="text-xs font-medium text-text-secondary text-center">
+                                  Нет перевода
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="pt-3">
+                          <h3 className="font-semibold text-sm text-text-tertiary mb-1 line-clamp-2">
+                            {comic.name} #{comic.number}
+                          </h3>
+                          {comic.pdate && (
+                            <p className="body-tiny mt-1">
+                              {formatDate(comic.pdate, { month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <h3 className={`text-sm font-medium mb-1 line-clamp-2 transition-colors ${
-                        comic.hasTranslation
-                          ? 'text-text-primary group-hover:text-accent'
-                          : 'text-text-tertiary'
-                      }`}>
-                        {comic.name} #{comic.number}
-                      </h3>
-                      <p className="text-xs text-text-secondary">
-                        {formatDate(comic.pdate, { month: 'short', year: 'numeric' })}
-                      </p>
-                    </>
-                  )
-
-                  // Если есть перевод - делаем ссылку, если нет - просто div
-                  return comic.hasTranslation && comic.translation ? (
-                    <Link
-                      key={comic.id}
-                      href={`/publishers/${comic.translation.series.publisher.id}/${comic.translation.series.id}/${comic.translation.comicvine}`}
-                      className="group block"
-                    >
-                      {cardContent}
-                    </Link>
-                  ) : (
-                    <div key={comic.id} className="group block cursor-default">
-                      {cardContent}
                     </div>
                   )
                 })}
