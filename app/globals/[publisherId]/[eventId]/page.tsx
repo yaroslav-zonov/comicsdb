@@ -28,9 +28,9 @@ async function getEventDetails(publisherId: number, eventId: string) {
     }
 
     // Получаем ВСЕ выпуски события из cdb_globcom
-    // Ищем комиксы в нашей базе по ID или по ComicVine ID
-    // Поле gc.comics может содержать либо c.id, либо c.comicvine
-    // Сначала пробуем найти по ID, если не нашли - по ComicVine ID
+    // Поле gc.comics ВСЕГДА содержит ComicVine ID (глобальный идентификатор комикса)
+    // Один комикс (comicvine) может иметь несколько переводов (разные id в cdb_comics)
+    // Используем MIN(c.id) чтобы выбрать первый перевод при наличии нескольких
     const eventComics = await prisma.$queryRaw<Array<{
       gc_id: number
       gc_name: string
@@ -56,35 +56,25 @@ async function getEventDetails(publisherId: number, eventId: string) {
         gc.thumb as gc_thumb,
         gc.super as gc_super,
         gc.pdate as gc_pdate,
-        COALESCE(c1.id, MIN(c2.id)) as comic_id,
-        COALESCE(c1.comicvine, MIN(c2.comicvine)) as comic_comicvine,
-        COALESCE(s1.id, MIN(s2.id)) as series_id,
-        COALESCE(s1.name, MIN(s2.name)) as series_name,
-        COALESCE(p1.id, MIN(p2.id)) as publisher_id,
-        COALESCE(p1.name, MIN(p2.name)) as publisher_name
+        MIN(c.id) as comic_id,
+        MIN(c.comicvine) as comic_comicvine,
+        MIN(s.id) as series_id,
+        MIN(s.name) as series_name,
+        MIN(p.id) as publisher_id,
+        MIN(p.name) as publisher_name
       FROM cdb_globcom gc
-      LEFT JOIN cdb_comics c1 ON (
+      LEFT JOIN cdb_comics c ON (
         gc.comics IS NOT NULL
         AND gc.comics != ''
         AND gc.comics != '0'
-        AND gc.comics = CAST(c1.id AS CHAR)
-        AND c1.date_delete IS NULL
+        AND CAST(gc.comics AS UNSIGNED) = c.comicvine
+        AND c.date_delete IS NULL
       )
-      LEFT JOIN cdb_series s1 ON c1.serie = s1.id AND s1.date_delete IS NULL
-      LEFT JOIN cdb_publishers p1 ON s1.publisher = p1.id AND p1.date_delete IS NULL
-      LEFT JOIN cdb_comics c2 ON (
-        c1.id IS NULL
-        AND gc.comics IS NOT NULL
-        AND gc.comics != ''
-        AND gc.comics != '0'
-        AND CAST(gc.comics AS UNSIGNED) = c2.comicvine
-        AND c2.date_delete IS NULL
-      )
-      LEFT JOIN cdb_series s2 ON c2.serie = s2.id AND s2.date_delete IS NULL
-      LEFT JOIN cdb_publishers p2 ON s2.publisher = p2.id AND p2.date_delete IS NULL
+      LEFT JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      LEFT JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE gc.global = ${eventId}
         AND gc.date_delete IS NULL
-      GROUP BY gc.id, gc.name, gc.number, gc.order, gc.tiny, gc.thumb, gc.super, gc.pdate, c1.id, c1.comicvine, s1.id, s1.name, p1.id, p1.name
+      GROUP BY gc.id, gc.name, gc.number, gc.order, gc.tiny, gc.thumb, gc.super, gc.pdate, gc.comics
       ORDER BY gc.order ASC, gc.pdate ASC
     `
 
