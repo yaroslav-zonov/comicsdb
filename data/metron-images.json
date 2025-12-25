@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-17",
+  "mappings": {
+    "4050-12345": {
+      "thumb": "https://metron.cloud/media/image/thumb/12345.jpg",
+      "tiny": "https://metron.cloud/media/image/tiny/12345.jpg",
+      "small": "https://metron.cloud/media/image/small/12345.jpg",
+      "super": "https://metron.cloud/media/image/super/12345.jpg"
+    }
+  }
+}
+

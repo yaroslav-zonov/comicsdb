@@ -39,3 +39,6 @@ prisma/migrations/
 # Database dumps
 dump/*.sql
 dump/*.dump
+
+# Metron cached images (слишком большие для git)
+public/images/metron/

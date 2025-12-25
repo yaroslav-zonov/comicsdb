@@ -2,11 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['comicvine.gamespot.com'],
+    domains: ['comicvine.gamespot.com', 'metron.cloud'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'comicvine.gamespot.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'metron.cloud',
         pathname: '/**',
       },
     ],
