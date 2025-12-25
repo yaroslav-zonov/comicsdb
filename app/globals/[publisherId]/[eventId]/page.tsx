@@ -27,69 +27,71 @@ async function getEventDetails(publisherId: number, eventId: string) {
       return null
     }
 
-    // Получаем комиксы события
+    // Получаем ВСЕ выпуски события из cdb_globcom
+    // Пытаемся найти соответствующий комикс в нашей базе по названию серии и номеру
     const eventComics = await prisma.$queryRaw<Array<{
-      id: number
-      comics_id: string
-      tiny: string
-      thumb: string
-      super: string
-      pdate: Date
-      name: string
-      number: string
-      order: number
-      series_id: number
-      series_name: string
-      publisher_id: number
-      publisher_name: string
-      comicvine: number
+      gc_id: number
+      gc_name: string
+      gc_number: string
+      gc_order: number
+      gc_tiny: string
+      gc_thumb: string
+      gc_super: string
+      gc_pdate: Date
+      comic_id: number | null
+      comic_comicvine: number | null
+      series_id: number | null
+      series_name: string | null
+      publisher_id: number | null
+      publisher_name: string | null
     }>>`
       SELECT
-        gc.id,
-        gc.comics as comics_id,
-        gc.tiny,
-        gc.thumb,
-        gc.super,
-        gc.pdate,
-        gc.name,
-        gc.number,
-        gc.order,
+        gc.id as gc_id,
+        gc.name as gc_name,
+        gc.number as gc_number,
+        gc.order as gc_order,
+        gc.tiny as gc_tiny,
+        gc.thumb as gc_thumb,
+        gc.super as gc_super,
+        gc.pdate as gc_pdate,
+        c.id as comic_id,
+        c.comicvine as comic_comicvine,
         s.id as series_id,
         s.name as series_name,
         p.id as publisher_id,
-        p.name as publisher_name,
-        c.comicvine
+        p.name as publisher_name
       FROM cdb_globcom gc
-      INNER JOIN cdb_comics c ON gc.comics = c.id
-      INNER JOIN cdb_series s ON c.serie = s.id
-      INNER JOIN cdb_publishers p ON s.publisher = p.id
+      LEFT JOIN cdb_comics c ON gc.comics = c.id AND c.date_delete IS NULL
+      LEFT JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
+      LEFT JOIN cdb_publishers p ON s.publisher = p.id AND p.date_delete IS NULL
       WHERE gc.global = ${eventId}
         AND gc.date_delete IS NULL
-        AND c.date_delete IS NULL
-        AND s.date_delete IS NULL
-        AND p.date_delete IS NULL
       ORDER BY gc.order ASC, gc.pdate ASC
     `
 
     const comics = eventComics.map(comic => ({
-      id: comic.id,
-      comicsId: comic.comics_id,
-      comicvine: comic.comicvine,
-      tiny: getImageUrl(comic.tiny),
-      thumb: getImageUrl(comic.thumb),
-      super: getImageUrl(comic.super),
-      pdate: comic.pdate,
-      name: decodeHtmlEntities(comic.name),
-      number: comic.number,
-      order: comic.order,
-      series: {
-        id: comic.series_id,
-        name: decodeHtmlEntities(comic.series_name),
-        publisher: {
-          id: comic.publisher_id,
-          name: decodeHtmlEntities(comic.publisher_name),
+      id: comic.gc_id,
+      name: decodeHtmlEntities(comic.gc_name),
+      number: comic.gc_number,
+      order: comic.gc_order,
+      tiny: comic.gc_tiny,
+      thumb: comic.gc_thumb,
+      super: comic.gc_super,
+      pdate: comic.gc_pdate,
+      // Информация о переводе (если есть)
+      hasTranslation: !!comic.comic_id,
+      translation: comic.comic_id ? {
+        comicId: comic.comic_id,
+        comicvine: comic.comic_comicvine!,
+        series: {
+          id: comic.series_id!,
+          name: decodeHtmlEntities(comic.series_name!),
+          publisher: {
+            id: comic.publisher_id!,
+            name: decodeHtmlEntities(comic.publisher_name!),
+          },
         },
-      },
+      } : null,
     }))
 
     return {
@@ -217,14 +219,8 @@ export default async function EventPage({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {data.comics.map(comic => {
                   const coverImage = comic.super || comic.thumb || comic.tiny
-                  const comicUrl = `/publishers/${comic.series.publisher.id}/${comic.series.id}/${comic.comicvine}`
-
-                  return (
-                    <Link
-                      key={comic.id}
-                      href={comicUrl}
-                      className="group block"
-                    >
+                  const cardContent = (
+                    <>
                       <div className="relative aspect-[2/3] bg-bg-tertiary rounded-lg overflow-hidden mb-2 border border-border-primary group-hover:border-accent transition-colors">
                         {coverImage ? (
                           <Image
@@ -243,19 +239,49 @@ export default async function EventPage({
                             </span>
                           </div>
                         )}
+                        {/* Порядковый номер в событии */}
                         {comic.order > 0 && (
                           <div className="absolute top-2 left-2 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
                             #{comic.order}
                           </div>
                         )}
+                        {/* Маркер "Нет перевода" */}
+                        {!comic.hasTranslation && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
+                              <p className="text-xs font-medium text-text-secondary text-center">
+                                Нет перевода
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <h3 className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors line-clamp-2 mb-1">
-                        {comic.series.name} #{comic.number}
+                      <h3 className={`text-sm font-medium mb-1 line-clamp-2 transition-colors ${
+                        comic.hasTranslation
+                          ? 'text-text-primary group-hover:text-accent'
+                          : 'text-text-tertiary'
+                      }`}>
+                        {comic.name} #{comic.number}
                       </h3>
                       <p className="text-xs text-text-secondary">
                         {formatDate(comic.pdate, { month: 'short', year: 'numeric' })}
                       </p>
+                    </>
+                  )
+
+                  // Если есть перевод - делаем ссылку, если нет - просто div
+                  return comic.hasTranslation && comic.translation ? (
+                    <Link
+                      key={comic.id}
+                      href={`/publishers/${comic.translation.series.publisher.id}/${comic.translation.series.id}/${comic.translation.comicvine}`}
+                      className="group block"
+                    >
+                      {cardContent}
                     </Link>
+                  ) : (
+                    <div key={comic.id} className="group block cursor-default">
+                      {cardContent}
+                    </div>
                   )
                 })}
               </div>
