@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { XMarkIcon } from '@heroicons/react/24/outline'
 import ComicCard, { ComicCardData } from './ComicCard'
-import TableRow from './TableRow'
 import ViewToggle, { ViewMode } from './ViewToggle'
 import { getComicUrl, formatDate } from '@/lib/utils'
 
@@ -109,7 +107,7 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                     showCover={true}
                     showTitle={true}
                     titleMode="full"
-                    showDate={true}
+                    showDate={false}
                   />
                   {/* Порядковый номер в событии - поверх обложки */}
                   {comic.order > 0 && (
@@ -156,11 +154,6 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                     <h3 className="font-semibold text-sm text-text-tertiary mb-1 line-clamp-2 opacity-60">
                       {comic.name} #{comic.number}
                     </h3>
-                    {comic.pdate && (
-                      <p className="body-tiny mt-1 text-text-tertiary opacity-60">
-                        {formatDate(comic.pdate, { month: 'short', year: 'numeric' })}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -170,34 +163,119 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
       ) : (
         <div className="overflow-hidden hidden md:block pt-6">
           <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-border-primary">
+                <th className="py-2 text-left text-xs text-text-secondary">#</th>
+                <th className="py-2 text-left text-xs text-text-secondary">Обложка</th>
+                <th className="py-2 text-left text-xs text-text-secondary">Название</th>
+                <th className="py-2 text-left text-xs text-text-secondary">Сайт</th>
+                <th className="py-2 text-left text-xs text-text-secondary">Дата публикации</th>
+              </tr>
+            </thead>
             <tbody>
               {tableComics.map(comic => {
-                // Для комиксов с переводом используем TableRow
+                const coverImage = comic.super || comic.thumb || comic.tiny
+                
+                // Для комиксов с переводом
                 if (comic.hasTranslation && comic.translation) {
                   return (
-                    <TableRow
-                      key={comic.id}
-                      type="comic"
-                      variant="main"
-                      data={{
-                        id: comic.translation.comicId,
-                        comicvine: comic.translation.comicvine,
-                        number: comic.number,
-                        series: comic.translation.series,
-                        thumb: comic.super || comic.thumb || null,
-                        tiny: comic.tiny || null,
-                        pdate: comic.pdate,
-                      }}
-                    />
+                    <>
+                      {/* Десктопная версия */}
+                      <tr key={comic.id} className="border-t border-border-primary first:border-t-0 hidden md:table-row">
+                        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+                          {comic.order > 0 ? `#${comic.order}` : '-'}
+                        </td>
+                        <td className="py-3 whitespace-nowrap">
+                          <Link href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)}>
+                            <div className="relative w-12 aspect-[2/3]">
+                              {coverImage ? (
+                                <Image
+                                  src={coverImage}
+                                  alt={`${comic.name} #${comic.number}`}
+                                  fill
+                                  className="object-cover"
+                                  sizes="48px"
+                                  loading="lazy"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                                  <span className="text-text-tertiary text-xs">Нет</span>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="py-3">
+                          <div>
+                            <Link
+                              href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)}
+                              className="text-sm font-medium text-text-primary hover:text-accent transition-colors block"
+                            >
+                              {comic.name} #{comic.number}
+                            </Link>
+                            <Link
+                              href={`/publishers/${comic.translation.series.publisher.id}`}
+                              className="text-xs text-text-secondary hover:text-accent transition-colors"
+                            >
+                              {comic.translation.series.publisher.name}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+                          -
+                        </td>
+                        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+                          {comic.pdate ? formatDate(comic.pdate) : '-'}
+                        </td>
+                      </tr>
+                      {/* Мобильная версия */}
+                      <tr key={`${comic.id}-mobile`} className="border-t border-border-primary first:border-t-0 md:hidden">
+                        <td className="py-2 px-2" colSpan={5}>
+                          <div className="flex items-start gap-3">
+                            <Link href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)} className="flex-shrink-0">
+                              <div className="relative w-10 aspect-[2/3]">
+                                {coverImage ? (
+                                  <Image
+                                    src={coverImage}
+                                    alt={`${comic.name} #${comic.number}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="40px"
+                                    loading="lazy"
+                                    unoptimized
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+                                    <span className="text-text-tertiary text-[10px]">Нет</span>
+                                  </div>
+                                )}
+                              </div>
+                            </Link>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-text-primary">
+                                {comic.order > 0 && <span className="text-text-secondary">#{comic.order} </span>}
+                                {comic.name} #{comic.number}
+                              </div>
+                              <div className="text-xs text-text-secondary mt-1">
+                                {comic.pdate ? formatDate(comic.pdate) : '-'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
                   )
                 }
 
-                // Для комиксов без перевода - упрощенная строка таблицы
-                const coverImage = comic.super || comic.thumb || comic.tiny
+                // Для комиксов без перевода
                 return (
                   <>
                     {/* Десктопная версия */}
                     <tr key={comic.id} className="border-t border-border-primary first:border-t-0 hidden md:table-row opacity-60">
+                      <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
+                        {comic.order > 0 ? `#${comic.order}` : '-'}
+                      </td>
                       <td className="py-3 whitespace-nowrap">
                         <div className="relative w-12 aspect-[2/3] bg-bg-tertiary">
                           {coverImage ? (
@@ -214,12 +292,6 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                               <span className="text-text-tertiary text-xs">Нет</span>
                             </div>
                           )}
-                          {/* Порядковый номер */}
-                          {comic.order > 0 && (
-                            <div className="absolute top-0 left-0 bg-accent text-white text-[10px] font-semibold px-1 py-0.5 rounded">
-                              #{comic.order}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td className="py-3">
@@ -232,11 +304,6 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                       </td>
                       <td className="py-3 whitespace-nowrap text-sm text-text-tertiary">
                         {comic.pdate ? formatDate(comic.pdate) : '-'}
-                      </td>
-                      <td className="py-3 whitespace-nowrap text-right pr-0">
-                        <span className="text-text-muted" title="Ссылка недоступна">
-                          <XMarkIcon className="w-5 h-5" />
-                        </span>
                       </td>
                     </tr>
                     {/* Мобильная версия */}
@@ -258,15 +325,10 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                                 <span className="text-text-tertiary text-[10px]">Нет</span>
                               </div>
                             )}
-                            {/* Порядковый номер */}
-                            {comic.order > 0 && (
-                              <div className="absolute top-0 left-0 bg-accent text-white text-[10px] font-semibold px-1 py-0.5 rounded">
-                                #{comic.order}
-                              </div>
-                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-text-tertiary">
+                              {comic.order > 0 && <span className="text-text-secondary">#{comic.order} </span>}
                               {comic.name} #{comic.number}
                             </div>
                             <div className="text-xs text-text-tertiary mt-1">
