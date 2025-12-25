@@ -45,20 +45,28 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
 
     // Получаем информацию о глобальном событии (если есть)
     // Проверяем все переводы, так как событие может быть привязано к любому из них
-    const comicIds = allTranslations.map(t => String(t.id))
-    const globalEvent = await prisma.cdb_globcom.findFirst({
-      where: {
-        comics: { in: comicIds },
-        date_delete: null,
-      },
-      include: {
-        cdb_globals: {
-          include: {
-            cdb_globgenl: true,
-          },
-        },
-      },
-    })
+    const comicIds = allTranslations.map(t => t.id)
+    const globalEvent = comicIds.length > 0 ? await prisma.$queryRaw<Array<{
+      id: number
+      global: string
+      order: number
+      event_name: string
+      event_genl_name: string | null
+    }>>`
+      SELECT
+        gc.id,
+        gc.global,
+        gc.order,
+        g.name as event_name,
+        gl.name as event_genl_name
+      FROM cdb_globcom gc
+      INNER JOIN cdb_globals g ON gc.global = g.id
+      LEFT JOIN cdb_globgenl gl ON g.genl = gl.id
+      WHERE gc.comics IN (${Prisma.join(comicIds)})
+        AND gc.date_delete IS NULL
+        AND g.date_delete IS NULL
+      LIMIT 1
+    `.then(results => results.length > 0 ? results[0] : null) : null
 
     // Получаем все уникальные номера выпусков серии для навигации
     // Используем comicvine ID для навигации
@@ -177,8 +185,9 @@ async function getComic(comicvineId: number, publisherId: number, seriesId: numb
       translations,
       globalEvent: globalEvent ? {
         id: globalEvent.id,
-        name: decodeHtmlEntities(globalEvent.cdb_globals.name),
-        genreName: globalEvent.cdb_globals.cdb_globgenl ? decodeHtmlEntities(globalEvent.cdb_globals.cdb_globgenl.name) : null,
+        globalId: globalEvent.global,
+        name: decodeHtmlEntities(globalEvent.event_name),
+        genreName: globalEvent.event_genl_name ? decodeHtmlEntities(globalEvent.event_genl_name) : null,
         order: globalEvent.order,
       } : null,
       prevIssue: prevIssue ? { comicvine: Number(prevIssue.comicvine), number: Number(prevIssue.number) } : null,

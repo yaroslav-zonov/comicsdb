@@ -114,6 +114,16 @@ export default function Header() {
               >
                 Жанры
               </Link>
+              <Link
+                href="/globals"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/globals')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
+                События
+              </Link>
             </nav>
 
           </div>
@@ -240,6 +250,16 @@ export default function Header() {
                 }`}
               >
                 Жанры
+              </Link>
+              <Link
+                href="/globals"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/globals')
+                    ? 'text-accent bg-accent-50 dark:bg-accent-100'
+                    : 'text-text-primary hover:text-accent hover:bg-accent-50/50 dark:hover:bg-accent-100/50'
+                }`}
+              >
+                События
               </Link>
             </nav>
 

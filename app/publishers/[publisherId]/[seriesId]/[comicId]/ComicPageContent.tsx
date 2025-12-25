@@ -49,6 +49,7 @@ type Comic = {
   }>
   globalEvent?: {
     id: number
+    globalId: string
     name: string
     genreName: string | null
     order: number
@@ -237,7 +238,12 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                       {comic.globalEvent.genreName && (
                         <span className="text-text-secondary">{comic.globalEvent.genreName}: </span>
                       )}
-                      <span className="font-medium">{comic.globalEvent.name}</span>
+                      <Link
+                        href={`/globals/${comic.series.publisher.id}/${comic.globalEvent.globalId}`}
+                        className="font-medium hover:text-accent hover:underline transition-colors"
+                      >
+                        {comic.globalEvent.name}
+                      </Link>
                       {comic.globalEvent.order > 0 && (
                         <span className="text-text-secondary ml-1">(#{comic.globalEvent.order})</span>
                       )}
