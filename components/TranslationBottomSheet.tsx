@@ -25,14 +25,14 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Информация о переводе">
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Сайт-переводчик */}
-        <div>
-          <h3 className="text-xs font-medium text-text-secondary mb-2">Сайт</h3>
-          <div className="flex flex-wrap gap-1">
+        <div className="flex items-center justify-between py-2 border-b border-border-primary">
+          <span className="text-sm text-text-secondary">Сайт</span>
+          <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
             <Link
               href={`/sites/${translation.siteId}`}
-              className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
+              className="text-sm font-medium text-text-primary hover:text-accent transition-colors text-right"
             >
               {translation.siteName}
             </Link>
@@ -41,7 +41,7 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
                 <span className="text-text-tertiary">,</span>
                 <Link
                   href={`/sites/${translation.site2Id}`}
-                  className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
+                  className="text-sm font-medium text-text-primary hover:text-accent transition-colors text-right"
                 >
                   {translation.site2Name}
                 </Link>
@@ -52,9 +52,9 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
 
         {/* Переводчик */}
         {translation.translate && (
-          <div>
-            <h3 className="text-xs font-medium text-text-secondary mb-2">Перевод</h3>
-            <div className="flex flex-wrap gap-1">
+          <div className="flex items-center justify-between py-2 border-b border-border-primary">
+            <span className="text-sm text-text-secondary">Перевод</span>
+            <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
               {translation.translate.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -62,7 +62,7 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-primary hover:text-accent hover:underline"
+                    className="text-sm text-text-primary hover:text-accent hover:underline text-right"
                   >
                     {trimmed}
                   </Link>
@@ -74,9 +74,9 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
 
         {/* Оформление */}
         {translation.edit && (
-          <div>
-            <h3 className="text-xs font-medium text-text-secondary mb-2">Оформление</h3>
-            <div className="flex flex-wrap gap-1">
+          <div className="flex items-center justify-between py-2 border-b border-border-primary">
+            <span className="text-sm text-text-secondary">Оформление</span>
+            <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
               {translation.edit.split(',').map((name, idx) => {
                 const trimmed = name.trim()
                 if (!trimmed) return null
@@ -84,7 +84,7 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
                   <Link
                     key={idx}
                     href={`/search?q=${encodeURIComponent(trimmed)}&type=scanlator&tab=scanlators`}
-                    className="text-sm text-text-primary hover:text-accent hover:underline"
+                    className="text-sm text-text-primary hover:text-accent hover:underline text-right"
                   >
                     {trimmed}
                   </Link>
@@ -95,15 +95,15 @@ export default function TranslationBottomSheet({ isOpen, onClose, translation }:
         )}
 
         {/* Дата перевода */}
-        <div>
-          <h3 className="text-xs font-medium text-text-secondary mb-2">Дата перевода</h3>
-          <p className="text-sm text-text-primary">
+        <div className="flex items-center justify-between py-2 border-b border-border-primary">
+          <span className="text-sm text-text-secondary">Дата</span>
+          <span className="text-sm text-text-primary">
             {translation.date ? formatDate(translation.date) : '-'}
-          </p>
+          </span>
         </div>
 
-        {/* Кнопка скачать */}
-        <div className="pt-2">
+        {/* Кнопка скачать с отступом снизу для safe area */}
+        <div className="pt-4 pb-6">
           {translation.link ? (
             <a
               href={translation.link}
