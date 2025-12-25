@@ -41,19 +41,31 @@ const MIN_DELAY_BETWEEN_REQUESTS = 4000 // 4 секунды (безопасны�
 
 /**
  * Загружает индекс кэша
+ * 
+ * На production (Vercel): загружает из файла при старте, затем только in-memory
+ * На локальной разработке: загружает из файла и обновляет его
  */
 function loadCacheIndex(): { cached: Map<string, string>; checked: Set<string> } {
+  // Если уже загружено в память - используем кэш
   if (cachedImagesMap && checkedIdsSet) {
     return { cached: cachedImagesMap, checked: checkedIdsSet }
   }
 
+  // Загружаем из JSON файла (только при первом вызове)
   if (metronCacheIndex && typeof metronCacheIndex === 'object') {
     const index = metronCacheIndex as MetronCacheIndex
     cachedImagesMap = new Map(Object.entries(index.cachedImages || {}))
     checkedIdsSet = new Set(index.checkedIds || [])
+    
+    // Логируем загрузку только в development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📂 [Metron] Загружен кэш: ${cachedImagesMap.size} изображений, ${checkedIdsSet.size} проверено`)
+    }
+    
     return { cached: cachedImagesMap, checked: checkedIdsSet }
   }
 
+  // Инициализируем пустые структуры
   cachedImagesMap = new Map()
   checkedIdsSet = new Set()
   return { cached: cachedImagesMap, checked: checkedIdsSet }
@@ -61,8 +73,9 @@ function loadCacheIndex(): { cached: Map<string, string>; checked: Set<string> }
 
 /**
  * Сохраняет индекс кэша
- * Примечание: В production лучше использовать API route для записи
- * Работает только на сервере (Node.js окружение)
+ * 
+ * На production (Vercel): только in-memory кэш (файловая система read-only)
+ * На локальной разработке: сохраняет в файл
  */
 async function saveCacheIndex(cachedImages: Map<string, string>, checkedIds: string[]) {
   // Проверяем, что мы на сервере
@@ -75,9 +88,19 @@ async function saveCacheIndex(cachedImages: Map<string, string>, checkedIds: str
     return // Не сохраняем без Node.js
   }
 
+  // На Vercel (production) файловая система read-only
+  // Используем только in-memory кэш
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV
+  if (isVercel) {
+    // На Vercel не сохраняем в файл, только в память
+    // Кэш будет работать, но потеряется при перезапуске
+    // Это нормально, так как запросы к Metron кэшируются в памяти
+    return
+  }
+
+  // Локальная разработка - сохраняем в файл
   try {
     // Динамический импорт только на сервере
-    // Используем строковый импорт для предотвращения включения в клиентский бандл
     const fsModule = 'fs'
     const pathModule = 'path'
     const fs = await import(fsModule)
@@ -92,10 +115,17 @@ async function saveCacheIndex(cachedImages: Map<string, string>, checkedIds: str
     }
 
     fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), 'utf-8')
+    
+    // Логируем только в development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`💾 [Metron] Кэш сохранен: ${cachedImages.size} изображений, ${checkedIds.length} проверено`)
+    }
   } catch (error) {
     // В production (Vercel) файловая система может быть read-only
     // Это нормально, кэш будет работать в памяти
-    // Не логируем ошибки, чтобы не засорять консоль
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Ошибка сохранения кэша:', error)
+    }
   }
 }
 
