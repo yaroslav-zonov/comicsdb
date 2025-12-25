@@ -168,7 +168,6 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                 <th className="py-2 text-left text-xs text-text-secondary">#</th>
                 <th className="py-2 text-left text-xs text-text-secondary">Обложка</th>
                 <th className="py-2 text-left text-xs text-text-secondary">Название</th>
-                <th className="py-2 text-left text-xs text-text-secondary">Сайт</th>
                 <th className="py-2 text-left text-xs text-text-secondary">Дата публикации</th>
               </tr>
             </thead>
@@ -223,15 +222,12 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                           </div>
                         </td>
                         <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
-                          -
-                        </td>
-                        <td className="py-3 whitespace-nowrap text-sm text-text-secondary">
                           {comic.pdate ? formatDate(comic.pdate) : '-'}
                         </td>
                       </tr>
                       {/* Мобильная версия */}
                       <tr key={`${comic.id}-mobile`} className="border-t border-border-primary first:border-t-0 md:hidden">
-                        <td className="py-2 px-2" colSpan={5}>
+                        <td className="py-2 px-2" colSpan={4}>
                           <div className="flex items-start gap-3">
                             <Link href={getComicUrl(comic.translation.series.publisher.id, comic.translation.series.id, comic.translation.comicvine)} className="flex-shrink-0">
                               <div className="relative w-10 aspect-[2/3]">
@@ -300,15 +296,12 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                         </div>
                       </td>
                       <td className="py-3 whitespace-nowrap text-sm text-text-tertiary">
-                        -
-                      </td>
-                      <td className="py-3 whitespace-nowrap text-sm text-text-tertiary">
                         {comic.pdate ? formatDate(comic.pdate) : '-'}
                       </td>
                     </tr>
                     {/* Мобильная версия */}
                     <tr key={`${comic.id}-mobile`} className="border-t border-border-primary first:border-t-0 md:hidden opacity-60">
-                      <td className="py-2 px-2" colSpan={5}>
+                      <td className="py-2 px-2" colSpan={4}>
                         <div className="flex items-start gap-3">
                           <div className="relative w-10 aspect-[2/3] bg-bg-tertiary flex-shrink-0">
                             {coverImage ? (
