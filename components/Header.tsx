@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const pathname = usePathname()
 
   const handleSearch = (e: React.FormEvent) => {
@@ -24,8 +26,38 @@ export default function Header() {
     return pathname.startsWith(path)
   }
 
+  useEffect(() => {
+    const controlHeader = () => {
+      const currentScrollY = window.scrollY
+
+      // Только для мобильных устройств (< 768px)
+      if (window.innerWidth < 768) {
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          // Скролл вниз - скрываем хедер
+          setIsVisible(false)
+        } else {
+          // Скролл вверх или в начале страницы - показываем хедер
+          setIsVisible(true)
+        }
+      } else {
+        // На десктопе всегда показываем
+        setIsVisible(true)
+      }
+
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', controlHeader)
+
+    return () => {
+      window.removeEventListener('scroll', controlHeader)
+    }
+  }, [lastScrollY])
+
   return (
-    <header className="relative header-bg backdrop-blur-md border-b border-border-primary sticky top-0 z-50 shadow-sm">
+    <header className={`relative header-bg backdrop-blur-md border-b border-border-primary sticky top-0 z-50 shadow-sm transition-transform duration-300 ${
+      isVisible ? 'translate-y-0' : '-translate-y-full'
+    }`}>
       {/* Градиентная подложка для улучшения контраста */}
       <div className="absolute inset-0 header-gradient pointer-events-none" />
 
