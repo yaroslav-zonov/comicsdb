@@ -9,16 +9,14 @@
  * 5. Строго соблюдаем лимиты: 30 запросов/мин, 10000/день
  */
 
-import metronCacheIndex from '@/data/metron-cache-index.json'
-
-type MetronCacheIndex = {
-  version: string
-  lastUpdated: string
-  // ID с найденными изображениями в Metron и их URL
-  cachedImages: { [comicvineId: string]: string }
-  // ID, которые уже проверяли (включая не найденные)
-  checkedIds: string[]
-}
+import {
+  loadCache,
+  saveCache,
+  getCachedImage,
+  isChecked,
+  saveCachedImage,
+  saveChecked,
+} from './metron-cache-kv'
 
 type MetronIssueResponse = {
   id: number
@@ -28,10 +26,6 @@ type MetronIssueResponse = {
   // Другие поля из API
 }
 
-// Кэш для быстрого доступа
-let cachedImagesMap: Map<string, string> | null = null
-let checkedIdsSet: Set<string> | null = null
-
 // Очередь запросов для соблюдения лимитов
 let requestQueue: Array<() => Promise<void>> = []
 let isProcessingQueue = false
@@ -39,95 +33,9 @@ let lastRequestTime = 0
 // Увеличена задержка для безопасности: 4 секунды = 15 запросов/мин (вместо 30)
 const MIN_DELAY_BETWEEN_REQUESTS = 4000 // 4 секунды (безопасный запас)
 
-/**
- * Загружает индекс кэша
- * 
- * На production (Vercel): загружает из файла при старте, затем только in-memory
- * На локальной разработке: загружает из файла и обновляет его
- */
-function loadCacheIndex(): { cached: Map<string, string>; checked: Set<string> } {
-  // Если уже загружено в память - используем кэш
-  if (cachedImagesMap && checkedIdsSet) {
-    return { cached: cachedImagesMap, checked: checkedIdsSet }
-  }
+// Кэш загружается асинхронно из KV или памяти
 
-  // Загружаем из JSON файла (только при первом вызове)
-  if (metronCacheIndex && typeof metronCacheIndex === 'object') {
-    const index = metronCacheIndex as MetronCacheIndex
-    cachedImagesMap = new Map(Object.entries(index.cachedImages || {}))
-    checkedIdsSet = new Set(index.checkedIds || [])
-    
-    // Логируем загрузку только в development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`📂 [Metron] Загружен кэш: ${cachedImagesMap.size} изображений, ${checkedIdsSet.size} проверено`)
-    }
-    
-    return { cached: cachedImagesMap, checked: checkedIdsSet }
-  }
-
-  // Инициализируем пустые структуры
-  cachedImagesMap = new Map()
-  checkedIdsSet = new Set()
-  return { cached: cachedImagesMap, checked: checkedIdsSet }
-}
-
-/**
- * Сохраняет индекс кэша
- * 
- * На production (Vercel): только in-memory кэш (файловая система read-only)
- * На локальной разработке: сохраняет в файл
- */
-async function saveCacheIndex(cachedImages: Map<string, string>, checkedIds: string[]) {
-  // Проверяем, что мы на сервере
-  if (typeof window !== 'undefined') {
-    return // Не сохраняем на клиенте
-  }
-
-  // Проверяем наличие Node.js окружения
-  if (typeof process === 'undefined' || !process.cwd) {
-    return // Не сохраняем без Node.js
-  }
-
-  // На Vercel (production) файловая система read-only
-  // Используем только in-memory кэш
-  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV
-  if (isVercel) {
-    // На Vercel не сохраняем в файл, только в память
-    // Кэш будет работать, но потеряется при перезапуске
-    // Это нормально, так как запросы к Metron кэшируются в памяти
-    return
-  }
-
-  // Локальная разработка - сохраняем в файл
-  try {
-    // Динамический импорт только на сервере
-    const fsModule = 'fs'
-    const pathModule = 'path'
-    const fs = await import(fsModule)
-    const path = await import(pathModule)
-    const indexFile = path.join(process.cwd(), 'data', 'metron-cache-index.json')
-    
-    const index: MetronCacheIndex = {
-      version: '1.0.0',
-      lastUpdated: new Date().toISOString().split('T')[0],
-      cachedImages: Object.fromEntries(cachedImages),
-      checkedIds,
-    }
-
-    fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), 'utf-8')
-    
-    // Логируем только в development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`💾 [Metron] Кэш сохранен: ${cachedImages.size} изображений, ${checkedIds.length} проверено`)
-    }
-  } catch (error) {
-    // В production (Vercel) файловая система может быть read-only
-    // Это нормально, кэш будет работать в памяти
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Ошибка сохранения кэша:', error)
-    }
-  }
-}
+// Сохранение кэша теперь через KV или память (см. metron-cache-kv.ts)
 
 /**
  * Определяет, является ли URL ComicVine старым форматом (api/image)
@@ -213,16 +121,16 @@ async function processRequestQueue() {
 export async function checkMetronForIssue(
   comicvineId: number | string
 ): Promise<string | null> {
-  const { cached, checked } = loadCacheIndex()
   const id = String(comicvineId)
 
-  // Если уже проверяли и нашли - возвращаем URL из кэша
-  if (cached.has(id)) {
-    return cached.get(id) || null
+  // Проверяем кэш (из KV или памяти)
+  const cachedUrl = await getCachedImage(id)
+  if (cachedUrl) {
+    return cachedUrl
   }
 
-  // Если уже проверяли и не нашли - возвращаем null
-  if (checked.has(id)) {
+  // Проверяем, был ли уже проверен
+  if (await isChecked(id)) {
     return null
   }
 
@@ -239,13 +147,10 @@ export async function checkMetronForIssue(
         
         if (issue && issue.image) {
           // Нашли в Metron - используем поле image напрямую
-          // Пример: "image": "https://static.metron.cloud/media/issue/2020/08/04/thor-v2-32.jpg"
           const imageUrl = issue.image
           
-          // Сохраняем в кэш
-          cached.set(id, imageUrl)
-          checked.add(id)
-          await saveCacheIndex(cached, Array.from(checked))
+          // Сохраняем в кэш (KV или память)
+          await saveCachedImage(id, imageUrl)
           
           // Логируем успешное нахождение (только в development)
           if (process.env.NODE_ENV === 'development') {
@@ -255,8 +160,7 @@ export async function checkMetronForIssue(
           resolve(imageUrl)
         } else {
           // Не нашли в Metron - помечаем как проверенное
-          checked.add(id)
-          await saveCacheIndex(cached, Array.from(checked))
+          await saveChecked(id)
           
           // Логируем отсутствие (только в development)
           if (process.env.NODE_ENV === 'development') {
@@ -266,9 +170,8 @@ export async function checkMetronForIssue(
           resolve(null)
         }
       } catch (error: any) {
-        // При ошибке помечаем как проверенное, чтобы не повторять запрос
-        checked.add(id)
-        await saveCacheIndex(cached, Array.from(checked))
+        // При ошибке помечаем как проверенное
+        await saveChecked(id)
         resolve(null)
       }
     })
@@ -326,13 +229,8 @@ export async function getImageUrlWithMetron(
 /**
  * Получает статистику кэша
  */
-export function getCacheStats() {
-  const { cached, checked } = loadCacheIndex()
-  return {
-    cachedCount: cached.size,
-    checkedCount: checked.size,
-    cachedImages: Object.fromEntries(cached),
-    checkedIds: Array.from(checked),
-  }
+export async function getCacheStats() {
+  const stats = await import('./metron-cache-kv').then(m => m.getCacheStats())
+  return stats
 }
 
