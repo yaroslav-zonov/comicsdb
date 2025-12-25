@@ -69,19 +69,32 @@ export function getTranslationStatus(
   return 'Продолжается'
 }
 
-import { isOldComicVineFormat, isNewComicVineFormat, shouldCheckMetron } from './metron-api'
+/**
+ * Определяет, является ли URL ComicVine старым форматом (api/image)
+ */
+function isOldComicVineFormat(url: string | null | undefined): boolean {
+  if (!url) return false
+  return url.includes('api/image/')
+}
+
+/**
+ * Определяет, является ли URL ComicVine новым форматом (a/uploads)
+ */
+function isNewComicVineFormat(url: string | null | undefined): boolean {
+  if (!url) return false
+  return url.includes('/a/uploads/scale_large/')
+}
 
 /**
  * Преобразует URL изображения, заменяя scale_avatar на scale_large для лучшего качества
  * 
  * Логика работы:
  * 1. Если URL в новом формате ComicVine (/a/uploads/) - используем как есть
- * 2. Если URL в старом формате (api/image) и есть comicvineId - проверяем Metron
- * 3. Если найдено в Metron - используем Metron URL
- * 4. Иначе - используем оригинальный URL
+ * 2. Если URL в старом формате (api/image) - возвращаем как есть (проверка Metron асинхронная)
+ * 3. Для проверки Metron используйте getImageUrlWithMetron из metron-api.ts в серверных компонентах
  * 
  * @param url - URL изображения
- * @param comicvineId - Опциональный ComicVine ID для проверки в Metron
+ * @param comicvineId - Опциональный ComicVine ID (не используется в синхронной версии)
  * @param size - Размер изображения (не используется, оставлен для совместимости)
  * @returns Преобразованный URL или null, если URL пустой
  */
@@ -97,16 +110,9 @@ export function getImageUrl(
     return url.replace(/scale_avatar/g, 'scale_large')
   }
 
-  // Если старый формат и есть comicvineId - нужно проверить Metron
-  // Но это асинхронная операция, поэтому здесь только проверяем формат
-  // Для асинхронной проверки используйте getImageUrlWithMetron из metron-api.ts
-  if (shouldCheckMetron(url, comicvineId)) {
-    // В синхронной версии возвращаем оригинальный URL
-    // Асинхронная проверка Metron будет выполнена отдельно
-    return url.replace(/scale_avatar/g, 'scale_large')
-  }
-
-  // Обычная обработка ComicVine URL
+  // Если старый формат - возвращаем как есть
+  // Проверка Metron выполняется асинхронно в серверных компонентах
+  // Для этого используйте getImageUrlWithMetron из metron-api.ts
   return url.replace(/scale_avatar/g, 'scale_large')
 }
 
