@@ -64,24 +64,35 @@ comicsdb/
 
 ```bash
 # Разработка
-npm run dev              # Запуск dev сервера
+npm run dev              # Запуск dev сервера (http://localhost:3000)
 
 # База данных
 npm run db:studio        # Prisma Studio (GUI для БД)
 npm run db:pull          # Синхронизация схемы с БД
 npm run db:generate      # Генерация Prisma Client
 
-# Установка
-npm run install:mysql    # Установка MySQL (macOS)
+# Установка (macOS)
+npm run install:mysql    # Установка MySQL через Homebrew
 npm run setup:mysql      # Настройка БД и импорт дампа
+
+# Утилиты
+# scripts/reset-mysql-password-v2.sh - Сброс пароля MySQL
+# scripts/install-mysql-macos.sh - Установка MySQL
+# scripts/setup-mysql.sh - Базовая настройка
+# scripts/setup-final.sh - Финальная настройка с credentials
 
 # Production
 npm run build            # Сборка для production
 npm start                # Запуск production сервера
+npm run lint             # Проверка кода
 ```
 
 ## 📚 Документация
 
+Подробная документация находится в папке [`docs/`](./docs/):
+
+- [CHANGELOG.md](./docs/CHANGELOG.md) - История изменений проекта
+- [SEARCH_OPTIMIZATION.md](./docs/SEARCH_OPTIMIZATION.md) - Оптимизация поиска и индексов БД
 - [DOCUMENTATION.md](./DOCUMENTATION.md) - Полная документация проекта
 - [FIELDS_CONFIGURATION.md](./FIELDS_CONFIGURATION.md) - Конфигурация полей для карточек и таблиц
 - [SEARCH_DOCUMENTATION.md](./SEARCH_DOCUMENTATION.md) - Документация поискового механизма

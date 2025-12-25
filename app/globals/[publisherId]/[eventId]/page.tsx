@@ -28,8 +28,8 @@ async function getEventDetails(publisherId: number, eventId: string) {
     }
 
     // Получаем ВСЕ выпуски события из cdb_globcom
-    // Ищем комиксы в нашей базе по ID или по ComicVine ID
-    // Поле gc.comics может содержать либо ID комикса, либо ComicVine ID
+    // Ищем комиксы в нашей базе по ID комикса
+    // Поле gc.comics содержит ID комикса из cdb_comics
     const eventComics = await prisma.$queryRaw<Array<{
       gc_id: number
       gc_name: string
@@ -66,10 +66,7 @@ async function getEventDetails(publisherId: number, eventId: string) {
         gc.comics IS NOT NULL
         AND gc.comics != ''
         AND gc.comics != '0'
-        AND (
-          gc.comics = CAST(c.id AS CHAR)
-          OR (CAST(gc.comics AS UNSIGNED) > 0 AND CAST(gc.comics AS UNSIGNED) = c.comicvine)
-        )
+        AND gc.comics = CAST(c.id AS CHAR)
         AND c.date_delete IS NULL
       )
       LEFT JOIN cdb_series s ON c.serie = s.id AND s.date_delete IS NULL
