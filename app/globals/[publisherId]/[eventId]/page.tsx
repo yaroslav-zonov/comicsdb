@@ -1,11 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import ComicCard, { ComicCardData } from '@/components/ComicCard'
-import { decodeHtmlEntities, formatDate } from '@/lib/utils'
+import EventComicsView from '@/components/EventComicsView'
+import { decodeHtmlEntities } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -236,117 +235,10 @@ export default async function EventPage({
           </div>
 
           {/* Список комиксов */}
-          <div>
-            <h2 className="text-xl font-semibold text-text-primary mb-4">
-              Выпуски ({data.comics.length})
-            </h2>
-
-            {data.comics.length > 0 ? (
-              <div className="grid-cards">
-                {data.comics.map(comic => {
-                  // Для комиксов с переводом используем ComicCard
-                  if (comic.hasTranslation && comic.translation) {
-                    const cardData: ComicCardData = {
-                      id: comic.translation.comicId,
-                      comicvine: comic.translation.comicvine,
-                      number: comic.number,
-                      series: comic.translation.series,
-                      thumb: comic.thumb || comic.super || null,
-                      tiny: comic.tiny || null,
-                      pdate: comic.pdate,
-                    }
-
-                    return (
-                      <div key={comic.id} className="relative">
-                        <ComicCard
-                          data={cardData}
-                          showCover={true}
-                          showTitle={true}
-                          titleMode="full"
-                          showDate={true}
-                        />
-                        {/* Порядковый номер в событии - поверх обложки */}
-                        {comic.order > 0 && (
-                          <div className="absolute top-2 left-2 z-20 bg-accent text-white text-xs font-semibold px-2 py-1 rounded pointer-events-none">
-                            #{comic.order}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  }
-
-                  // Для комиксов без перевода создаем обертку с маркером
-                  const coverImage = comic.super || comic.thumb || comic.tiny
-                  return (
-                    <div key={comic.id} className="overflow-hidden group card-lift relative">
-                      <div className="block cursor-default">
-                        {coverImage && (
-                          <div className="relative aspect-[2/3] bg-bg-tertiary overflow-hidden shadow-sm">
-                            <Image
-                              src={coverImage}
-                              alt={`${comic.name} #${comic.number}`}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                              loading="lazy"
-                              unoptimized
-                            />
-                            {/* Порядковый номер в событии */}
-                            {comic.order > 0 && (
-                              <div className="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
-                                #{comic.order}
-                              </div>
-                            )}
-                            {/* Маркер "Нет перевода" */}
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
-                                <p className="text-xs font-medium text-text-secondary text-center">
-                                  Нет перевода
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {!coverImage && (
-                          <div className="relative aspect-[2/3] bg-bg-tertiary overflow-hidden shadow-sm flex items-center justify-center">
-                            <span className="text-text-tertiary text-xs">Нет обложки</span>
-                            {/* Порядковый номер в событии */}
-                            {comic.order > 0 && (
-                              <div className="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-semibold px-2 py-1 rounded">
-                                #{comic.order}
-                              </div>
-                            )}
-                            {/* Маркер "Нет перевода" */}
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <div className="bg-bg-primary/90 px-3 py-2 rounded-lg border border-border-primary">
-                                <p className="text-xs font-medium text-text-secondary text-center">
-                                  Нет перевода
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="pt-3">
-                          <h3 className="font-semibold text-sm text-text-tertiary mb-1 line-clamp-2">
-                            {comic.name} #{comic.number}
-                          </h3>
-                          {comic.pdate && (
-                            <p className="body-tiny mt-1">
-                              {formatDate(comic.pdate, { month: 'short', year: 'numeric' })}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-text-secondary">Комиксы не найдены</p>
-              </div>
-            )}
-          </div>
+          <EventComicsView
+            comics={data.comics}
+            title={`Выпуски (${data.comics.length})`}
+          />
         </div>
       </div>
 
