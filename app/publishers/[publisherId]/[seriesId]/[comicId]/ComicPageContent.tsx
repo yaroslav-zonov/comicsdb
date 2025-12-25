@@ -228,24 +228,18 @@ export default function ComicPageContent({ comic }: { comic: Comic }) {
                 {/* Глобальное событие */}
                 {comic.globalEvent && (
                   <div className="pt-4 border-t border-border-primary">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-accent text-lg" title="Глобальное событие">★</span>
-                      <h3 className="text-sm font-medium text-text-secondary">
-                        Глобальное событие
-                      </h3>
-                    </div>
-                    <div className="text-sm text-text-primary">
-                      {comic.globalEvent.genreName && (
-                        <span className="text-text-secondary">{comic.globalEvent.genreName}: </span>
-                      )}
+                    <h3 className="text-sm font-medium text-text-secondary mb-2">
+                      Глобальное событие
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/globals/${comic.series.publisher.id}/${comic.globalEvent.globalId}`}
-                        className="font-medium hover:text-accent hover:underline transition-colors"
+                        className="text-sm text-text-primary hover:text-accent hover:underline transition-colors"
                       >
                         {comic.globalEvent.name}
                       </Link>
                       {comic.globalEvent.order > 0 && (
-                        <span className="text-text-secondary ml-1">(#{comic.globalEvent.order})</span>
+                        <span className="text-sm text-text-secondary">(#{comic.globalEvent.order})</span>
                       )}
                     </div>
                   </div>

@@ -65,8 +65,8 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
   // Для карточного вида берем первый комикс из каждой группы
   const displayComics = Array.from(groupedComics.values()).map(group => group[0])
 
-  // Для табличного вида показываем все комиксы
-  const tableComics = comics
+  // Для табличного вида тоже группируем по comicvine (берем первый из каждой группы)
+  const tableComics = Array.from(groupedComics.values()).map(group => group[0])
 
   return (
     <div>
@@ -97,7 +97,7 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                 comicvine: comic.translation.comicvine,
                 number: comic.number,
                 series: comic.translation.series,
-                thumb: comic.thumb || null, // Используем thumb для карточек
+                thumb: comic.super || comic.thumb || null, // Используем super для лучшего качества
                 tiny: comic.tiny || null,
                 pdate: comic.pdate,
               }
@@ -122,7 +122,7 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
             }
 
             // Для комиксов без перевода - упрощенный дизайн
-            const coverImage = comic.thumb || comic.tiny
+            const coverImage = comic.super || comic.thumb || comic.tiny
             return (
               <div key={comic.id} className="overflow-hidden group relative">
                 <div className="block cursor-default">
@@ -184,7 +184,7 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                         comicvine: comic.translation.comicvine,
                         number: comic.number,
                         series: comic.translation.series,
-                        thumb: comic.thumb || null,
+                        thumb: comic.super || comic.thumb || null,
                         tiny: comic.tiny || null,
                         pdate: comic.pdate,
                       }}
@@ -193,7 +193,7 @@ export default function EventComicsView({ comics, title }: EventComicsViewProps)
                 }
 
                 // Для комиксов без перевода - упрощенная строка таблицы
-                const coverImage = comic.thumb || comic.tiny
+                const coverImage = comic.super || comic.thumb || comic.tiny
                 return (
                   <>
                     {/* Десктопная версия */}
